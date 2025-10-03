@@ -7,13 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save, X, ArrowLeft, LogOut, Wand2, Settings, BarChart3, FolderTree, TrendingUp } from "lucide-react";
+import { Loader2, Save, X, ArrowLeft, LogOut, Wand2, Settings, BarChart3, FolderTree, TrendingUp, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ManageColoringPages from "@/components/admin/ManageColoringPages";
 import ManageCategories from "@/components/admin/ManageCategories";
 import DashboardStats from "@/components/admin/DashboardStats";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
+import UserManagement from "@/components/admin/UserManagement";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -387,7 +388,7 @@ export default function Admin() {
       </div>
       <div className="container py-8">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-5 mb-8">
+          <TabsList className="grid w-full max-w-6xl mx-auto grid-cols-6 mb-8">
             <TabsTrigger value="dashboard" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               数据概览
@@ -395,6 +396,10 @@ export default function Admin() {
             <TabsTrigger value="analytics" className="gap-2">
               <TrendingUp className="h-4 w-4" />
               数据分析
+            </TabsTrigger>
+            <TabsTrigger value="users" className="gap-2">
+              <Users className="h-4 w-4" />
+              用户管理
             </TabsTrigger>
             <TabsTrigger value="generate" className="gap-2">
               <Wand2 className="h-4 w-4" />
@@ -416,6 +421,10 @@ export default function Admin() {
 
           <TabsContent value="analytics">
             <AnalyticsDashboard />
+          </TabsContent>
+
+          <TabsContent value="users">
+            <UserManagement />
           </TabsContent>
 
           <TabsContent value="generate">

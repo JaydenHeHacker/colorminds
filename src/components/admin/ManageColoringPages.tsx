@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Edit, Trash2, Star, StarOff, Loader2 } from "lucide-react";
+import { Search, Edit, Trash2, Star, StarOff, Loader2, FolderTree, Gauge } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ManageColoringPages() {
@@ -39,6 +39,10 @@ export default function ManageColoringPages() {
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [showBatchCategoryDialog, setShowBatchCategoryDialog] = useState(false);
+  const [showBatchDifficultyDialog, setShowBatchDifficultyDialog] = useState(false);
+  const [batchCategory, setBatchCategory] = useState<string>("");
+  const [batchDifficulty, setBatchDifficulty] = useState<string>("");
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -159,6 +163,50 @@ export default function ManageColoringPages() {
     },
   });
 
+  const batchUpdateCategoryMutation = useMutation({
+    mutationFn: async ({ ids, categoryId }: { ids: string[]; categoryId: string }) => {
+      const { error } = await supabase
+        .from('coloring_pages')
+        .update({ category_id: categoryId })
+        .in('id', ids);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-coloring-pages'] });
+      queryClient.invalidateQueries({ queryKey: ['coloring-pages'] });
+      toast.success(`成功修改 ${selectedPages.size} 个项目的分类！`);
+      setSelectedPages(new Set());
+      setShowBatchCategoryDialog(false);
+      setBatchCategory("");
+    },
+    onError: (error: Error) => {
+      toast.error("批量修改失败：" + error.message);
+    },
+  });
+
+  const batchUpdateDifficultyMutation = useMutation({
+    mutationFn: async ({ ids, difficulty }: { ids: string[]; difficulty: 'easy' | 'medium' | 'hard' }) => {
+      const { error } = await supabase
+        .from('coloring_pages')
+        .update({ difficulty })
+        .in('id', ids);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-coloring-pages'] });
+      queryClient.invalidateQueries({ queryKey: ['coloring-pages'] });
+      toast.success(`成功修改 ${selectedPages.size} 个项目的难度！`);
+      setSelectedPages(new Set());
+      setShowBatchDifficultyDialog(false);
+      setBatchDifficulty("");
+    },
+    onError: (error: Error) => {
+      toast.error("批量修改失败：" + error.message);
+    },
+  });
+
   const filteredPages = coloringPages?.filter(page => {
     const matchesSearch = !searchQuery || 
       page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -232,6 +280,33 @@ export default function ManageColoringPages() {
     batchFeatureMutation.mutate({ ids: Array.from(selectedPages), featured });
   };
 
+  const handleBatchUpdateCategory = () => {
+    if (selectedPages.size === 0) {
+      toast.error("请先选择要操作的项目");
+      return;
+    }
+    if (!batchCategory) {
+      toast.error("请选择分类");
+      return;
+    }
+    batchUpdateCategoryMutation.mutate({ ids: Array.from(selectedPages), categoryId: batchCategory });
+  };
+
+  const handleBatchUpdateDifficulty = () => {
+    if (selectedPages.size === 0) {
+      toast.error("请先选择要操作的项目");
+      return;
+    }
+    if (!batchDifficulty) {
+      toast.error("请选择难度");
+      return;
+    }
+    batchUpdateDifficultyMutation.mutate({ 
+      ids: Array.from(selectedPages), 
+      difficulty: batchDifficulty as 'easy' | 'medium' | 'hard'
+    });
+  };
+
   const difficultyConfig = {
     easy: { label: "简单", icon: "🟢" },
     medium: { label: "中等", icon: "🟡" },
@@ -297,7 +372,7 @@ export default function ManageColoringPages() {
             <span className="text-sm text-muted-foreground">
               已选择 {selectedPages.size} 个项目
             </span>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -315,6 +390,22 @@ export default function ManageColoringPages() {
               >
                 <StarOff className="h-4 w-4 mr-1" />
                 取消精选
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowBatchCategoryDialog(true)}
+              >
+                <FolderTree className="h-4 w-4 mr-1" />
+                修改分类
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowBatchDifficultyDialog(true)}
+              >
+                <Gauge className="h-4 w-4 mr-1" />
+                修改难度
               </Button>
               <Button
                 variant="destructive"
@@ -521,6 +612,98 @@ export default function ManageColoringPages() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Batch Category Dialog */}
+      <Dialog open={showBatchCategoryDialog} onOpenChange={setShowBatchCategoryDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>批量修改分类</DialogTitle>
+            <DialogDescription>
+              为选中的 {selectedPages.size} 个项目修改分类
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Label htmlFor="batch-category">选择分类</Label>
+            <Select value={batchCategory} onValueChange={setBatchCategory}>
+              <SelectTrigger id="batch-category">
+                <SelectValue placeholder="选择分类" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[400px]">
+                {categories?.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {getCategoryLabel(cat)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBatchCategoryDialog(false)}>
+              取消
+            </Button>
+            <Button 
+              onClick={handleBatchUpdateCategory} 
+              disabled={batchUpdateCategoryMutation.isPending || !batchCategory}
+            >
+              {batchUpdateCategoryMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  更新中...
+                </>
+              ) : (
+                "确认修改"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Batch Difficulty Dialog */}
+      <Dialog open={showBatchDifficultyDialog} onOpenChange={setShowBatchDifficultyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>批量修改难度</DialogTitle>
+            <DialogDescription>
+              为选中的 {selectedPages.size} 个项目修改难度
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Label htmlFor="batch-difficulty">选择难度</Label>
+            <Select value={batchDifficulty} onValueChange={setBatchDifficulty}>
+              <SelectTrigger id="batch-difficulty">
+                <SelectValue placeholder="选择难度" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="easy">🟢 简单</SelectItem>
+                <SelectItem value="medium">🟡 中等</SelectItem>
+                <SelectItem value="hard">🔴 困难</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBatchDifficultyDialog(false)}>
+              取消
+            </Button>
+            <Button 
+              onClick={handleBatchUpdateDifficulty} 
+              disabled={batchUpdateDifficultyMutation.isPending || !batchDifficulty}
+            >
+              {batchUpdateDifficultyMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  更新中...
+                </>
+              ) : (
+                "确认修改"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
