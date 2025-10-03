@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FolderTree, Plus, Edit, Trash2, Loader2, ChevronRight, ChevronDown, Wand2, Image } from "lucide-react";
+import { FolderTree, Plus, Edit, Trash2, Loader2, ChevronRight, ChevronDown, Wand2, Image, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { slugify } from "@/lib/slugify";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +56,9 @@ export default function ManageCategories() {
   const [isCreating, setIsCreating] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [generatingForCategory, setGeneratingForCategory] = useState<Category | null>(null);
+  const [generatingIconForCategory, setGeneratingIconForCategory] = useState<Category | null>(null);
+  const [generatedIcon, setGeneratedIcon] = useState<string>("");
+  const [isGeneratingIcon, setIsGeneratingIcon] = useState(false);
 
   // Form state
   const [formName, setFormName] = useState("");
@@ -256,6 +259,66 @@ export default function ManageCategories() {
     setGenerateCount("1");
     setGeneratedImages([]);
     setGeneratedPagesData([]);
+  };
+
+  const handleOpenGenerateIcon = (category: Category) => {
+    setGeneratingIconForCategory(category);
+    setGeneratedIcon("");
+  };
+
+  const handleGenerateIcon = async () => {
+    if (!generatingIconForCategory) {
+      toast.error("未选择分类");
+      return;
+    }
+
+    setIsGeneratingIcon(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-category-icon', {
+        body: { 
+          categoryName: generatingIconForCategory.name,
+          categoryDescription: generatingIconForCategory.description || ""
+        }
+      });
+
+      if (error) throw error;
+      
+      if (data?.icon) {
+        setGeneratedIcon(data.icon);
+        toast.success("图标生成成功！");
+      } else {
+        throw new Error("未收到图标数据");
+      }
+    } catch (error: any) {
+      console.error('图标生成错误:', error);
+      toast.error("生成失败：" + error.message);
+    } finally {
+      setIsGeneratingIcon(false);
+    }
+  };
+
+  const handleSaveGeneratedIcon = async () => {
+    if (!generatingIconForCategory || !generatedIcon) {
+      toast.error("没有可保存的图标");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update({ icon: generatedIcon })
+        .eq('id', generatingIconForCategory.id);
+
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+      toast.success("图标已更新！");
+      setGeneratingIconForCategory(null);
+      setGeneratedIcon("");
+    } catch (error: any) {
+      console.error('保存图标错误:', error);
+      toast.error("保存失败：" + error.message);
+    }
   };
 
   const handleGenerateTheme = async () => {
@@ -468,6 +531,16 @@ export default function ManageCategories() {
             </div>
             
             <div className="flex gap-2 flex-shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleOpenGenerateIcon(category)}
+                title="生成类目图"
+                className="gap-1"
+              >
+                <Sparkles className="h-4 w-4" />
+                类目图
+              </Button>
               <Button
                 variant="default"
                 size="sm"
@@ -898,6 +971,113 @@ export default function ManageCategories() {
                   </>
                 )}
               </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Generate Icon Dialog */}
+      <Dialog 
+        open={!!generatingIconForCategory} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setGeneratingIconForCategory(null);
+            setGeneratedIcon("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              为 "{generatingIconForCategory?.name}" 生成类目图标
+            </DialogTitle>
+            <DialogDescription>
+              AI 将根据类目名称和描述自动生成合适的 emoji 图标
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>当前分类信息</Label>
+              <div className="p-4 bg-muted rounded-lg space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">名称:</span>
+                  <span className="text-sm">{generatingIconForCategory?.name}</span>
+                </div>
+                {generatingIconForCategory?.description && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-sm font-medium">描述:</span>
+                    <span className="text-sm text-muted-foreground">
+                      {generatingIconForCategory.description}
+                    </span>
+                  </div>
+                )}
+                {generatingIconForCategory?.icon && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">当前图标:</span>
+                    <span className="text-2xl">{generatingIconForCategory.icon}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {generatedIcon && (
+              <div className="space-y-2">
+                <Label>生成的图标</Label>
+                <div className="flex items-center justify-center p-8 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border-2 border-primary/20">
+                  <span className="text-6xl">{generatedIcon}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            {!generatedIcon ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setGeneratingIconForCategory(null);
+                    setGeneratedIcon("");
+                  }}
+                >
+                  取消
+                </Button>
+                <Button
+                  onClick={handleGenerateIcon}
+                  disabled={isGeneratingIcon}
+                  className="gap-2"
+                >
+                  {isGeneratingIcon ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      开始生成
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setGeneratedIcon("")}
+                >
+                  重新生成
+                </Button>
+                <Button
+                  onClick={handleSaveGeneratedIcon}
+                  className="gap-2"
+                >
+                  <Image className="h-4 w-4" />
+                  保存图标
+                </Button>
+              </>
             )}
           </DialogFooter>
         </DialogContent>
