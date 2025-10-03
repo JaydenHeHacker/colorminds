@@ -127,9 +127,11 @@ serve(async (req) => {
 
       console.log(`Processing ${images.length} generated images...`);
 
-      // 为整个系列生成统一的 series_id
+      // 为整个系列生成统一的 series_id 和 series_slug
       const seriesId = crypto.randomUUID();
+      const seriesSlug = slugify(theme);
       console.log(`Generated series_id: ${seriesId}`);
+      console.log(`Generated series_slug: ${seriesSlug}`);
 
       // 保存系列图到数据库（草稿状态）
       for (let i = 0; i < images.length; i++) {
@@ -149,8 +151,10 @@ serve(async (req) => {
             category_id: category.id,
             difficulty,
             series_id: seriesId,  // 设置统一的 series_id
+            series_slug: seriesSlug,  // 设置统一的 series_slug
             series_title: theme,
             series_order: i + 1,
+            series_total: images.length,  // 设置系列总数
             status: 'draft'
           })
           .select()
