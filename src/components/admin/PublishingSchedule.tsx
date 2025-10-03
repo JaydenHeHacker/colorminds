@@ -21,7 +21,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Clock, FileText, TrendingUp, Send, CalendarDays } from "lucide-react";
+import { Calendar, Clock, FileText, TrendingUp, Send, CalendarDays, CheckSquare, Edit2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { zhCN } from "date-fns/locale";
@@ -36,6 +37,10 @@ export default function PublishingSchedule() {
   const [scheduledTime, setScheduledTime] = useState("09:00");
   const [calendarView, setCalendarView] = useState<'week' | 'month'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
+  const [showBatchScheduleDialog, setShowBatchScheduleDialog] = useState(false);
+  const [batchScheduledDate, setBatchScheduledDate] = useState("");
+  const [batchScheduledTime, setBatchScheduledTime] = useState("09:00");
 
   // 获取所有页面
   const { data: pages, isLoading } = useQuery({
@@ -170,6 +175,103 @@ export default function PublishingSchedule() {
     });
   };
 
+  // 批量操作
+  const handleToggleSelect = (pageId: string) => {
+    const newSelected = new Set(selectedPages);
+    if (newSelected.has(pageId)) {
+      newSelected.delete(pageId);
+    } else {
+      newSelected.add(pageId);
+    }
+    setSelectedPages(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedPages.size === pages?.length) {
+      setSelectedPages(new Set());
+    } else {
+      setSelectedPages(new Set(pages?.map(p => p.id) || []));
+    }
+  };
+
+  const handleBatchSchedule = () => {
+    if (selectedPages.size === 0) {
+      toast.error("请先选择要操作的项目");
+      return;
+    }
+    if (!batchScheduledDate || !batchScheduledTime) {
+      toast.error("请选择日期和时间");
+      return;
+    }
+
+    const scheduledDateTime = `${batchScheduledDate}T${batchScheduledTime}:00`;
+    
+    // 批量更新
+    Promise.all(
+      Array.from(selectedPages).map(id =>
+        updateStatusMutation.mutateAsync({
+          id,
+          status: 'scheduled',
+          scheduledAt: scheduledDateTime,
+        })
+      )
+    ).then(() => {
+      toast.success(`成功为 ${selectedPages.size} 个项目设置定时发布！`);
+      setSelectedPages(new Set());
+      setShowBatchScheduleDialog(false);
+    });
+  };
+
+  const handleBatchPublish = () => {
+    if (selectedPages.size === 0) {
+      toast.error("请先选择要操作的项目");
+      return;
+    }
+
+    Promise.all(
+      Array.from(selectedPages).map(id =>
+        updateStatusMutation.mutateAsync({
+          id,
+          status: 'published',
+        })
+      )
+    ).then(() => {
+      toast.success(`成功发布 ${selectedPages.size} 个项目！`);
+      setSelectedPages(new Set());
+    });
+  };
+
+  const handleBatchToDraft = () => {
+    if (selectedPages.size === 0) {
+      toast.error("请先选择要操作的项目");
+      return;
+    }
+
+    Promise.all(
+      Array.from(selectedPages).map(id =>
+        updateStatusMutation.mutateAsync({
+          id,
+          status: 'draft',
+        })
+      )
+    ).then(() => {
+      toast.success(`成功移至草稿 ${selectedPages.size} 个项目！`);
+      setSelectedPages(new Set());
+    });
+  };
+
+  const handleEditSchedule = (page: any) => {
+    setEditingPage(page);
+    if (page.scheduled_publish_at) {
+      const date = new Date(page.scheduled_publish_at);
+      setScheduledDate(format(date, 'yyyy-MM-dd'));
+      setScheduledTime(format(date, 'HH:mm'));
+    } else {
+      setScheduledDate(format(new Date(), 'yyyy-MM-dd'));
+      setScheduledTime("09:00");
+    }
+  };
+
   // 获取日历范围内的日期
   const getCalendarDates = () => {
     if (calendarView === 'week') {
@@ -276,24 +378,72 @@ export default function PublishingSchedule() {
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
-          {/* 筛选器 */}
+          {/* 筛选器和批量操作 */}
           <Card className="p-4">
-            <div className="flex items-center gap-4">
-              <Label>状态筛选：</Label>
-              <Select 
-                value={selectedStatus} 
-                onValueChange={(v) => setSelectedStatus(v as PublishStatus | 'all')}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部</SelectItem>
-                  <SelectItem value="draft">草稿</SelectItem>
-                  <SelectItem value="scheduled">定时发布</SelectItem>
-                  <SelectItem value="published">已发布</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Label>状态筛选：</Label>
+                <Select 
+                  value={selectedStatus} 
+                  onValueChange={(v) => setSelectedStatus(v as PublishStatus | 'all')}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全部</SelectItem>
+                    <SelectItem value="draft">草稿</SelectItem>
+                    <SelectItem value="scheduled">定时发布</SelectItem>
+                    <SelectItem value="published">已发布</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="ml-auto"
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  {selectedPages.size === pages?.length ? "取消全选" : "全选"}
+                </Button>
+              </div>
+
+              {selectedPages.size > 0 && (
+                <div className="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
+                  <span className="text-sm text-muted-foreground">
+                    已选择 {selectedPages.size} 个项目
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowBatchScheduleDialog(true)}
+                    >
+                      <Clock className="h-4 w-4 mr-1" />
+                      批量定时
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBatchPublish}
+                      disabled={updateStatusMutation.isPending}
+                    >
+                      <Send className="h-4 w-4 mr-1" />
+                      批量发布
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBatchToDraft}
+                      disabled={updateStatusMutation.isPending}
+                    >
+                      <FileText className="h-4 w-4 mr-1" />
+                      移至草稿
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
 
@@ -302,6 +452,13 @@ export default function PublishingSchedule() {
             {pages?.map((page) => (
               <Card key={page.id} className="p-4">
                 <div className="flex gap-4">
+                  <div className="flex items-center">
+                    <Checkbox
+                      checked={selectedPages.has(page.id)}
+                      onCheckedChange={() => handleToggleSelect(page.id)}
+                    />
+                  </div>
+
                   <div className="w-20 h-20 rounded-lg overflow-hidden border-2 bg-white flex-shrink-0">
                     <img
                       src={page.image_url}
@@ -339,7 +496,7 @@ export default function PublishingSchedule() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => setEditingPage(page)}
+                              onClick={() => handleEditSchedule(page)}
                             >
                               <Clock className="h-4 w-4 mr-1" />
                               定时发布
@@ -357,6 +514,14 @@ export default function PublishingSchedule() {
 
                         {page.status === 'scheduled' && (
                           <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditSchedule(page)}
+                              title="编辑定时"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
@@ -526,6 +691,51 @@ export default function PublishingSchedule() {
             </Button>
             <Button
               onClick={handleSchedulePublish}
+              disabled={updateStatusMutation.isPending}
+            >
+              确认
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 批量定时发布对话框 */}
+      <Dialog open={showBatchScheduleDialog} onOpenChange={setShowBatchScheduleDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>批量设置定时发布</DialogTitle>
+            <DialogDescription>
+              为选中的 {selectedPages.size} 个项目设置统一的发布时间
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label>发布日期</Label>
+              <Input
+                type="date"
+                value={batchScheduledDate}
+                onChange={(e) => setBatchScheduledDate(e.target.value)}
+                min={format(new Date(), 'yyyy-MM-dd')}
+              />
+            </div>
+
+            <div>
+              <Label>发布时间</Label>
+              <Input
+                type="time"
+                value={batchScheduledTime}
+                onChange={(e) => setBatchScheduledTime(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBatchScheduleDialog(false)}>
+              取消
+            </Button>
+            <Button
+              onClick={handleBatchSchedule}
               disabled={updateStatusMutation.isPending}
             >
               确认
