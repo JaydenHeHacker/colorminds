@@ -8,13 +8,15 @@ import { Footer } from "@/components/Footer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Download, Search } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: coloringPages, isLoading } = useQuery({
     queryKey: ['coloring-pages'],
@@ -34,10 +36,16 @@ const Index = () => {
     },
   });
 
-  // Filter coloring pages by selected category
-  const filteredPages = selectedCategory
-    ? coloringPages?.filter(page => page.categories?.name === selectedCategory)
-    : coloringPages;
+  // Filter coloring pages by search and category
+  const filteredPages = coloringPages?.filter(page => {
+    const matchesCategory = !selectedCategory || page.categories?.name === selectedCategory;
+    const matchesSearch = !searchQuery || 
+      page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      page.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      page.categories?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      page.series_title?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   // Group pages by series
   const seriesGroups = new Map<string, any[]>();
@@ -133,6 +141,29 @@ const Index = () => {
           selectedCategory={selectedCategory}
           onCategorySelect={setSelectedCategory}
         />
+        
+        {/* Search Bar */}
+        <section className="py-8 bg-background">
+          <div className="container">
+            <div className="max-w-2xl mx-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="搜索涂色页标题、描述、分类或系列..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-12 text-base"
+                />
+              </div>
+              {searchQuery && (
+                <p className="text-sm text-muted-foreground mt-2 text-center">
+                  找到 {pagesToDisplay.length + (selectedSeriesId ? 0 : seriesToDisplay.length)} 个结果
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
         
         <section className="py-16 md:py-20 bg-muted/30" id="popular">
           <div className="container">
