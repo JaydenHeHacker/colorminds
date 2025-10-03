@@ -29,6 +29,20 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
     },
   });
 
+  // Get sample images for "All" card
+  const { data: sampleImages } = useQuery({
+    queryKey: ['sample-images'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('coloring_pages')
+        .select('image_url')
+        .limit(4);
+      
+      if (error) throw error;
+      return data.map(page => page.image_url);
+    },
+  });
+
   // Get page counts for each category
   const { data: categoryCounts } = useQuery({
     queryKey: ['category-counts'],
@@ -100,16 +114,47 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                      : "shadow-soft hover:border-primary/60 hover:-translate-y-2"
                  )}
                >
-                 <div className="aspect-square flex flex-col items-center justify-center p-4 md:p-6 gradient-card relative">
-                   <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                   <div className="text-4xl md:text-5xl lg:text-6xl mb-2 md:mb-4 transition-all duration-300 group-hover:scale-125 group-hover:rotate-12 filter drop-shadow-lg relative z-10">
-                     🎨
-                   </div>
-                   <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center relative z-10 group-hover:text-primary transition-colors">All</h3>
-                   {totalPages && (
-                     <p className="text-xs text-muted-foreground mt-1 relative z-10 group-hover:text-primary/80 transition-colors">
-                       {totalPages} pages
-                     </p>
+                 <div className="aspect-square relative overflow-hidden">
+                   {sampleImages && sampleImages.length >= 4 ? (
+                     <>
+                       <div className="grid grid-cols-2 grid-rows-2 gap-1 h-full">
+                         {sampleImages.slice(0, 4).map((url, idx) => (
+                           <div key={idx} className="relative overflow-hidden">
+                             <img 
+                               src={url} 
+                               alt={`Sample ${idx + 1}`}
+                               className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                             />
+                           </div>
+                         ))}
+                       </div>
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent group-hover:from-primary/80 group-hover:via-primary/40 transition-all duration-500" />
+                       <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-secondary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                       <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                         <div className="text-3xl md:text-4xl mb-2 transition-all duration-300 group-hover:scale-110 filter drop-shadow-lg">
+                           🎨
+                         </div>
+                         <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center drop-shadow-lg">All</h3>
+                         {totalPages && (
+                           <p className="text-xs opacity-90 mt-1 drop-shadow">
+                             {totalPages} pages
+                           </p>
+                         )}
+                       </div>
+                     </>
+                   ) : (
+                     <div className="h-full flex flex-col items-center justify-center p-4 md:p-6 gradient-card relative">
+                       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                       <div className="text-4xl md:text-5xl lg:text-6xl mb-2 md:mb-4 transition-all duration-300 group-hover:scale-125 group-hover:rotate-12 filter drop-shadow-lg relative z-10">
+                         🎨
+                       </div>
+                       <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center relative z-10 group-hover:text-primary transition-colors">All</h3>
+                       {totalPages && (
+                         <p className="text-xs text-muted-foreground mt-1 relative z-10 group-hover:text-primary/80 transition-colors">
+                           {totalPages} pages
+                         </p>
+                       )}
+                     </div>
                    )}
                  </div>
                </Card>
