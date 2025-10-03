@@ -115,18 +115,25 @@ export const ColoringCard = ({ id, slug, title, image, category, difficulty = "m
 
   const handlePrint = async () => {
     try {
-      // Open print dialog for the image
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        toast({
-          title: "Please allow pop-ups",
-          description: "Pop-ups are needed to open the print dialog",
-          variant: "destructive",
-        });
-        return;
+      sonnerToast.info("Loading image for print...");
+      
+      // Create a hidden iframe for printing
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+      
+      const iframeDoc = iframe.contentWindow?.document;
+      if (!iframeDoc) {
+        throw new Error('Could not access iframe');
       }
       
-      printWindow.document.write(`
+      iframeDoc.open();
+      iframeDoc.write(`
         <!DOCTYPE html>
         <html>
           <head>
@@ -138,7 +145,6 @@ export const ColoringCard = ({ id, slug, title, image, category, difficulty = "m
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                min-height: 100vh;
               }
               img {
                 max-width: 100%;
@@ -157,28 +163,39 @@ export const ColoringCard = ({ id, slug, title, image, category, difficulty = "m
             </style>
           </head>
           <body>
-            <img src="${image}" alt="${title}" onload="window.print(); window.close();" />
+            <img src="${image}" alt="${title}" />
           </body>
         </html>
       `);
-      printWindow.document.close();
+      iframeDoc.close();
+      
+      // Wait for image to load
+      const img = iframeDoc.querySelector('img');
+      if (img) {
+        img.onload = () => {
+          setTimeout(() => {
+            iframe.contentWindow?.print();
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+            }, 100);
+          }, 250);
+        };
+        
+        img.onerror = () => {
+          sonnerToast.error("Failed to load image");
+          document.body.removeChild(iframe);
+        };
+      }
       
       // Increment download count
       if (id) {
         await supabase.rpc('increment_download_count', { page_id: id });
       }
       
-      toast({
-        title: "Opening print dialog...",
-        description: "Choose printer or save as PDF",
-      });
+      sonnerToast.success("Print dialog will open shortly...");
     } catch (error) {
       console.error('Print error:', error);
-      toast({
-        title: "Print failed",
-        description: "Please try again later",
-        variant: "destructive",
-      });
+      sonnerToast.error("Print failed. Please try again.");
     }
   };
   return (

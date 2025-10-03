@@ -135,14 +135,25 @@ const ColoringPage = () => {
     if (!page) return;
     
     try {
-      // Open print dialog for the image
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        toast.error("Please allow pop-ups to print");
-        return;
+      toast.info("Loading image for print...");
+      
+      // Create a hidden iframe for printing
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+      
+      const iframeDoc = iframe.contentWindow?.document;
+      if (!iframeDoc) {
+        throw new Error('Could not access iframe');
       }
       
-      printWindow.document.write(`
+      iframeDoc.open();
+      iframeDoc.write(`
         <!DOCTYPE html>
         <html>
           <head>
@@ -154,7 +165,6 @@ const ColoringPage = () => {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                min-height: 100vh;
               }
               img {
                 max-width: 100%;
@@ -173,14 +183,32 @@ const ColoringPage = () => {
             </style>
           </head>
           <body>
-            <img src="${page.image_url}" alt="${page.title}" onload="window.print(); window.close();" />
+            <img src="${page.image_url}" alt="${page.title}" />
           </body>
         </html>
       `);
-      printWindow.document.close();
+      iframeDoc.close();
+      
+      // Wait for image to load
+      const img = iframeDoc.querySelector('img');
+      if (img) {
+        img.onload = () => {
+          setTimeout(() => {
+            iframe.contentWindow?.print();
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+            }, 100);
+          }, 250);
+        };
+        
+        img.onerror = () => {
+          toast.error("Failed to load image");
+          document.body.removeChild(iframe);
+        };
+      }
       
       await supabase.rpc('increment_download_count', { page_id: page.id });
-      toast.success("Opening print dialog...");
+      toast.success("Print dialog will open shortly...");
     } catch (error) {
       console.error('Print error:', error);
       toast.error("Print failed. Please try again.");
