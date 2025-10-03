@@ -39,13 +39,13 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1SE9H6CTw9zay88KrYYebhAm",
+          price: "price_1SEAJ7CTw9zay88KHEEc6b2w",
           quantity: 1,
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/credits?success=true`,
-      cancel_url: `${req.headers.get("origin")}/credits?canceled=true`,
+      success_url: `${req.headers.get("origin")}/credits-store?success=true`,
+      cancel_url: `${req.headers.get("origin")}/credits-store?canceled=true`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

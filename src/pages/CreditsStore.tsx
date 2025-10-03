@@ -64,12 +64,26 @@ export default function CreditsStore() {
     }
   };
 
-  const handleUpgradePremium = () => {
-    toast({
-      title: "Feature in Development",
-      description: "Subscription feature coming soon!",
-    });
-    // TODO: Integrate with Stripe for subscription
+  const handleUpgradePremium = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout');
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast({
+          title: "Redirecting to subscription",
+          description: "Opening Stripe checkout...",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Subscription Error",
+        description: error.message || "Failed to create subscription session",
+        variant: "destructive",
+      });
+    }
   };
 
   const isPremium = subscription?.tier === 'premium';
