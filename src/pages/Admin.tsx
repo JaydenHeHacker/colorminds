@@ -57,36 +57,17 @@ export default function Admin() {
         throw new Error('Missing required data');
       }
 
-      // Convert base64 to blob
-      const response = await fetch(generatedImage);
-      const blob = await response.blob();
-      
-      // Upload to storage
-      const fileName = `${Date.now()}-${theme.replace(/\s+/g, '-')}.png`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('coloring-pages')
-        .upload(fileName, blob, {
-          contentType: 'image/png',
-          cacheControl: '3600',
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('coloring-pages')
-        .getPublicUrl(fileName);
-
       // Find category ID
       const category = categories?.find(c => c.name === selectedCategory);
       if (!category) throw new Error('Category not found');
 
-      // Save to database
+      // Save base64 image directly to database
+      // Note: For production, consider uploading to storage after configuring the bucket
       const { error: insertError } = await supabase
         .from('coloring_pages')
         .insert({
           title: theme,
-          image_url: publicUrl,
+          image_url: generatedImage, // Save base64 directly
           category_id: category.id,
           is_featured: false,
         });
