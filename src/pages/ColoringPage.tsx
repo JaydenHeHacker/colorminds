@@ -43,7 +43,8 @@ const ColoringPage = () => {
           *,
           categories (
             name,
-            slug
+            slug,
+            path
           )
         `)
         .eq('slug', slug)
@@ -326,7 +327,7 @@ const ColoringPage = () => {
             { label: 'Home', href: '/' },
             ...(page.categories ? [{ 
               label: page.categories.name, 
-              href: `/category/${page.categories.slug}` 
+              href: `/category/${page.categories.path || page.categories.slug}` 
             }] : []),
             { label: page.title, isCurrentPage: true },
           ]
@@ -339,7 +340,7 @@ const ColoringPage = () => {
             { label: 'Home', href: '/' },
             ...(page.categories ? [{ 
               label: page.categories.name, 
-              href: `/category/${page.categories.slug}` 
+              href: `/category/${page.categories.path || page.categories.slug}` 
             }] : []),
             { label: page.title, isCurrentPage: true },
           ]}
@@ -389,7 +390,7 @@ const ColoringPage = () => {
                   
                   <div className="flex flex-wrap gap-2 mb-4">
                     {page.categories && (
-                      <Link to={`/category/${page.categories.slug}`}>
+                      <Link to={`/category/${page.categories.path || page.categories.slug}`}>
                         <span className="inline-block px-3 py-1.5 text-sm font-medium rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-pointer">
                           {page.categories.name}
                         </span>
