@@ -121,8 +121,7 @@ serve(async (req) => {
             difficulty,
             series_title: theme,
             series_order: i + 1,
-            status: 'draft',
-            tags: [category.name, difficulty, 'series', 'auto-generated']
+            status: 'draft'
           })
           .select()
           .single();
@@ -170,8 +169,7 @@ serve(async (req) => {
           image_url: imageUrl,
           category_id: category.id,
           difficulty,
-          status: 'draft',
-          tags: [category.name, difficulty, 'single', 'auto-generated']
+          status: 'draft'
         })
         .select()
         .single();
