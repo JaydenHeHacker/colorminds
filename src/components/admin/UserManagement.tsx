@@ -51,7 +51,7 @@ export default function UserManagement() {
       if (favError) throw favError;
 
       // 按用户分组统计收藏数
-      const favoritesByUser = favorites.reduce((acc: any, fav) => {
+      const favoritesByUser = favorites.reduce((acc: Record<string, number>, fav) => {
         acc[fav.user_id] = (acc[fav.user_id] || 0) + 1;
         return acc;
       }, {});
