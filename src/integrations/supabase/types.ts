@@ -133,6 +133,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_download_count: {
+        Args: { page_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"

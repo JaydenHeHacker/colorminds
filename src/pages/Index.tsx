@@ -117,6 +117,10 @@ const Index = () => {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
+        
+        // Increment download count
+        await supabase.rpc('increment_download_count', { page_id: pageId });
+        
         successCount++;
         
         // Add delay to avoid overwhelming the browser
@@ -257,6 +261,7 @@ const Index = () => {
                 pagesToDisplay.map((page) => (
                   <ColoringCard
                     key={page.id}
+                    id={page.id}
                     title={page.title}
                     image={page.image_url}
                     category={page.categories?.name || 'Uncategorized'}

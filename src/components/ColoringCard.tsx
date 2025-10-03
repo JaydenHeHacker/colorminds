@@ -2,8 +2,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Heart, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ColoringCardProps {
+  id?: string;
   title: string;
   image: string;
   category: string;
@@ -12,7 +14,7 @@ interface ColoringCardProps {
   isSelected?: boolean;
 }
 
-export const ColoringCard = ({ title, image, category, difficulty = "medium", onSelect, isSelected = false }: ColoringCardProps) => {
+export const ColoringCard = ({ id, title, image, category, difficulty = "medium", onSelect, isSelected = false }: ColoringCardProps) => {
   const { toast } = useToast();
 
   const difficultyConfig = {
@@ -35,6 +37,11 @@ export const ColoringCard = ({ title, image, category, difficulty = "medium", on
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      
+      // Increment download count
+      if (id) {
+        await supabase.rpc('increment_download_count', { page_id: id });
+      }
       
       toast({
         title: "Download started",
