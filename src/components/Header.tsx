@@ -90,7 +90,7 @@ export const Header = () => {
               </button>
               {user && (
                 <button 
-                  onClick={() => scrollToSection('favorites')}
+                  onClick={() => navigate('/favorites')}
                   className="text-sm font-medium transition-smooth hover:text-primary flex items-center gap-1"
                 >
                   <Heart className="h-4 w-4" />
@@ -145,7 +145,7 @@ export const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="z-50 bg-popover">
-                  <DropdownMenuItem onClick={() => scrollToSection('favorites')}>
+                  <DropdownMenuItem onClick={() => navigate('/favorites')}>
                     <Heart className="h-4 w-4 mr-2" />
                     My Favorites
                   </DropdownMenuItem>
@@ -207,7 +207,7 @@ export const Header = () => {
             </button>
             {user && (
               <button 
-                onClick={() => scrollToSection('favorites')}
+                onClick={() => { navigate('/favorites'); setMobileMenuOpen(false); }}
                 className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth flex items-center gap-2"
               >
                 <Heart className="h-5 w-5" />

@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import ColoringPage from "./pages/ColoringPage";
 import CategoryPage from "./pages/CategoryPage";
 import SeriesPage from "./pages/SeriesPage";
+import Favorites from "./pages/Favorites";
 import Sitemap from "./pages/Sitemap";
 import ImageSitemap from "./pages/ImageSitemap";
 import Admin from "./pages/Admin";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/coloring-page/:slug" element={<ColoringPage />} />
           <Route path="/category/*" element={<CategoryPage />} />
           <Route path="/series/:slug" element={<SeriesPage />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/sitemap.xml" element={<Sitemap />} />
           <Route path="/image-sitemap.xml" element={<ImageSitemap />} />
           <Route path="/admin" element={<Admin />} />
