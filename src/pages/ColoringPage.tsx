@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecommendedPages } from "@/components/RecommendedPages";
 import { Button } from "@/components/ui/button";
-import { Printer, Heart, Share2, ArrowLeft, Loader2 } from "lucide-react";
+import { Printer, Heart, Share2, ArrowLeft, Loader2, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShareDialog } from "@/components/ShareDialog";
@@ -19,6 +19,7 @@ const ColoringPage = () => {
   const [user, setUser] = useState<any>(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -154,6 +155,10 @@ const ColoringPage = () => {
     }
   };
 
+  const handlePrintPreview = () => {
+    setIsPrintPreviewOpen(true);
+  };
+
   const handlePrint = async () => {
     if (!page) return;
     
@@ -182,53 +187,43 @@ const ColoringPage = () => {
           <head>
             <title>Print ${page.title}</title>
             <style>
+              @page {
+                margin: 0.5in;
+              }
               body {
                 margin: 0;
-                padding: 20px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
+                padding: 0;
                 font-family: Arial, sans-serif;
               }
               .content {
                 width: 100%;
-                max-width: 800px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
               }
               img {
                 width: 100%;
+                max-width: 7.5in;
                 height: auto;
                 display: block;
-                margin-bottom: 15px;
+                margin-bottom: 0.3in;
               }
               .footer {
                 text-align: center;
-                padding: 10px 0;
+                padding: 0.2in 0;
                 border-top: 2px solid #333;
-                margin-top: 10px;
+                width: 100%;
+                max-width: 7.5in;
               }
               .brand {
-                font-size: 18px;
+                font-size: 16pt;
                 font-weight: bold;
                 color: #333;
-                margin-bottom: 5px;
+                margin-bottom: 0.1in;
               }
               .url {
-                font-size: 14px;
+                font-size: 12pt;
                 color: #666;
-              }
-              @media print {
-                body {
-                  padding: 0;
-                }
-                .content {
-                  page-break-inside: avoid;
-                }
-                img {
-                  page-break-inside: avoid;
-                }
-                .footer {
-                  page-break-inside: avoid;
-                }
               }
             </style>
           </head>
@@ -392,25 +387,40 @@ const ColoringPage = () => {
                   />
                 </div>
                 
-                <div className="flex gap-3">
-                  <Button onClick={handlePrint} className="flex-1 gap-2" size="lg">
-                    <Printer className="h-5 w-5" />
-                    Print
-                  </Button>
-                  <Button 
-                    variant={isFavorited ? "default" : "outline"}
-                    onClick={handleToggleFavorite}
-                    size="lg"
-                  >
-                    <Heart className={`h-5 w-5 ${isFavorited ? 'fill-current' : ''}`} />
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsShareOpen(true)}
-                    size="lg"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </Button>
+                <div className="flex flex-col gap-3">
+                  <div className="flex gap-3">
+                    <Button onClick={handlePrint} className="flex-1 gap-2" size="lg">
+                      <Printer className="h-5 w-5" />
+                      Print
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handlePrintPreview}
+                      size="lg"
+                      className="gap-2"
+                    >
+                      <Eye className="h-5 w-5" />
+                      Preview
+                    </Button>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button 
+                      variant={isFavorited ? "default" : "outline"}
+                      onClick={handleToggleFavorite}
+                      size="lg"
+                      className="flex-1"
+                    >
+                      <Heart className={`h-5 w-5 ${isFavorited ? 'fill-current' : ''}`} />
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setIsShareOpen(true)}
+                      size="lg"
+                      className="flex-1"
+                    >
+                      <Share2 className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -550,6 +560,36 @@ const ColoringPage = () => {
         title={page.title}
         pageId={page.id}
       />
+
+      {/* Print Preview Dialog */}
+      {isPrintPreviewOpen && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setIsPrintPreviewOpen(false)}>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900">Print Preview</h3>
+                <Button variant="ghost" onClick={() => setIsPrintPreviewOpen(false)}>✕</Button>
+              </div>
+              <div className="border-2 border-gray-300 rounded-lg p-6 bg-white">
+                <img src={page.image_url} alt={page.title} className="w-full h-auto mb-4" />
+                <div className="border-t-2 border-gray-800 pt-4 text-center">
+                  <div className="text-lg font-bold text-gray-900 mb-2">Color Minds</div>
+                  <div className="text-sm text-gray-600">www.colorminds.com - Free Printable Coloring Pages</div>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button onClick={() => { setIsPrintPreviewOpen(false); handlePrint(); }} className="flex-1 gap-2">
+                  <Printer className="h-5 w-5" />
+                  Print Now
+                </Button>
+                <Button variant="outline" onClick={() => setIsPrintPreviewOpen(false)} className="flex-1">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
