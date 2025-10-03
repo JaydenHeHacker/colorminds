@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -28,6 +29,22 @@ export default function CreatePage() {
   const [upgradeFeature, setUpgradeFeature] = useState<'speed' | 'privacy' | 'quantity' | 'ai-polish'>('speed');
   const [imageQuantity, setImageQuantity] = useState("1");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+
+  // Load categories
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('level', 1)
+        .order('name', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   useEffect(() => {
     checkAuth();
@@ -103,6 +120,15 @@ export default function CreatePage() {
       return;
     }
 
+    if (!selectedCategoryId) {
+      toast({
+        title: "Please select a category",
+        description: "Choose a category for your coloring page",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!canGenerate()) {
       toast({
         title: "Insufficient quota",
@@ -135,7 +161,11 @@ export default function CreatePage() {
 
       // Call edge function to generate
       const { data, error } = await supabase.functions.invoke('generate-ai-coloring', {
-        body: { prompt }
+        body: { 
+          prompt,
+          category_id: selectedCategoryId,
+          is_private: isPrivate,
+        }
       });
 
       if (error) throw error;
@@ -221,6 +251,28 @@ export default function CreatePage() {
         {/* Creation Form */}
         <Card className="p-8 mb-8">
           <div className="space-y-6">
+            {/* Category Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Select Category *
+              </label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId} disabled={isGenerating}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a category..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground mt-2">
+                Select the most relevant category for your coloring page
+              </p>
+            </div>
+
             {/* Prompt Input with AI Polish */}
             <div>
               <label className="block text-sm font-medium mb-2">

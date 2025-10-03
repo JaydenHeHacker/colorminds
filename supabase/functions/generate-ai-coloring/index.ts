@@ -31,10 +31,14 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { prompt } = await req.json();
+    const { prompt, category_id, is_private } = await req.json();
     
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
       throw new Error('Invalid prompt');
+    }
+
+    if (!category_id || typeof category_id !== 'string') {
+      throw new Error('Category is required');
     }
 
     console.log(`Generation request from user ${user.id}: ${prompt}`);
@@ -68,7 +72,8 @@ serve(async (req) => {
 
     // Determine cost type
     const costType = hasMonthlyQuota ? 'monthly_quota' : 'credits';
-    const isPublic = subscription.tier === 'free'; // Free users must be public
+    // Free users cannot set private, premium users can choose
+    const finalIsPublic = subscription.tier === 'free' ? true : (is_private === false);
 
     // Create generation record
     const { data: generation, error: genError } = await supabase
@@ -76,8 +81,9 @@ serve(async (req) => {
       .insert({
         user_id: user.id,
         prompt: prompt.trim(),
+        category_id: category_id,
         cost_type: costType,
-        is_public: isPublic,
+        is_public: finalIsPublic,
         status: 'processing',
       })
       .select()

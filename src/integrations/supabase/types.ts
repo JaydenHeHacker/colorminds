@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       ai_generations: {
         Row: {
+          category_id: string | null
           cost_type: string
           created_at: string
           error_message: string | null
@@ -30,6 +31,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category_id?: string | null
           cost_type: string
           created_at?: string
           error_message?: string | null
@@ -44,6 +46,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category_id?: string | null
           cost_type?: string
           created_at?: string
           error_message?: string | null
@@ -57,7 +60,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ai_generations_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       analytics_events: {
         Row: {
