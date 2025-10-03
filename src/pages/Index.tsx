@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ColoringCard } from "@/components/ColoringCard";
 import { SeriesCard } from "@/components/SeriesCard";
 import { RecommendedPages } from "@/components/RecommendedPages";
+import { FAQ } from "@/components/FAQ";
 import { Footer } from "@/components/Footer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -459,6 +460,8 @@ const Index = () => {
             )}
           </div>
         </section>
+        
+        <FAQ />
       </main>
       
       <Footer />

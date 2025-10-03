@@ -19,14 +19,14 @@ export const Hero = () => {
         <div className="grid gap-8 lg:grid-cols-2 items-center">
           <div className="space-y-4 md:space-y-6">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
-              Unleash Your Creativity with
+              Free Printable Coloring Pages
               <span className="block bg-clip-text text-transparent gradient-rainbow">
-                Color Minds
+                for Kids & Adults
               </span>
             </h1>
             
             <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-xl">
-              Explore thousands of free creative coloring pages for kids and adults. AI-generated story series, instant download and print!
+              Discover thousands of <strong>free printable coloring pages</strong> perfect for all ages. Download instantly and print at home—featuring animals, holidays, fantasy characters, and exclusive AI-generated story series!
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4">

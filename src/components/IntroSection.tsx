@@ -38,23 +38,26 @@ export const IntroSection = () => {
           
           <div className="space-y-4 text-left md:text-center">
             <h2 className="text-2xl md:text-3xl font-bold">
-              Welcome to Color Minds - Your Ultimate Free Coloring Pages Collection
+              Free Coloring Pages for Kids and Adults - Print & Download Instantly
             </h2>
             
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-              Discover an ever-growing library of high-quality, <strong>free printable coloring pages</strong> perfect for kids, adults, teachers, and parents. 
-              Whether you're looking for simple designs for toddlers or intricate patterns for advanced colorists, Color Minds offers something special for everyone.
+              Welcome to Color Minds, your ultimate destination for <strong>free printable coloring pages for kids</strong> and adults. 
+              Our ever-growing library features high-quality <strong>coloring pages printable</strong> designs—from easy <strong>coloring pages for toddlers</strong> to intricate <strong>adult coloring pages</strong> for advanced colorists. 
+              Whether you need <strong>coloring pages for girls</strong>, <strong>coloring pages for boys</strong>, or <strong>coloring pages for teens</strong>, we have something special for everyone.
             </p>
             
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-              Our collection features <strong>animals, nature scenes, holiday themes, fantasy characters,</strong> and exclusive <strong>AI-generated story series</strong> that 
-              combine creativity with storytelling. Each coloring page is carefully crafted to provide hours of relaxing, educational fun. Simply browse our categories, 
-              download your favorite designs instantly, and print them at home—completely free with no sign-up required!
+              Browse our extensive collection featuring popular themes: <strong>animal coloring pages</strong> (cats, dogs, dinosaurs, unicorns), <strong>holiday coloring pages</strong> (Christmas, Halloween, Easter, Thanksgiving), 
+              <strong>Disney coloring pages</strong>, <strong>princess coloring pages</strong>, and beloved characters like Hello Kitty, Sonic, Pokemon, and more. 
+              We also offer exclusive <strong>AI-generated story series</strong> that combine creativity with storytelling. Each <strong>free coloring page</strong> is carefully crafted to provide hours of relaxing, educational fun. 
+              Simply browse, download instantly, and <strong>print coloring pages</strong> at home—completely free with no sign-up required!
             </p>
             
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-              Perfect for classrooms, rainy days, birthday parties, or quiet time, our <strong>printable coloring sheets</strong> help develop fine motor skills, 
-              encourage creativity, and provide screen-free entertainment. Start exploring our diverse collection today and unleash your inner artist!
+              Perfect for classrooms, homeschooling, rainy days, birthday parties, or quiet time, our <strong>printable coloring sheets</strong> help develop fine motor skills, 
+              hand-eye coordination, color recognition, and encourage creativity while providing screen-free entertainment. Teachers and parents love our <strong>easy coloring pages</strong> for early learners 
+              and <strong>cute coloring pages</strong> that keep children engaged. Start exploring today!
             </p>
           </div>
         </div>
