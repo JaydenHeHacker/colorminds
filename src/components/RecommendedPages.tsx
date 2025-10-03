@@ -86,7 +86,7 @@ export const RecommendedPages = ({ currentPageId, category, difficulty }: Recomm
 
   return (
     <div className="space-y-4">
-      <h3 className="text-2xl font-semibold">你可能还喜欢</h3>
+      <h3 className="text-2xl font-semibold">You Might Also Like</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {recommendedPages.map((page) => (
           <ColoringCard

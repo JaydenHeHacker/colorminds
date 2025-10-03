@@ -266,9 +266,9 @@ const ColoringPage = () => {
   }
 
   const difficultyConfig = {
-    easy: { label: "Easy", icon: "🟢", color: "bg-green-500/10 text-green-700 border-green-200" },
-    medium: { label: "Medium", icon: "🟡", color: "bg-yellow-500/10 text-yellow-700 border-yellow-200" },
-    hard: { label: "Hard", icon: "🔴", color: "bg-red-500/10 text-red-700 border-red-200" }
+    easy: { label: "Easy", icon: "🟢", color: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800", age: "Ages 3-6" },
+    medium: { label: "Medium", icon: "🟡", color: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800", age: "Ages 7-10" },
+    hard: { label: "Hard", icon: "🔴", color: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800", age: "Ages 11+" }
   };
 
   const config = difficultyConfig[page.difficulty || 'medium'];
@@ -396,10 +396,10 @@ const ColoringPage = () => {
                       </Link>
                     )}
                     <span className={`inline-block px-3 py-1.5 text-sm font-medium rounded-full border ${config.color}`}>
-                      {config.icon} {config.label}
+                      {config.icon} {config.label} · {config.age}
                     </span>
                     {page.series_title && (
-                      <span className="inline-block px-3 py-1.5 text-sm font-medium rounded-full bg-secondary/10 text-secondary-foreground">
+                      <span className="inline-block px-3 py-1.5 text-sm font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
                         📚 {page.series_title} - Chapter {page.series_order}/{page.series_total}
                       </span>
                     )}
