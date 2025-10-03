@@ -13,9 +13,9 @@ const supabaseAdmin = createClient(
 
 // Credit pack mapping
 const CREDIT_PACKS: Record<string, number> = {
-  "price_1SEAU5CTw9zay88K44Jyq0EU": 100,  // $4.99
-  "price_1SEAU5CTw9zay88KD3CehoHy": 300,  // $12.99
-  "price_1SEAU6CTw9zay88KEQrBDQ3x": 1000, // $39.99
+  "price_1SEAdUCTw9zay88KgwgdFNn6": 100,  // $4.99
+  "price_1SEAdVCTw9zay88KrZbzwfu8": 300,  // $12.99
+  "price_1SEAdWCTw9zay88K5uRYNv6p": 1000, // $39.99
 };
 
 serve(async (req) => {
