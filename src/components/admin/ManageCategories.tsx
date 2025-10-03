@@ -483,6 +483,8 @@ export default function ManageCategories() {
           category_id: generatingForCategory.id,
           difficulty,
           is_featured: false,
+          status: 'draft', // 管理员创建的内容默认为草稿状态
+          published_at: null, // 草稿状态不设置发布时间
         };
 
         // Add series metadata for story series
