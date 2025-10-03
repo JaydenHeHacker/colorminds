@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Crown, Zap, Check, ArrowLeft } from "lucide-react";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 export default function CreditsStore() {
   const navigate = useNavigate();
@@ -91,14 +93,20 @@ export default function CreditsStore() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <p>Loading...</p>
+        </div>
+        <Footer />
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 py-20 px-4">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 py-20 px-4">
       <div className="container max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -332,5 +340,7 @@ export default function CreditsStore() {
         </Card>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }
