@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import logo from "@/assets/logo.png";
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -39,9 +40,10 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <nav className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
-          <a href="/" className="flex items-center space-x-2">
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent gradient-rainbow">
-              ColoringFun
+          <a href="/" className="flex items-center space-x-3">
+            <img src={logo} alt="Color Minds Logo" className="h-10 w-10" />
+            <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent gradient-rainbow">
+              Color Minds
             </h1>
           </a>
           

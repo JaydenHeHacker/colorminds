@@ -284,16 +284,16 @@ const Index = () => {
                 {selectedSeriesId 
                   ? seriesToDisplay.find(s => s.seriesId === selectedSeriesId)?.seriesTitle 
                   : selectedCategory 
-                    ? `${selectedCategory} Coloring Pages` 
-                    : 'Popular Coloring Pages'
+                    ? `${selectedCategory} 涂色页` 
+                    : '热门涂色页'
                 }
               </h2>
               <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
                 {selectedSeriesId 
                   ? '故事系列的所有章节' 
                   : selectedCategory 
-                    ? `Browse our collection of ${selectedCategory.toLowerCase()} themed coloring pages`
-                    : 'Our most loved and downloaded coloring pages'
+                    ? `浏览我们的 ${selectedCategory} 主题涂色页合集`
+                    : '最受欢迎和下载最多的涂色页'
                 }
               </p>
               {selectedSeriesId && (
@@ -367,9 +367,9 @@ const Index = () => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {isLoading ? (
-                <div className="col-span-full text-center py-12 text-muted-foreground">
-                  Loading coloring pages...
-                </div>
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                加载涂色页中...
+              </div>
               ) : pagesToDisplay.length > 0 ? (
                 pagesToDisplay.map((page) => (
                   <ColoringCard
@@ -384,9 +384,9 @@ const Index = () => {
                   />
                 ))
               ) : (
-                <div className="col-span-full text-center py-12 text-muted-foreground">
-                  {selectedSeriesId ? '该系列暂无页面' : 'No coloring pages available yet. Check back soon!'}
-                </div>
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                {selectedSeriesId ? '该系列暂无页面' : '暂无涂色页，敬请期待！'}
+              </div>
               )}
             </div>
 

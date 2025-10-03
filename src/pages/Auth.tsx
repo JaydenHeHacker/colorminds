@@ -134,10 +134,14 @@ export default function Auth() {
         </Button>
 
         <Card className="p-6">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold mb-2">欢迎来到涂色乐园</h1>
-            <p className="text-muted-foreground">登录或注册以收藏你喜欢的涂色页</p>
-          </div>
+        <div className="text-center mb-8 md:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+            欢迎来到 Color Minds
+          </h1>
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+            登录或注册，开启你的创意涂色之旅
+          </p>
+        </div>
 
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">

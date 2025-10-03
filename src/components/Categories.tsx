@@ -24,19 +24,19 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
   return (
     <section className="py-12 md:py-16 lg:py-20" id="categories">
       <div className="container px-4">
-        <div className="text-center mb-8 md:mb-12">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
-            Browse by Category
-          </h2>
-          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-            Find the perfect coloring page from our wide range of categories
-          </p>
-        </div>
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
+              浏览分类
+            </h2>
+            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+              从我们丰富的分类中找到完美的涂色页
+            </p>
+          </div>
         
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
           {isLoading ? (
             <div className="col-span-full text-center py-12 text-muted-foreground">
-              Loading categories...
+              加载分类中...
             </div>
           ) : categories && categories.length > 0 ? (
             <>
@@ -53,7 +53,7 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                    <div className="text-4xl md:text-5xl lg:text-6xl mb-2 md:mb-4 transition-smooth group-hover:scale-110">
                      🎨
                    </div>
-                   <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center">All</h3>
+                   <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center">全部</h3>
                  </div>
                </Card>
                {categories.map((category) => (
@@ -78,7 +78,7 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
             </>
           ) : (
             <div className="col-span-full text-center py-12 text-muted-foreground">
-              No categories available
+              暂无分类
             </div>
           )}
         </div>
