@@ -523,6 +523,11 @@ export default function ManageCategories() {
   };
 
   const buildTree = (cats: Category[]): Category[] => {
+    // Show root level (level 0) categories first, then level 1 if no root exists
+    const rootCategories = cats.filter(cat => cat.level === 0);
+    if (rootCategories.length > 0) {
+      return rootCategories;
+    }
     return cats.filter(cat => cat.level === 1);
   };
 

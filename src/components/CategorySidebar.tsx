@@ -27,6 +27,9 @@ export const CategorySidebar = ({ category, subCategories, totalCount }: Categor
   const currentPath = location.pathname.replace('/category/', '');
 
   const isActive = (path: string) => currentPath === path;
+  
+  // Check if this is the "All" root category
+  const isAllCategory = category.path === 'all';
 
   return (
     <aside className="w-full lg:w-64 flex-shrink-0">
@@ -54,7 +57,7 @@ export const CategorySidebar = ({ category, subCategories, totalCount }: Categor
                       <span className="text-lg flex-shrink-0">{category.icon}</span>
                     )
                   )}
-                  <span className="truncate">All {category.name}</span>
+                  <span className="truncate">{isAllCategory ? 'All' : `All ${category.name}`}</span>
                 </div>
                 <span className="text-xs opacity-70 ml-2 flex-shrink-0">{totalCount}</span>
               </Link>
