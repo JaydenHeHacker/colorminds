@@ -25,9 +25,9 @@ export const SeriesCard = ({
   onViewSeries 
 }: SeriesCardProps) => {
   const difficultyConfig = {
-    easy: { label: "简单", icon: "🟢", color: "bg-green-500/10 text-green-700 border-green-200" },
-    medium: { label: "中等", icon: "🟡", color: "bg-yellow-500/10 text-yellow-700 border-yellow-200" },
-    hard: { label: "困难", icon: "🔴", color: "bg-red-500/10 text-red-700 border-red-200" }
+    easy: { label: "Easy", icon: "🟢", color: "bg-green-500/10 text-green-700 border-green-200" },
+    medium: { label: "Medium", icon: "🟡", color: "bg-yellow-500/10 text-yellow-700 border-yellow-200" },
+    hard: { label: "Hard", icon: "🔴", color: "bg-red-500/10 text-red-700 border-red-200" }
   };
 
   const config = difficultyConfig[difficulty];
@@ -44,7 +44,7 @@ export const SeriesCard = ({
           />
           <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-semibold flex items-center gap-1">
             <Book className="h-3 w-3" />
-            <span className="hidden xs:inline">{seriesTotal} 章节</span>
+            <span className="hidden xs:inline">{seriesTotal} Chapters</span>
             <span className="xs:hidden">{seriesTotal}</span>
           </div>
         </div>
@@ -60,11 +60,11 @@ export const SeriesCard = ({
               </span>
             </div>
             <h3 className="font-semibold text-base md:text-lg line-clamp-2 mb-1">{seriesTitle}</h3>
-            <p className="text-xs md:text-sm text-muted-foreground">故事系列 · {seriesTotal}个章节</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Story Series · {seriesTotal} chapters</p>
           </div>
           
           <div className="flex items-center justify-between text-sm text-primary font-medium">
-            <span>查看系列</span>
+            <span>View Series</span>
             <ChevronRight className="h-4 w-4" />
           </div>
         </div>
