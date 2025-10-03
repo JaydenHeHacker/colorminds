@@ -5,16 +5,22 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ColoringCard } from "@/components/ColoringCard";
-import { SubCategoryCard } from "@/components/SubCategoryCard";
+import { CategorySidebar } from "@/components/CategorySidebar";
+import { Pagination } from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ArrowLeft, Loader2, SlidersHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
 import { StructuredData } from "@/components/StructuredData";
 import { SocialMeta } from "@/components/SocialMeta";
+
+const ITEMS_PER_PAGE = 24;
 
 const CategoryPage = () => {
   const { "*": pathSlug } = useParams<{ "*": string }>();
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(0);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Query category by path (supports multi-level like 'animals/cats/cute-cats')
   const { data: category, isLoading: isCategoryLoading } = useQuery({
@@ -56,10 +62,17 @@ const CategoryPage = () => {
     enabled: !!category?.id,
   });
 
-  const { data: coloringPages, isLoading: isPagesLoading } = useQuery({
-    queryKey: ['category-pages', category?.id],
+  // Query all coloring pages in this category and its subcategories
+  const { data: allColoringPages, isLoading: isPagesLoading } = useQuery({
+    queryKey: ['category-all-pages', category?.id],
     queryFn: async () => {
       if (!category?.id) return [];
+      
+      // Get all category IDs (current + subcategories)
+      const categoryIds = [category.id];
+      if (subCategories && subCategories.length > 0) {
+        categoryIds.push(...subCategories.map(sub => sub.id));
+      }
       
       const { data, error } = await supabase
         .from('coloring_pages')
@@ -70,14 +83,25 @@ const CategoryPage = () => {
             slug
           )
         `)
-        .eq('category_id', category.id)
+        .in('category_id', categoryIds)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data;
     },
-    enabled: !!category?.id,
+    enabled: !!category?.id && !isSubCategoriesLoading,
   });
+
+  // Calculate pagination
+  const totalPages = Math.ceil((allColoringPages?.length || 0) / ITEMS_PER_PAGE);
+  const startIndex = currentPage * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedPages = allColoringPages?.slice(startIndex, endIndex) || [];
+
+  // Reset to page 0 when category changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [pathSlug]);
 
   // Build breadcrumb items from category path
   const breadcrumbItems: Array<{ label: string; href?: string; isCurrentPage?: boolean }> = [
@@ -138,8 +162,6 @@ const CategoryPage = () => {
   }
 
   const isLoading = isPagesLoading || isSubCategoriesLoading;
-  const hasSubCategories = subCategories && subCategories.length > 0;
-  const hasColoringPages = coloringPages && coloringPages.length > 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -147,8 +169,8 @@ const CategoryPage = () => {
       
       <SocialMeta
         title={`${category.name} Coloring Pages - Free Printables`}
-        description={`Discover ${coloringPages?.length || 0} free printable ${category.name.toLowerCase()} coloring pages. ${category.description || ''} Download and print high-quality designs for kids and adults.`}
-        image={coloringPages?.[0]?.image_url}
+        description={`Discover ${allColoringPages?.length || 0} free printable ${category.name.toLowerCase()} coloring pages. ${category.description || ''} Download and print high-quality designs for kids and adults.`}
+        image={allColoringPages?.[0]?.image_url}
         type="website"
         keywords={[
           category.name,
@@ -166,8 +188,8 @@ const CategoryPage = () => {
         data={{
           category: category.name,
           description: category.description,
-          numberOfItems: coloringPages?.length || 0,
-          items: coloringPages?.map(page => ({
+          numberOfItems: allColoringPages?.length || 0,
+          items: allColoringPages?.map(page => ({
             title: page.title,
             image: page.image_url
           }))
@@ -177,117 +199,135 @@ const CategoryPage = () => {
       <main className="flex-1">
         <Breadcrumbs items={breadcrumbItems} />
 
-        <section className="container px-4 py-8 md:py-12">
-          <div className="max-w-6xl mx-auto">
-            {/* Category Header */}
-            <header className="mb-8 md:mb-12">
-              {category.icon && category.icon.startsWith('http') ? (
-                <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-2xl overflow-hidden mb-8 shadow-xl">
-                  <img 
-                    src={category.icon} 
-                    alt={category.name} 
-                    className="w-full h-full object-cover" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-10 text-white">
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3">
-                      {category.name} Coloring Pages
-                    </h1>
+        <div className="container px-4 py-8 md:py-12">
+          <div className="flex gap-8">
+            {/* Mobile Filter Button */}
+            <div className="lg:hidden fixed bottom-6 right-6 z-40">
+              <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
+                <SheetTrigger asChild>
+                  <Button size="lg" className="rounded-full shadow-lg gap-2">
+                    <SlidersHorizontal className="h-5 w-5" />
+                    Categories
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80">
+                  <SheetHeader>
+                    <SheetTitle>Categories</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <CategorySidebar
+                      category={category}
+                      subCategories={subCategories || []}
+                      totalCount={allColoringPages?.length || 0}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Desktop Sidebar */}
+            <div className="hidden lg:block">
+              <CategorySidebar
+                category={category}
+                subCategories={subCategories || []}
+                totalCount={allColoringPages?.length || 0}
+              />
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 min-w-0">
+              {/* Category Header */}
+              <header className="mb-8">
+                {category.icon && category.icon.startsWith('http') ? (
+                  <div className="relative w-full h-48 md:h-64 rounded-2xl overflow-hidden mb-6 shadow-lg">
+                    <img 
+                      src={category.icon} 
+                      alt={category.name} 
+                      className="w-full h-full object-cover" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                      <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">
+                        {category.name} Coloring Pages
+                      </h1>
+                      {category.description && (
+                        <p className="text-sm md:text-base opacity-90">
+                          {category.description}
+                        </p>
+                      )}
+                      <div className="mt-2 text-xs md:text-sm opacity-80">
+                        {allColoringPages?.length || 0} coloring pages available
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      {category.icon && !category.icon.startsWith('http') && (
+                        <span className="text-4xl md:text-5xl">{category.icon}</span>
+                      )}
+                      <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">
+                        {category.name} Coloring Pages
+                      </h1>
+                    </div>
                     {category.description && (
-                      <p className="text-base md:text-lg lg:text-xl opacity-90 max-w-3xl">
+                      <p className="text-base md:text-lg text-muted-foreground mb-3">
                         {category.description}
                       </p>
                     )}
-                    <div className="mt-3 text-sm md:text-base opacity-80">
-                      {coloringPages?.length || 0} free printable coloring pages available
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center">
-                  {category.icon && (
-                    <div className="mb-6 flex justify-center">
-                      <span className="text-6xl md:text-7xl lg:text-8xl">{category.icon}</span>
-                    </div>
-                  )}
-                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                    {category.name} Coloring Pages
-                  </h1>
-                  {category.description && (
-                    <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-                      {category.description}
-                    </p>
-                  )}
-                  <div className="mt-4 text-sm text-muted-foreground">
-                    {coloringPages?.length || 0} free printable coloring pages available
-                  </div>
-                </div>
-              )}
-            </header>
-
-            {/* Loading State */}
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <>
-                {/* Subcategories Grid */}
-                {hasSubCategories && (
-                  <div className="mb-12">
-                    <h2 className="text-2xl font-bold mb-6">Browse by Subcategory</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                      {subCategories.map((subCat) => (
-                        <SubCategoryCard
-                          key={subCat.id}
-                          id={subCat.id}
-                          name={subCat.name}
-                          slug={subCat.slug}
-                          path={subCat.path}
-                          description={subCat.description}
-                          icon={subCat.icon}
-                          itemCount={subCat.coloring_pages?.[0]?.count || 0}
-                        />
-                      ))}
+                    <div className="text-sm text-muted-foreground">
+                      {allColoringPages?.length || 0} coloring pages available
                     </div>
                   </div>
                 )}
+              </header>
 
-                {/* Coloring Pages Grid */}
-                {hasColoringPages ? (
-                  <div>
-                    <h2 className="text-2xl font-bold mb-6">
-                      {hasSubCategories ? 'Featured Pages' : 'All Pages'}
-                    </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                      {coloringPages.map((page) => (
-                        <ColoringCard
-                          key={page.id}
-                          id={page.id}
-                          slug={page.slug}
-                          title={page.title}
-                          image={page.image_url}
-                          category={category.name}
-                          difficulty={page.difficulty as "easy" | "medium" | "hard"}
-                        />
-                      ))}
-                    </div>
+              {/* Loading State */}
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : paginatedPages.length > 0 ? (
+                <>
+                  {/* Coloring Pages Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    {paginatedPages.map((page) => (
+                      <ColoringCard
+                        key={page.id}
+                        id={page.id}
+                        slug={page.slug}
+                        title={page.title}
+                        image={page.image_url}
+                        category={page.categories?.name || category.name}
+                        difficulty={page.difficulty as "easy" | "medium" | "hard"}
+                      />
+                    ))}
                   </div>
-                ) : !hasSubCategories ? (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground mb-4">
-                      No coloring pages found in this category yet.
-                    </p>
-                    <Button onClick={() => navigate('/')}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Browse All Categories
-                    </Button>
-                  </div>
-                ) : null}
-              </>
-            )}
+
+                  {/* Pagination */}
+                  <Pagination
+                    pageCount={totalPages}
+                    currentPage={currentPage}
+                    onPageChange={(selected) => {
+                      setCurrentPage(selected.selected);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  />
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground mb-4">
+                    No coloring pages found in this category yet.
+                  </p>
+                  <Button onClick={() => navigate('/')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Browse All Categories
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
-        </section>
+        </div>
       </main>
 
       <Footer />
