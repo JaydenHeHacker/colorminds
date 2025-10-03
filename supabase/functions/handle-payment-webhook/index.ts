@@ -39,7 +39,7 @@ serve(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log(`Checkout completed: mode=${session.mode}, customer_email=${session.customer_email}`);
+        console.log(`Checkout completed: mode=${session.mode}, user_id=${session.metadata?.user_id}`);
         
         if (session.mode === "payment") {
           // Handle credit pack purchase
@@ -94,48 +94,48 @@ serve(async (req) => {
           }
         } else if (session.mode === "subscription") {
           // Handle subscription checkout completion
-          const customerEmail = session.customer_email || session.customer_details?.email;
-          if (!customerEmail) {
-            console.error("No customer email in session");
-            break;
-          }
-
-          // Get user by email using auth.users (via service role key)
-          const { data: { users }, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
-          if (usersError) {
-            console.error("Error listing users:", usersError);
-            break;
-          }
-
-          const user = users.find(u => u.email === customerEmail);
-          if (!user) {
-            console.error(`No user found with email: ${customerEmail}`);
+          const userId = session.metadata?.user_id;
+          if (!userId) {
+            console.error("No user_id in session metadata");
             break;
           }
 
           // Get subscription details
           const subscriptionId = session.subscription as string;
+          if (!subscriptionId) {
+            console.error("No subscription ID in session");
+            break;
+          }
+
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
           const customerId = session.customer as string;
 
           const tier = subscription.status === "active" ? "premium" : "free";
           const monthlyQuota = tier === "premium" ? 100 : 5;
+          
+          // Safely handle date conversion
+          let subscriptionEndDate = null;
+          if (subscription.status === "active" && subscription.current_period_end) {
+            try {
+              subscriptionEndDate = new Date(subscription.current_period_end * 1000).toISOString();
+            } catch (error) {
+              console.error("Error converting subscription end date:", error);
+            }
+          }
 
           await supabaseAdmin
             .from("user_subscriptions")
             .upsert({
-              user_id: user.id,
+              user_id: userId,
               tier,
               monthly_quota: monthlyQuota,
               stripe_customer_id: customerId,
               stripe_subscription_id: subscription.id,
-              subscription_end_date: subscription.status === "active" 
-                ? new Date(subscription.current_period_end * 1000).toISOString()
-                : null,
+              subscription_end_date: subscriptionEndDate,
               updated_at: new Date().toISOString(),
             });
 
-          console.log(`Subscription created for user ${user.id}, tier: ${tier}`);
+          console.log(`Subscription created for user ${userId}, tier: ${tier}`);
         }
         break;
       }
@@ -143,41 +143,43 @@ serve(async (req) => {
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        const customer = await stripe.customers.retrieve(subscription.customer as string);
         
-        if ('email' in customer && customer.email) {
-          // Get user by email using auth.users
-          const { data: { users }, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
-          if (usersError) {
-            console.error("Error listing users:", usersError);
-            break;
-          }
+        // Find user by stripe_subscription_id in database
+        const { data: userSub } = await supabaseAdmin
+          .from("user_subscriptions")
+          .select("user_id")
+          .eq("stripe_subscription_id", subscription.id)
+          .single();
 
-          const user = users.find(u => u.email === customer.email);
-          if (!user) {
-            console.error(`No user found with email: ${customer.email}`);
-            break;
-          }
-
-          const tier = subscription.status === "active" ? "premium" : "free";
-          const monthlyQuota = tier === "premium" ? 100 : 5;
-
-          await supabaseAdmin
-            .from("user_subscriptions")
-            .upsert({
-              user_id: user.id,
-              tier,
-              monthly_quota: monthlyQuota,
-              stripe_customer_id: customer.id,
-              stripe_subscription_id: subscription.id,
-              subscription_end_date: subscription.status === "active" 
-                ? new Date(subscription.current_period_end * 1000).toISOString()
-                : null,
-              updated_at: new Date().toISOString(),
-            });
-
-          console.log(`Updated subscription for user ${user.id} to ${tier}`);
+        if (!userSub) {
+          console.error(`No user found for subscription: ${subscription.id}`);
+          break;
         }
+
+        const tier = subscription.status === "active" ? "premium" : "free";
+        const monthlyQuota = tier === "premium" ? 100 : 5;
+        
+        // Safely handle date conversion
+        let subscriptionEndDate = null;
+        if (subscription.status === "active" && subscription.current_period_end) {
+          try {
+            subscriptionEndDate = new Date(subscription.current_period_end * 1000).toISOString();
+          } catch (error) {
+            console.error("Error converting subscription end date:", error);
+          }
+        }
+
+        await supabaseAdmin
+          .from("user_subscriptions")
+          .update({
+            tier,
+            monthly_quota: monthlyQuota,
+            subscription_end_date: subscriptionEndDate,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", userSub.user_id);
+
+        console.log(`Updated subscription for user ${userSub.user_id} to ${tier}`);
         break;
       }
     }

@@ -47,6 +47,10 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${req.headers.get("origin")}/credits-store?success=true`,
       cancel_url: `${req.headers.get("origin")}/credits-store?canceled=true`,
+      metadata: {
+        user_id: user.id,
+        user_email: user.email,
+      },
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
