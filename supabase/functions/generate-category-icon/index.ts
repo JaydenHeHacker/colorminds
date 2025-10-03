@@ -18,32 +18,24 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('Generating category icon:', { categoryName, categoryDescription });
+    console.log('Generating category cover image:', { categoryName, categoryDescription });
 
-    // Create prompt for generating category icon using AI
-    const prompt = `You are an expert at selecting the perfect emoji or icon for categories.
+    // Create prompt for generating category representative coloring page
+    const prompt = `Create a black and white line art coloring page that represents the "${categoryName}" category.
 
-Category Name: ${categoryName}
 Category Description: ${categoryDescription || 'No description provided'}
 
-Task: Select the single most appropriate emoji that represents this category.
-
 Requirements:
-- Return ONLY ONE emoji character
-- Choose an emoji that visually represents the category theme
-- The emoji should be universally recognizable
-- Prefer colorful, expressive emojis over simple ones
-- Consider the category's context and target audience
+- Black lines on white background
+- No shading or gradients
+- High contrast for easy coloring
+- The image should be iconic and representative of the category theme
+- Suitable for use as a category cover/thumbnail image
+- Medium difficulty level (not too simple, not too complex)
+- Clear, bold outlines
+- Fun and appealing design
 
-Examples:
-- "Animals" → 🐾
-- "Nature" → 🌿
-- "Holiday" → 🎉
-- "Fantasy" → ✨
-- "Sports" → ⚽
-- "Food" → 🍕
-
-Return ONLY the emoji character, nothing else.`;
+Make it a visually striking coloring page that immediately conveys what the "${categoryName}" category is about.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -52,13 +44,14 @@ Return ONLY the emoji character, nothing else.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-flash-image-preview',
         messages: [
           {
             role: 'user',
             content: prompt
           }
-        ]
+        ],
+        modalities: ['image', 'text']
       }),
     });
 
@@ -71,18 +64,18 @@ Return ONLY the emoji character, nothing else.`;
     const data = await response.json();
     console.log('AI response received');
 
-    const aiResponse = data.choices?.[0]?.message?.content || '';
-    
-    // Extract emoji from response (remove any extra text)
-    const emojiMatch = aiResponse.match(/[\p{Emoji}\u200d]+/gu);
-    const generatedIcon = emojiMatch ? emojiMatch[0] : '📁';
+    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-    console.log('Generated icon:', generatedIcon);
+    if (!imageUrl) {
+      throw new Error('No image generated');
+    }
+
+    console.log('Generated category cover image successfully');
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        icon: generatedIcon
+        imageUrl
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

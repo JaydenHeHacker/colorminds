@@ -59,6 +59,7 @@ export default function ManageCategories() {
   const [generatingIconForCategory, setGeneratingIconForCategory] = useState<Category | null>(null);
   const [generatedIcon, setGeneratedIcon] = useState<string>("");
   const [isGeneratingIcon, setIsGeneratingIcon] = useState(false);
+  const [isSavingIcon, setIsSavingIcon] = useState(false);
 
   // Form state
   const [formName, setFormName] = useState("");
@@ -283,14 +284,14 @@ export default function ManageCategories() {
 
       if (error) throw error;
       
-      if (data?.icon) {
-        setGeneratedIcon(data.icon);
-        toast.success("图标生成成功！");
+      if (data?.imageUrl) {
+        setGeneratedIcon(data.imageUrl);
+        toast.success("类目图生成成功！");
       } else {
-        throw new Error("未收到图标数据");
+        throw new Error("未收到图片数据");
       }
     } catch (error: any) {
-      console.error('图标生成错误:', error);
+      console.error('类目图生成错误:', error);
       toast.error("生成失败：" + error.message);
     } finally {
       setIsGeneratingIcon(false);
@@ -299,25 +300,41 @@ export default function ManageCategories() {
 
   const handleSaveGeneratedIcon = async () => {
     if (!generatingIconForCategory || !generatedIcon) {
-      toast.error("没有可保存的图标");
+      toast.error("没有可保存的类目图");
       return;
     }
 
+    setIsSavingIcon(true);
     try {
+      // Upload to R2 first
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-to-r2', {
+        body: { 
+          imageUrl: generatedIcon,
+          filename: `category-${generatingIconForCategory.slug}-${Date.now()}.png`
+        }
+      });
+
+      if (uploadError) throw uploadError;
+      
+      const r2Url = uploadData.url;
+
+      // Update category with R2 URL
       const { error } = await supabase
         .from('categories')
-        .update({ icon: generatedIcon })
+        .update({ icon: r2Url })
         .eq('id', generatingIconForCategory.id);
 
       if (error) throw error;
 
       await queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
-      toast.success("图标已更新！");
+      toast.success("类目图已更新！");
       setGeneratingIconForCategory(null);
       setGeneratedIcon("");
     } catch (error: any) {
-      console.error('保存图标错误:', error);
+      console.error('保存类目图错误:', error);
       toast.error("保存失败：" + error.message);
+    } finally {
+      setIsSavingIcon(false);
     }
   };
 
@@ -986,14 +1003,14 @@ export default function ManageCategories() {
           }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
-              为 "{generatingIconForCategory?.name}" 生成类目图标
+              为 "{generatingIconForCategory?.name}" 生成类目封面图
             </DialogTitle>
             <DialogDescription>
-              AI 将根据类目名称和描述自动生成合适的 emoji 图标
+              AI 将根据类目名称和描述生成一个代表性的涂色页作为类目封面
             </DialogDescription>
           </DialogHeader>
 
@@ -1013,20 +1030,18 @@ export default function ManageCategories() {
                     </span>
                   </div>
                 )}
-                {generatingIconForCategory?.icon && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">当前图标:</span>
-                    <span className="text-2xl">{generatingIconForCategory.icon}</span>
-                  </div>
-                )}
               </div>
             </div>
 
             {generatedIcon && (
               <div className="space-y-2">
-                <Label>生成的图标</Label>
-                <div className="flex items-center justify-center p-8 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border-2 border-primary/20">
-                  <span className="text-6xl">{generatedIcon}</span>
+                <Label>生成的类目封面</Label>
+                <div className="relative aspect-square bg-white rounded-lg border-2 border-primary/20 overflow-hidden">
+                  <img
+                    src={generatedIcon}
+                    alt="Generated category cover"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
             )}
@@ -1067,15 +1082,26 @@ export default function ManageCategories() {
                 <Button
                   variant="outline"
                   onClick={() => setGeneratedIcon("")}
+                  disabled={isSavingIcon}
                 >
                   重新生成
                 </Button>
                 <Button
                   onClick={handleSaveGeneratedIcon}
+                  disabled={isSavingIcon}
                   className="gap-2"
                 >
-                  <Image className="h-4 w-4" />
-                  保存图标
+                  {isSavingIcon ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      保存中...
+                    </>
+                  ) : (
+                    <>
+                      <Image className="h-4 w-4" />
+                      保存为类目封面
+                    </>
+                  )}
                 </Button>
               </>
             )}
