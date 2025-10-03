@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 import CreatePage from "./pages/CreatePage";
 import CreditsStore from "./pages/CreditsStore";
 import Community from "./pages/Community";
+import AIColoringPage from "./pages/AIColoringPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/coloring-page/:slug" element={<ColoringPage />} />
+          <Route path="/ai-coloring-page/:id" element={<AIColoringPage />} />
           <Route path="/category/*" element={<CategoryPage />} />
           <Route path="/series" element={<AllSeries />} />
           <Route path="/series/:slug" element={<SeriesPage />} />

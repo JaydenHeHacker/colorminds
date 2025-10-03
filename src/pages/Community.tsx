@@ -1,28 +1,63 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Sparkles, Download } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Pagination } from "@/components/Pagination";
 
 export default function Community() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [generations, setGenerations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 24;
 
   useEffect(() => {
     loadCommunityGenerations();
-  }, []);
+  }, [currentPage]);
 
   const loadCommunityGenerations = async () => {
+    // Get total count
+    const { count } = await supabase
+      .from("ai_generations")
+      .select("*", { count: "exact", head: true })
+      .eq("is_public", true)
+      .eq("status", "completed");
+    
+    setTotalCount(count || 0);
+
+    // Get paginated data
     const { data, error } = await supabase
       .from("ai_generations")
       .select("*")
       .eq("is_public", true)
       .eq("status", "completed")
       .order("created_at", { ascending: false })
-      .limit(50);
+      .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
+
+    if (!error && data) {
+      // Fetch profiles for all generations
+      const userIds = [...new Set(data.map(g => g.user_id))];
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .in("id", userIds);
+      
+      // Merge profile data with generations
+      const profileMap = new Map(profilesData?.map(p => [p.id, p]) || []);
+      const enrichedData = data.map(gen => ({
+        ...gen,
+        profile: profileMap.get(gen.user_id)
+      }));
+      
+      setGenerations(enrichedData);
+    }
 
     if (error) {
       console.error("Error loading community generations:", error);
@@ -31,36 +66,41 @@ export default function Community() {
         description: "Unable to load community creations",
         variant: "destructive",
       });
-    } else {
-      setGenerations(data || []);
+      setGenerations([]);
     }
     setLoading(false);
   };
 
-  const handleDownload = (imageUrl: string, id: string) => {
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = `coloring-page-${id}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast({
-      title: "Download successful",
-      description: "Coloring page saved to your device",
-    });
+  const handlePageChange = (selectedItem: { selected: number }) => {
+    setCurrentPage(selectedItem.selected);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const getUserDisplayName = (gen: any) => {
+    if (gen.profile?.email) {
+      return gen.profile.email.split('@')[0];
+    }
+    return 'Anonymous';
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p>Loading...</p>
+        </main>
+        <Footer />
       </div>
     );
   }
 
+  const pageCount = Math.ceil(totalCount / itemsPerPage);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 py-20 px-4">
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 bg-gradient-to-b from-background to-secondary/20 py-20 px-4">
       <div className="container max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -90,57 +130,55 @@ export default function Community() {
             <p className="text-muted-foreground mb-6">
               Be the first creator and share your work!
             </p>
-            <Button onClick={() => window.location.href = '/create'}>
-              Start Creating
-            </Button>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {generations.map((gen) => (
-              <Card key={gen.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
-                {/* Image */}
-                <div className="aspect-square bg-muted relative overflow-hidden">
-                  {gen.image_url ? (
-                    <img
-                      src={gen.image_url}
-                      alt={gen.prompt}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Sparkles className="w-12 h-12 text-muted-foreground" />
-                    </div>
-                  )}
-                  
-                  {/* Overlay on hover */}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => handleDownload(gen.image_url, gen.id)}
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {generations.map((gen) => (
+                <Card 
+                  key={gen.id} 
+                  className="overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/ai-coloring-page/${gen.id}`)}
+                >
+                  {/* Image */}
+                  <div className="aspect-square bg-muted relative overflow-hidden">
+                    {gen.image_url ? (
+                      <img
+                        src={gen.image_url}
+                        alt={gen.prompt}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Sparkles className="w-12 h-12 text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                {/* Info */}
-                <div className="p-4">
-                  <p className="text-sm line-clamp-2 mb-2">{gen.prompt}</p>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      {new Date(gen.created_at).toLocaleDateString('en-US')}
-                    </span>
-                    <Badge variant="outline" className="text-xs">
-                      Community
-                    </Badge>
+                  {/* Info */}
+                  <div className="p-4">
+                    <p className="text-sm line-clamp-2 mb-2">{gen.prompt}</p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>By {getUserDisplayName(gen)}</span>
+                      <span>
+                        {new Date(gen.created_at).toLocaleDateString('en-US')}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+            
+            <Pagination
+              pageCount={pageCount}
+              currentPage={currentPage}
+              onPageChange={handlePageChange}
+            />
+          </>
         )}
       </div>
+      </main>
+      <Footer />
     </div>
   );
 }
