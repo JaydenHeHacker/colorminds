@@ -27,8 +27,8 @@ export default function CreatePage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast({
-        title: "请先登录",
-        description: "需要登录才能创建涂色页",
+        title: "Please log in",
+        description: "You need to log in to create coloring pages",
         variant: "destructive",
       });
       navigate("/auth");
@@ -56,8 +56,8 @@ export default function CreatePage() {
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast({
-        title: "请输入提示词",
-        description: "描述你想要的涂色页内容",
+        title: "Please enter a prompt",
+        description: "Describe the coloring page you want",
         variant: "destructive",
       });
       return;
@@ -65,8 +65,8 @@ export default function CreatePage() {
 
     if (!canGenerate()) {
       toast({
-        title: "配额不足",
-        description: "请购买积分包或升级会员",
+        title: "Insufficient quota",
+        description: "Please purchase credits or upgrade membership",
         variant: "destructive",
       });
       navigate("/credits");
@@ -80,8 +80,8 @@ export default function CreatePage() {
       // Simulate generation progress for free users (delayed)
       if (subscription.tier === 'free') {
         toast({
-          title: "已加入队列",
-          description: "免费用户需要排队，预计30-60秒",
+          title: "Added to queue",
+          description: "Free users need to wait in queue, estimated 30-60 seconds",
         });
         
         // Simulate queue delay
@@ -103,8 +103,8 @@ export default function CreatePage() {
       setProgress(100);
       
       toast({
-        title: "生成成功！",
-        description: "你的涂色页已经准备好了",
+        title: "Generation successful!",
+        description: "Your coloring page is ready",
       });
 
       // Reload user data
@@ -117,8 +117,8 @@ export default function CreatePage() {
     } catch (error: any) {
       console.error("Generation error:", error);
       toast({
-        title: "生成失败",
-        description: error.message || "请稍后重试",
+        title: "Generation failed",
+        description: error.message || "Please try again later",
         variant: "destructive",
       });
     } finally {
@@ -137,10 +137,10 @@ export default function CreatePage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 flex items-center justify-center gap-3">
             <Sparkles className="w-10 h-10 text-primary" />
-            AI 创作涂色页
+            Create with AI
           </h1>
           <p className="text-muted-foreground text-lg">
-            用文字描述，让AI为你创作独特的涂色页
+            Describe what you want, and AI will create a unique coloring page for you
           </p>
         </div>
 
@@ -151,17 +151,17 @@ export default function CreatePage() {
               {isPremium ? (
                 <Badge className="bg-gradient-to-r from-amber-500 to-orange-500">
                   <Crown className="w-4 h-4 mr-1" />
-                  高级会员
+                  Premium
                 </Badge>
               ) : (
-                <Badge variant="outline">免费用户</Badge>
+                <Badge variant="outline">Free User</Badge>
               )}
               <div className="text-sm">
-                <span className="text-muted-foreground">本月配额：</span>
+                <span className="text-muted-foreground">Monthly Quota:</span>
                 <span className="font-bold ml-2">{remainingQuota} / {subscription?.monthly_quota || 5}</span>
               </div>
               <div className="text-sm">
-                <span className="text-muted-foreground">积分余额：</span>
+                <span className="text-muted-foreground">Credits:</span>
                 <span className="font-bold ml-2">{credits?.balance || 0}</span>
               </div>
             </div>
@@ -171,7 +171,7 @@ export default function CreatePage() {
               onClick={() => navigate("/credits")}
             >
               <Zap className="w-4 h-4 mr-2" />
-              购买积分
+              Buy Credits
             </Button>
           </div>
         </Card>
@@ -181,12 +181,12 @@ export default function CreatePage() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2">
-                描述你想要的涂色页内容 *
+                Describe the coloring page you want *
               </label>
               <Textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="例如：一只可爱的小猫在花园里玩耍，周围有蝴蝶和花朵，简单线条适合儿童涂色"
+                placeholder="Example: A cute kitten playing in a garden with butterflies and flowers, simple lines suitable for kids"
                 className="min-h-[120px]"
                 disabled={isGenerating}
               />
@@ -194,10 +194,10 @@ export default function CreatePage() {
                 {isPremium ? (
                   <span className="flex items-center gap-2 text-primary">
                     <Crown className="w-4 h-4" />
-                    高级会员可以使用AI优化提示词功能（即将推出）
+                    Premium members get AI prompt optimization (coming soon)
                   </span>
                 ) : (
-                  "提示：详细描述主题、风格和复杂度会获得更好的效果"
+                  "Tip: Detailed descriptions of theme, style and complexity will get better results"
                 )}
               </p>
             </div>
@@ -209,19 +209,19 @@ export default function CreatePage() {
                   <Lock className="w-5 h-5 text-amber-600 mt-0.5" />
                   <div className="text-sm">
                     <p className="font-medium text-amber-900 dark:text-amber-100 mb-1">
-                      免费用户限制
+                      Free User Limitations
                     </p>
                     <ul className="list-disc list-inside text-amber-800 dark:text-amber-200 space-y-1">
-                      <li>需要排队生成（30-60秒）</li>
-                      <li>一次只能生成1张</li>
-                      <li>生成的作品将公开展示在社区</li>
+                      <li>Queue-based generation (30-60 seconds)</li>
+                      <li>Can only generate 1 at a time</li>
+                      <li>Creations will be publicly displayed in community</li>
                     </ul>
                     <Button
                       variant="link"
                       className="p-0 h-auto text-amber-700 dark:text-amber-300 mt-2"
                       onClick={() => navigate("/credits")}
                     >
-                      升级为高级会员 →
+                      Upgrade to Premium →
                     </Button>
                   </div>
                 </div>
@@ -232,7 +232,7 @@ export default function CreatePage() {
             {isGenerating && (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>生成中...</span>
+                  <span>Generating...</span>
                   <span>{progress}%</span>
                 </div>
                 <Progress value={progress} />
@@ -248,7 +248,7 @@ export default function CreatePage() {
                 size="lg"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
-                {isGenerating ? "生成中..." : "开始创作"}
+                {isGenerating ? "Generating..." : "Start Creating"}
               </Button>
               <Button
                 variant="outline"
@@ -256,7 +256,7 @@ export default function CreatePage() {
                 disabled={isGenerating}
                 size="lg"
               >
-                返回首页
+                Back to Home
               </Button>
             </div>
           </div>
@@ -264,12 +264,12 @@ export default function CreatePage() {
 
         {/* Tips */}
         <Card className="p-6 bg-secondary/30">
-          <h3 className="font-semibold mb-3">💡 创作小贴士</h3>
+          <h3 className="font-semibold mb-3">💡 Creation Tips</h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• 清晰描述主题：如"恐龙"、"公主"、"太空飞船"等</li>
-            <li>• 添加场景细节：如"在森林里"、"在海底世界"</li>
-            <li>• 指定风格：如"简单线条"、"卡通风格"、"适合3-6岁儿童"</li>
-            <li>• 避免过于复杂的描述，保持简洁明了</li>
+            <li>• Clearly describe the theme: e.g. "dinosaur", "princess", "spaceship"</li>
+            <li>• Add scene details: e.g. "in a forest", "underwater world"</li>
+            <li>• Specify style: e.g. "simple lines", "cartoon style", "suitable for ages 3-6"</li>
+            <li>• Avoid overly complex descriptions, keep it simple and clear</li>
           </ul>
         </Card>
       </div>

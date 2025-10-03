@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Download, Heart } from "lucide-react";
+import { Sparkles, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Community() {
@@ -27,8 +27,8 @@ export default function Community() {
     if (error) {
       console.error("Error loading community generations:", error);
       toast({
-        title: "加载失败",
-        description: "无法加载社区作品",
+        title: "Failed to load",
+        description: "Unable to load community creations",
         variant: "destructive",
       });
     } else {
@@ -46,15 +46,15 @@ export default function Community() {
     document.body.removeChild(link);
     
     toast({
-      title: "下载成功",
-      description: "涂色页已保存到本地",
+      title: "Download successful",
+      description: "Coloring page saved to your device",
     });
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>加载中...</p>
+        <p>Loading...</p>
       </div>
     );
   }
@@ -66,19 +66,19 @@ export default function Community() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 flex items-center justify-center gap-3">
             <Sparkles className="w-10 h-10 text-primary" />
-            社区创作
+            Community Creations
           </h1>
           <p className="text-muted-foreground text-lg">
-            探索用户们创作的精彩涂色页
+            Explore amazing coloring pages created by our community
           </p>
         </div>
 
         {/* Notice */}
         <Card className="p-6 mb-8 bg-primary/5">
           <p className="text-sm text-center">
-            💡 这里展示的是免费用户创作的作品。所有免费用户的创作都会公开展示在社区。
+            💡 These are creations from free users. All free tier creations are publicly displayed in the community.
             <br />
-            成为高级会员后，你可以选择将作品设为私有。
+            Upgrade to Premium to make your creations private.
           </p>
         </Card>
 
@@ -86,12 +86,12 @@ export default function Community() {
         {generations.length === 0 ? (
           <Card className="p-12 text-center">
             <Sparkles className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">还没有社区作品</h3>
+            <h3 className="text-xl font-semibold mb-2">No community creations yet</h3>
             <p className="text-muted-foreground mb-6">
-              成为第一个创作者，分享你的作品吧！
+              Be the first creator and share your work!
             </p>
             <Button onClick={() => window.location.href = '/create'}>
-              开始创作
+              Start Creating
             </Button>
           </Card>
         ) : (
@@ -129,10 +129,10 @@ export default function Community() {
                   <p className="text-sm line-clamp-2 mb-2">{gen.prompt}</p>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
-                      {new Date(gen.created_at).toLocaleDateString('zh-CN')}
+                      {new Date(gen.created_at).toLocaleDateString('en-US')}
                     </span>
                     <Badge variant="outline" className="text-xs">
-                      社区作品
+                      Community
                     </Badge>
                   </div>
                 </div>

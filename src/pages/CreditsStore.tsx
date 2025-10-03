@@ -42,16 +42,16 @@ export default function CreditsStore() {
 
   const handlePurchasePackage = async (packageId: string, credits: number, price: number) => {
     toast({
-      title: "功能开发中",
-      description: "支付功能即将上线，敬请期待！",
+      title: "Feature in Development",
+      description: "Payment integration coming soon!",
     });
     // TODO: Integrate with Stripe
   };
 
   const handleUpgradePremium = () => {
     toast({
-      title: "功能开发中",
-      description: "订阅功能即将上线，敬请期待！",
+      title: "Feature in Development",
+      description: "Subscription feature coming soon!",
     });
     // TODO: Integrate with Stripe for subscription
   };
@@ -62,7 +62,7 @@ export default function CreditsStore() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>加载中...</p>
+        <p>Loading...</p>
       </div>
     );
   }
@@ -78,10 +78,10 @@ export default function CreditsStore() {
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            返回
+            Back
           </Button>
-          <h1 className="text-4xl font-bold mb-2">积分商店</h1>
-          <p className="text-muted-foreground">选择适合你的套餐，解锁更多创作可能</p>
+          <h1 className="text-4xl font-bold mb-2">Credits Store</h1>
+          <p className="text-muted-foreground">Choose the plan that fits your needs</p>
         </div>
 
         {/* Current Status */}
@@ -92,15 +92,15 @@ export default function CreditsStore() {
                 {isPremium ? (
                   <Badge className="bg-gradient-to-r from-amber-500 to-orange-500">
                     <Crown className="w-4 h-4 mr-1" />
-                    高级会员
+                    Premium Member
                   </Badge>
                 ) : (
-                  <Badge variant="outline">免费用户</Badge>
+                  <Badge variant="outline">Free User</Badge>
                 )}
               </div>
               <div className="text-sm text-muted-foreground space-y-1">
-                <p>本月配额：<span className="font-bold text-foreground">{remainingQuota}</span> / {subscription?.monthly_quota || 5}</p>
-                <p>积分余额：<span className="font-bold text-foreground">{credits?.balance || 0}</span></p>
+                <p>Monthly Quota: <span className="font-bold text-foreground">{remainingQuota}</span> / {subscription?.monthly_quota || 5}</p>
+                <p>Credits Balance: <span className="font-bold text-foreground">{credits?.balance || 0}</span></p>
               </div>
             </div>
           </div>
@@ -109,40 +109,40 @@ export default function CreditsStore() {
         {/* Premium Subscription */}
         {!isPremium && (
           <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6">订阅会员</h2>
+            <h2 className="text-2xl font-bold mb-6">Premium Membership</h2>
             <Card className="p-8 border-2 border-primary/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
               <div className="flex items-start justify-between flex-wrap gap-6">
                 <div className="flex-1 min-w-[300px]">
                   <div className="flex items-center gap-2 mb-2">
                     <Crown className="w-6 h-6 text-amber-600" />
-                    <h3 className="text-2xl font-bold">高级会员</h3>
+                    <h3 className="text-2xl font-bold">Premium</h3>
                   </div>
-                  <p className="text-muted-foreground mb-6">每月订阅，享受所有特权</p>
+                  <p className="text-muted-foreground mb-6">Monthly subscription with all benefits</p>
                   
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center gap-2 text-sm">
                       <Check className="w-5 h-5 text-green-600" />
-                      <span>每月 50 张配额（可满足重度需求）</span>
+                      <span>50 generations per month</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Check className="w-5 h-5 text-green-600" />
-                      <span>优先生成队列（10秒内完成）</span>
+                      <span>Priority queue (10 seconds)</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Check className="w-5 h-5 text-green-600" />
-                      <span>一次生成最多3张（多选项）</span>
+                      <span>Generate up to 3 at once</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Check className="w-5 h-5 text-green-600" />
-                      <span>AI智能优化提示词</span>
+                      <span>AI prompt optimization</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Check className="w-5 h-5 text-green-600" />
-                      <span>作品可选私有/公开</span>
+                      <span>Private or public creations</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Check className="w-5 h-5 text-green-600" />
-                      <span>高清下载（2048px）</span>
+                      <span>HD downloads (2048px)</span>
                     </div>
                   </div>
                 </div>
@@ -150,7 +150,7 @@ export default function CreditsStore() {
                 <div className="text-center">
                   <div className="mb-4">
                     <div className="text-4xl font-bold text-primary mb-1">$4.99</div>
-                    <div className="text-sm text-muted-foreground">每月</div>
+                    <div className="text-sm text-muted-foreground">per month</div>
                   </div>
                   <Button
                     size="lg"
@@ -158,7 +158,7 @@ export default function CreditsStore() {
                     className="w-full min-w-[200px] bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
                   >
                     <Crown className="w-5 h-5 mr-2" />
-                    立即订阅
+                    Subscribe Now
                   </Button>
                 </div>
               </div>
@@ -168,9 +168,9 @@ export default function CreditsStore() {
 
         {/* Credit Packages */}
         <div>
-          <h2 className="text-2xl font-bold mb-6">积分包（一次性购买）</h2>
+          <h2 className="text-2xl font-bold mb-6">Credit Packages (One-time Purchase)</h2>
           <p className="text-muted-foreground mb-6">
-            积分永久有效，不会过期。适合不需要频繁使用的用户。
+            Credits never expire. Perfect for occasional users.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -182,7 +182,7 @@ export default function CreditsStore() {
                 <Card key={pkg.id} className={`p-6 relative ${isPopular ? 'border-2 border-primary' : ''}`}>
                   {isPopular && (
                     <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      最超值
+                      Best Value
                     </Badge>
                   )}
                   
@@ -190,10 +190,10 @@ export default function CreditsStore() {
                     <Zap className="w-12 h-12 mx-auto mb-3 text-primary" />
                     <h3 className="text-xl font-bold mb-1">{pkg.name}</h3>
                     <p className="text-3xl font-bold text-primary mb-1">
-                      {pkg.credits} 积分
+                      {pkg.credits} Credits
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      ${pricePerCredit} / 张
+                      ${pricePerCredit} / page
                     </p>
                   </div>
                   
@@ -201,7 +201,7 @@ export default function CreditsStore() {
                     <div className="text-3xl font-bold text-center mb-1">
                       ${Number(pkg.price_usd).toFixed(2)}
                     </div>
-                    <p className="text-sm text-center text-muted-foreground">一次性购买</p>
+                    <p className="text-sm text-center text-muted-foreground">One-time purchase</p>
                   </div>
                   
                   <Button
@@ -209,11 +209,11 @@ export default function CreditsStore() {
                     className="w-full"
                     variant={isPopular ? "default" : "outline"}
                   >
-                    立即购买
+                    Buy Now
                   </Button>
                   
                   <div className="mt-4 text-xs text-center text-muted-foreground">
-                    • 永久有效 • 可叠加购买
+                    • Never expires • Stackable
                   </div>
                 </Card>
               );
@@ -223,23 +223,23 @@ export default function CreditsStore() {
 
         {/* FAQ */}
         <Card className="p-6 mt-12">
-          <h3 className="font-bold mb-4">常见问题</h3>
+          <h3 className="font-bold mb-4">Frequently Asked Questions</h3>
           <div className="space-y-4 text-sm">
             <div>
-              <p className="font-medium mb-1">Q: 订阅和积分包有什么区别？</p>
-              <p className="text-muted-foreground">A: 订阅每月自动续费，提供固定配额和所有特权功能。积分包是一次性购买，永久有效，适合偶尔使用的用户。</p>
+              <p className="font-medium mb-1">Q: What's the difference between subscription and credit packages?</p>
+              <p className="text-muted-foreground">A: Subscription auto-renews monthly with fixed quota and premium features. Credit packages are one-time purchases that never expire.</p>
             </div>
             <div>
-              <p className="font-medium mb-1">Q: 积分会过期吗？</p>
-              <p className="text-muted-foreground">A: 不会！购买的积分永久有效，可以随时使用。</p>
+              <p className="font-medium mb-1">Q: Do credits expire?</p>
+              <p className="text-muted-foreground">A: No! Purchased credits are permanent and can be used anytime.</p>
             </div>
             <div>
-              <p className="font-medium mb-1">Q: 如果订阅到期了会怎样？</p>
-              <p className="text-muted-foreground">A: 你将回到免费用户状态，但已购买的积分依然可以使用。</p>
+              <p className="font-medium mb-1">Q: What happens when my subscription expires?</p>
+              <p className="text-muted-foreground">A: You'll return to free user status, but your purchased credits remain available.</p>
             </div>
             <div>
-              <p className="font-medium mb-1">Q: 可以同时拥有订阅和积分吗？</p>
-              <p className="text-muted-foreground">A: 可以！生成时会优先使用月度配额，配额用完后自动使用积分。</p>
+              <p className="font-medium mb-1">Q: Can I have both subscription and credits?</p>
+              <p className="text-muted-foreground">A: Yes! Monthly quota is used first, then credits are automatically deducted when quota runs out.</p>
             </div>
           </div>
         </Card>
