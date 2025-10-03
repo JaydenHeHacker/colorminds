@@ -182,11 +182,15 @@ const CategoryPage = () => {
             {/* Category Header */}
             <header className="mb-8 md:mb-12 text-center">
               {category.icon && (
-                <div className="mb-4 flex justify-center">
+                <div className="mb-6 flex justify-center">
                   {category.icon.startsWith('http') ? (
-                    <img src={category.icon} alt={category.name} className="w-32 h-32 object-cover rounded-lg" />
+                    <img 
+                      src={category.icon} 
+                      alt={category.name} 
+                      className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 object-cover rounded-2xl shadow-lg hover-scale transition-smooth" 
+                    />
                   ) : (
-                    <span className="text-6xl">{category.icon}</span>
+                    <span className="text-6xl md:text-7xl lg:text-8xl">{category.icon}</span>
                   )}
                 </div>
               )}

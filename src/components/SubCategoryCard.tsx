@@ -30,7 +30,17 @@ export const SubCategoryCard = ({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              {icon && <span className="text-3xl">{icon}</span>}
+              {icon && (
+                icon.startsWith('http') ? (
+                  <img 
+                    src={icon} 
+                    alt={name} 
+                    className="w-12 h-12 object-cover rounded-lg shadow-sm flex-shrink-0" 
+                  />
+                ) : (
+                  <span className="text-3xl flex-shrink-0">{icon}</span>
+                )
+              )}
               <h3 className="text-lg font-semibold group-hover:text-primary transition-smooth">
                 {name}
               </h3>

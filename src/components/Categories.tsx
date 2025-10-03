@@ -117,9 +117,13 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                       )}
                     >
                       <div className="aspect-square flex flex-col items-center justify-center p-4 md:p-6 gradient-card">
-                        <div className="mb-2 md:mb-4 transition-smooth group-hover:scale-110 flex items-center justify-center">
+                        <div className="mb-2 md:mb-4 transition-smooth group-hover:scale-110 flex items-center justify-center w-full">
                           {category.icon?.startsWith('http') ? (
-                            <img src={category.icon} alt={category.name} className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 object-cover rounded-lg" />
+                            <img 
+                              src={category.icon} 
+                              alt={category.name} 
+                              className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-cover rounded-lg shadow-md" 
+                            />
                           ) : (
                             <span className="text-4xl md:text-5xl lg:text-6xl">{category.icon}</span>
                           )}
