@@ -4,9 +4,10 @@ import { Download, Heart, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast as sonnerToast } from "sonner";
 import { ShareDialog } from "./ShareDialog";
+import { generatePageSlug } from "@/lib/slugify";
 
 interface ColoringCardProps {
   id?: string;
@@ -68,7 +69,7 @@ export const ColoringCard = ({ id, title, image, category, difficulty = "medium"
 
   const handleToggleFavorite = async () => {
     if (!user) {
-      sonnerToast.error("请先登录以收藏涂色页");
+      sonnerToast.error("Please log in to save favorites");
       navigate("/auth");
       return;
     }
@@ -86,7 +87,7 @@ export const ColoringCard = ({ id, title, image, category, difficulty = "medium"
         if (error) throw error;
         
         setIsFavorited(false);
-        sonnerToast.success("已取消收藏");
+        sonnerToast.success("Removed from favorites");
       } else {
         const { error } = await supabase
           .from('favorites')
@@ -98,18 +99,18 @@ export const ColoringCard = ({ id, title, image, category, difficulty = "medium"
         if (error) throw error;
         
         setIsFavorited(true);
-        sonnerToast.success("已添加到收藏");
+        sonnerToast.success("Added to favorites");
       }
     } catch (error: any) {
       console.error('Error toggling favorite:', error);
-      sonnerToast.error("操作失败：" + error.message);
+      sonnerToast.error("Failed to update favorite");
     }
   };
 
   const difficultyConfig = {
-    easy: { label: "简单", icon: "🟢", color: "bg-green-500/10 text-green-700 border-green-200" },
-    medium: { label: "中等", icon: "🟡", color: "bg-yellow-500/10 text-yellow-700 border-yellow-200" },
-    hard: { label: "困难", icon: "🔴", color: "bg-red-500/10 text-red-700 border-red-200" }
+    easy: { label: "Easy", icon: "🟢", color: "bg-green-500/10 text-green-700 border-green-200" },
+    medium: { label: "Medium", icon: "🟡", color: "bg-yellow-500/10 text-yellow-700 border-yellow-200" },
+    hard: { label: "Hard", icon: "🔴", color: "bg-red-500/10 text-red-700 border-red-200" }
   };
 
   const config = difficultyConfig[difficulty];
@@ -157,14 +158,16 @@ export const ColoringCard = ({ id, title, image, category, difficulty = "medium"
           />
         </div>
       )}
-      <div className="aspect-square overflow-hidden bg-muted">
-        <img
-          src={image}
-          alt={`${title} - ${category} coloring page for kids and adults - Free printable`}
-          className="w-full h-full object-cover transition-smooth group-hover:scale-105"
-          loading="lazy"
-        />
-      </div>
+      <Link to={id ? `/coloring-page/${generatePageSlug(title, id)}` : '#'} className="block">
+        <div className="aspect-square overflow-hidden bg-muted">
+          <img
+            src={image}
+            alt={`${title} - ${category} coloring page for kids and adults - Free printable`}
+            className="w-full h-full object-cover transition-smooth group-hover:scale-105"
+            loading="lazy"
+          />
+        </div>
+      </Link>
       
       <div className="p-4 space-y-3">
         <div>
