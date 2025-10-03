@@ -66,7 +66,7 @@ export function AutoGenerateControl() {
   const generateNowMutation = useMutation({
     mutationFn: async () => {
       console.log('🚀 开始生成草稿...');
-      toast.info('正在生成中，请稍候...', { duration: 2000 });
+      toast.loading('正在生成中，请稍候...', { duration: 60000 }); // 60秒超时
       
       const { data, error } = await supabase.functions.invoke('auto-generate-drafts', {
         body: {}
@@ -92,10 +92,10 @@ export function AutoGenerateControl() {
       queryClient.invalidateQueries({ queryKey: ['generation-stats-today'] });
       
       const message = data.pages?.length > 0 
-        ? `成功生成 ${data.pages.length} 个草稿！类目: ${data.category}, 难度: ${data.difficulty}, 类型: ${data.type}`
-        : `生成完成，但未创建页面。类目: ${data.category}, 难度: ${data.difficulty}`;
+        ? `✅ 成功生成 ${data.pages.length} 个草稿！\n类目: ${data.category}\n难度: ${data.difficulty}\n类型: ${data.type === 'series' ? '系列图(8张)' : '单图'}`
+        : `⚠️ 生成完成但未创建页面\n类目: ${data.category}\n难度: ${data.difficulty}`;
       
-      toast.success(message, { duration: 5000 });
+      toast.success(message, { duration: 8000 }); // 8秒显示
       
       if (data.pages?.length > 0) {
         console.log('生成的页面:', data.pages);
@@ -104,7 +104,7 @@ export function AutoGenerateControl() {
     onError: (error: any) => {
       console.error('❌ 生成失败:', error);
       const errorMessage = error?.message || error?.error || '未知错误';
-      toast.error(`生成失败: ${errorMessage}`, { duration: 5000 });
+      toast.error(`❌ 生成失败\n${errorMessage}`, { duration: 8000 }); // 8秒显示
     }
   });
 
