@@ -50,6 +50,7 @@ All colors MUST be HSL.
     
     --shadow-colorful: 0 10px 40px -10px hsl(280 70% 60% / 0.3);
     --shadow-glow: 0 0 30px hsl(280 70% 80% / 0.4);
+    --shadow-soft: 0 2px 12px -2px hsl(240 20% 40% / 0.08);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -95,6 +96,7 @@ All colors MUST be HSL.
     
     --shadow-colorful: 0 10px 40px -10px hsl(280 70% 40% / 0.5);
     --shadow-glow: 0 0 30px hsl(280 70% 50% / 0.3);
+    --shadow-soft: 0 2px 12px -2px hsl(240 20% 80% / 0.12);
   }
 }
 
@@ -140,6 +142,10 @@ All colors MUST be HSL.
 
   .shadow-glow {
     box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
   }
 
   .transition-smooth {

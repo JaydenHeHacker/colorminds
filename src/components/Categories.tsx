@@ -94,10 +94,10 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                   scrollToTop();
                 }}
                  className={cn(
-                   "category-card group cursor-pointer overflow-hidden border-2 transition-all duration-500 shadow-lg hover:shadow-glow active:scale-95 touch-manipulation backdrop-blur-sm",
+                   "category-card group cursor-pointer overflow-hidden border-2 transition-all duration-500 hover:shadow-glow active:scale-95 touch-manipulation backdrop-blur-sm",
                    selectedCategory === null
                      ? "border-primary bg-primary/10 shadow-colorful scale-105"
-                     : "hover:border-primary/60 hover:-translate-y-2"
+                     : "shadow-soft hover:border-primary/60 hover:-translate-y-2"
                  )}
                >
                  <div className="aspect-square flex flex-col items-center justify-center p-4 md:p-6 gradient-card relative">
@@ -122,10 +122,10 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                    >
                      <Card
                       className={cn(
-                        "category-card group cursor-pointer overflow-hidden border-2 transition-all duration-500 shadow-lg hover:shadow-glow active:scale-95 touch-manipulation backdrop-blur-sm h-full",
+                        "category-card group cursor-pointer overflow-hidden border-2 transition-all duration-500 hover:shadow-glow active:scale-95 touch-manipulation backdrop-blur-sm h-full",
                         selectedCategory === category.name
                           ? "border-primary bg-primary/10 shadow-colorful scale-105"
-                          : "hover:border-primary/60 hover:-translate-y-2"
+                          : "shadow-soft hover:border-primary/60 hover:-translate-y-2"
                       )}
                     >
                       <div className="aspect-square relative overflow-hidden">
