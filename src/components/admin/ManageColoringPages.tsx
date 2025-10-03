@@ -46,11 +46,19 @@ export default function ManageColoringPages() {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
+        .order('level', { ascending: true })
         .order('name');
       if (error) throw error;
       return data;
     },
   });
+
+  // 组织分类树结构用于显示
+  const getCategoryLabel = (cat: any) => {
+    const indent = '  '.repeat(cat.level - 1);
+    const levelPrefix = cat.level === 1 ? '' : '└─ ';
+    return `${indent}${levelPrefix}${cat.icon} ${cat.name}`;
+  };
 
   const { data: coloringPages, isLoading } = useQuery({
     queryKey: ['admin-coloring-pages'],
@@ -258,7 +266,7 @@ export default function ManageColoringPages() {
                 <SelectItem value="all">全部分类</SelectItem>
                 {categories?.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
-                    {cat.icon} {cat.name}
+                    {getCategoryLabel(cat)}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -23,6 +23,7 @@ export default function Admin() {
   const [theme, setTheme] = useState("");
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("medium");
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [generatedPagesData, setGeneratedPagesData] = useState<any[]>([]); // Store full page data including titles
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateCount, setGenerateCount] = useState("1");
   const [generationType, setGenerationType] = useState<"single" | "series">("single");
@@ -104,6 +105,7 @@ export default function Admin() {
         // Generate individual pages
         const count = parseInt(generateCount);
         const images: string[] = [];
+        const pagesData: any[] = [];
         
         for (let i = 0; i < count; i++) {
           const { data, error } = await supabase.functions.invoke('generate-coloring-page', {
@@ -114,9 +116,15 @@ export default function Admin() {
           if (!data.success) throw new Error(data.error);
           
           images.push(data.imageUrl);
+          pagesData.push({
+            imageUrl: data.imageUrl,
+            suggestedTitle: data.suggestedTitle || theme,
+            suggestedDescription: data.suggestedDescription || null
+          });
           toast.success(`已生成第 ${i + 1}/${count} 张图片`);
         }
         
+        setGeneratedPagesData(pagesData);
         return images;
       }
     },
@@ -164,14 +172,14 @@ export default function Admin() {
           continue;
         }
 
-        // Prepare insert data
+        // Prepare insert data with English titles
         const insertData: any = {
           title: generationType === "series" 
-            ? `${theme} - 第${i + 1}章` 
-            : `${theme} ${i + 1}`,
+            ? `${theme} - Chapter ${i + 1}` 
+            : (generatedPagesData[i]?.suggestedTitle || `${theme} ${i + 1}`),
           description: generationType === "series" && seriesData?.images?.[i]?.sceneDescription 
             ? seriesData.images[i].sceneDescription 
-            : null,
+            : generatedPagesData[i]?.suggestedDescription || null,
           image_url: uploadData.publicUrl,
           category_id: category.id,
           difficulty: difficulty,
@@ -214,6 +222,7 @@ export default function Admin() {
       }
       queryClient.invalidateQueries({ queryKey: ['coloring-pages'] });
       setGeneratedImages([]);
+      setGeneratedPagesData([]);
       setSeriesData(null);
       setTheme("");
       setSelectedCategory("");
@@ -239,6 +248,7 @@ export default function Admin() {
 
   const handleDiscard = () => {
     setGeneratedImages([]);
+    setGeneratedPagesData([]);
     toast.info("已放弃当前生成");
   };
 
@@ -423,11 +433,15 @@ export default function Admin() {
                     <SelectValue placeholder="选择类目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories?.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {"  ".repeat(cat.level - 1)}{cat.icon} {cat.name}
-                      </SelectItem>
-                    ))}
+                    {categories?.map((cat) => {
+                      const indent = "  ".repeat(cat.level - 1);
+                      const prefix = cat.level === 1 ? "" : "└─ ";
+                      return (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {indent}{prefix}{cat.icon} {cat.name}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>

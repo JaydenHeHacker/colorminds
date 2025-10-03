@@ -41,7 +41,7 @@ serve(async (req) => {
 - Suitable for advanced coloring`
     };
 
-    // Create detailed prompt for coloring page
+    // Create detailed prompt for coloring page (MUST generate in English)
     const prompt = `Create a black and white line art coloring page suitable for children. 
 Theme: ${theme}
 Category: ${category}
@@ -54,6 +54,10 @@ Requirements:
 - No shading or gradients
 - High contrast for easy coloring
 - Fun and engaging subject matter
+
+IMPORTANT: Generate an English title and description for this coloring page that will be used in a US/UK market.
+- Title should be clear and descriptive (e.g., "Cute Cat Playing with Yarn")
+- Description should be engaging for parents/children (1-2 sentences)
 
 Make it a ${difficulty} level line drawing perfect for printing and coloring.`;
 
@@ -90,12 +94,31 @@ Make it a ${difficulty} level line drawing perfect for printing and coloring.`;
       throw new Error('No image generated');
     }
 
+    // Extract English title from AI response
+    const aiText = data.choices?.[0]?.message?.content || '';
+    let suggestedTitle = theme;
+    let suggestedDescription = '';
+    
+    // Try to extract title from AI response
+    const titleMatch = aiText.match(/Title:\s*([^\n]+)/i);
+    if (titleMatch) {
+      suggestedTitle = titleMatch[1].trim().replace(/["""]/g, '');
+    }
+    
+    // Try to extract description from AI response
+    const descMatch = aiText.match(/Description:\s*([^\n]+)/i);
+    if (descMatch) {
+      suggestedDescription = descMatch[1].trim().replace(/["""]/g, '');
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true,
         imageUrl,
         category,
-        theme 
+        theme,
+        suggestedTitle,
+        suggestedDescription
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -20,20 +20,23 @@ serve(async (req) => {
 
     console.log('Generating story series:', { category, theme, difficulty, seriesLength });
 
-    // Step 1: Generate story outline
+    // Step 1: Generate story outline (MUST be in English)
     const outlinePrompt = `Create a ${seriesLength}-page story outline for a children's coloring book.
 
 Theme: ${theme}
 Category: ${category}
 Number of pages: ${seriesLength}
 
+IMPORTANT: All content must be in English for a US/UK market.
+
 Generate a coherent story with ${seriesLength} scenes. Each scene should:
 - Be suitable for children
 - Progress the story naturally
 - Be visually interesting for a coloring page
 - Connect to the previous and next scenes
+- Have a clear English description
 
-Return ONLY a JSON array of ${seriesLength} scene descriptions. Format:
+Return ONLY a JSON array of ${seriesLength} scene descriptions in English. Format:
 [
   "Scene 1 description...",
   "Scene 2 description...",
@@ -91,7 +94,7 @@ Return ONLY a JSON array of ${seriesLength} scene descriptions. Format:
 - Intricate backgrounds`
     };
 
-    // Step 2: Generate images for each scene
+    // Step 2: Generate images for each scene (with English titles)
     const imageUrls = [];
     for (let i = 0; i < scenes.length; i++) {
       const scenePrompt = `Create a black and white line art coloring page for a children's story.
@@ -108,6 +111,9 @@ Requirements:
 - High contrast for easy coloring
 - Fun and engaging
 - This is part ${i + 1} of ${seriesLength} in a story sequence
+
+IMPORTANT: Generate an English title for this scene suitable for US/UK market.
+- Title should describe this specific scene clearly
 
 Make it a ${difficulty} level line drawing perfect for printing and coloring.`;
 
