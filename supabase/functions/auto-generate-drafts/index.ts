@@ -1,6 +1,23 @@
-// Auto-generate drafts function - v1.1
+// Auto-generate drafts function - v1.2
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// Slugify function
+const slugify = (text: string): string => {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/--+/g, '-')
+    .trim();
+};
+
+// Generate slug from title and id
+const generatePageSlug = (title: string, id: string): string => {
+  const titleSlug = slugify(title);
+  const shortId = id.slice(0, 8);
+  return `${titleSlug}-${shortId}`;
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -112,10 +129,16 @@ serve(async (req) => {
 
       // 保存系列图到数据库（草稿状态）
       for (let i = 0; i < images.length; i++) {
+        const pageId = crypto.randomUUID();
+        const title = `${theme} - Chapter ${i + 1}`;
+        const slug = generatePageSlug(title, pageId);
+        
         const { data: page, error: insertError } = await supabase
           .from('coloring_pages')
           .insert({
-            title: `${theme} - Chapter ${i + 1}`,
+            id: pageId,
+            title,
+            slug,
             description: story?.chapters?.[i] || `Part ${i + 1} of ${theme}`,
             image_url: images[i],
             category_id: category.id,
@@ -162,10 +185,15 @@ serve(async (req) => {
       }
 
       // 保存单图到数据库（草稿状态）
+      const pageId = crypto.randomUUID();
+      const slug = generatePageSlug(theme, pageId);
+      
       const { data: page, error: insertError } = await supabase
         .from('coloring_pages')
         .insert({
+          id: pageId,
           title: theme,
+          slug,
           description: `A ${difficulty} level coloring page about ${theme}`,
           image_url: imageUrl,
           category_id: category.id,
