@@ -153,7 +153,10 @@ export default function PublishingSchedule() {
       return;
     }
 
-    const scheduledDateTime = `${scheduledDate}T${scheduledTime}:00`;
+    // 将本地时间转换为 UTC 时间存储
+    const localDateTime = new Date(`${scheduledDate}T${scheduledTime}:00`);
+    const scheduledDateTime = localDateTime.toISOString();
+    
     updateStatusMutation.mutate({
       id: editingPage.id,
       status: 'scheduled',
@@ -204,7 +207,9 @@ export default function PublishingSchedule() {
       return;
     }
 
-    const scheduledDateTime = `${batchScheduledDate}T${batchScheduledTime}:00`;
+    // 将本地时间转换为 UTC 时间存储
+    const localDateTime = new Date(`${batchScheduledDate}T${batchScheduledTime}:00`);
+    const scheduledDateTime = localDateTime.toISOString();
     
     // 批量更新
     Promise.all(
@@ -263,9 +268,10 @@ export default function PublishingSchedule() {
   const handleEditSchedule = (page: any) => {
     setEditingPage(page);
     if (page.scheduled_publish_at) {
-      const date = new Date(page.scheduled_publish_at);
-      setScheduledDate(format(date, 'yyyy-MM-dd'));
-      setScheduledTime(format(date, 'HH:mm'));
+      // 将 UTC 时间转换为本地时间显示
+      const utcDate = new Date(page.scheduled_publish_at);
+      setScheduledDate(format(utcDate, 'yyyy-MM-dd'));
+      setScheduledTime(format(utcDate, 'HH:mm'));
     } else {
       setScheduledDate(format(new Date(), 'yyyy-MM-dd'));
       setScheduledTime("09:00");
