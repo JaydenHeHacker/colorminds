@@ -299,6 +299,9 @@ const AIColoringPage = () => {
         onClose={() => setIsShareOpen(false)}
         pageId={generation.id}
         title={generation.prompt}
+        imageUrl={generation.image_url}
+        description={generation.prompt}
+        categoryName={generation.categories?.name}
       />
     </div>
   );

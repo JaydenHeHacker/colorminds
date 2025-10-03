@@ -567,6 +567,11 @@ const ColoringPage = () => {
         onClose={() => setIsShareOpen(false)}
         title={page.title}
         pageId={page.id}
+        slug={page.slug}
+        imageUrl={page.image_url}
+        description={page.description}
+        difficulty={page.difficulty}
+        categoryName={page.categories?.name}
       />
 
       {/* Print Preview Dialog */}
