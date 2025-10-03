@@ -104,7 +104,7 @@ export function AutoGenerateControl() {
           <div>
             <p className="font-medium">启用自动生成</p>
             <p className="text-sm text-muted-foreground">
-              每分钟自动生成 {isEnabled ? '1-2' : '0'} 个草稿
+              每3分钟自动生成 {isEnabled ? '1-2' : '0'} 个草稿
             </p>
           </div>
           <Switch
@@ -156,6 +156,7 @@ export function AutoGenerateControl() {
 
         {/* 说明 */}
         <div className="text-xs text-muted-foreground space-y-1 p-3 bg-muted/50 rounded">
+          <p>• 每3分钟自动运行一次生成任务</p>
           <p>• 每次生成会随机选择类目和难度</p>
           <p>• 40% 概率生成单图，60% 概率生成 8 张系列图</p>
           <p>• 所有内容保存为草稿状态，需手动发布</p>
