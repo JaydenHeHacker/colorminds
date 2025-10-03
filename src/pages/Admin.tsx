@@ -15,8 +15,9 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [theme, setTheme] = useState("");
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generateCount, setGenerateCount] = useState("1");
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [email, setEmail] = useState("");
@@ -74,18 +75,26 @@ export default function Admin() {
 
   const generateMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('generate-coloring-page', {
-        body: { category: selectedCategory, theme }
-      });
-
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error);
+      const count = parseInt(generateCount);
+      const images: string[] = [];
       
-      return data.imageUrl;
+      for (let i = 0; i < count; i++) {
+        const { data, error } = await supabase.functions.invoke('generate-coloring-page', {
+          body: { category: selectedCategory, theme }
+        });
+
+        if (error) throw error;
+        if (!data.success) throw new Error(data.error);
+        
+        images.push(data.imageUrl);
+        toast.success(`已生成第 ${i + 1}/${count} 张图片`);
+      }
+      
+      return images;
     },
-    onSuccess: (imageUrl) => {
-      setGeneratedImage(imageUrl);
-      toast.success("涂色页面生成成功！");
+    onSuccess: (images) => {
+      setGeneratedImages(images);
+      toast.success(`成功生成 ${images.length} 张涂色页面！`);
     },
     onError: (error: Error) => {
       console.error('Generation error:', error);
@@ -95,46 +104,62 @@ export default function Admin() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!generatedImage || !selectedCategory) {
+      if (generatedImages.length === 0 || !selectedCategory) {
         throw new Error('缺少必要数据');
       }
 
-      // Upload to R2
-      const fileName = `${Date.now()}-${theme.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}.png`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-to-r2', {
-        body: {
-          imageData: generatedImage,
-          fileName
-        }
-      });
-
-      if (uploadError || !uploadData?.publicUrl) {
-        throw new Error('上传到 R2 失败：' + (uploadError?.message || '未知错误'));
-      }
-
-      // Find category ID
       const category = categories?.find(c => c.name === selectedCategory);
       if (!category) throw new Error('未找到分类');
 
-      // Save to database
-      const { error: insertError } = await supabase
-        .from('coloring_pages')
-        .insert({
-          title: theme,
-          image_url: uploadData.publicUrl,
-          category_id: category.id,
-          is_featured: false,
+      let successCount = 0;
+      
+      for (let i = 0; i < generatedImages.length; i++) {
+        const imageData = generatedImages[i];
+        
+        // Upload to R2
+        const fileName = `${Date.now()}-${i}-${theme.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}.png`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-to-r2', {
+          body: {
+            imageData,
+            fileName
+          }
         });
 
-      if (insertError) {
-        throw new Error('保存到数据库失败：' + insertError.message);
+        if (uploadError || !uploadData?.publicUrl) {
+          console.error(`上传第 ${i + 1} 张图片失败:`, uploadError);
+          continue;
+        }
+
+        // Save to database
+        const { error: insertError } = await supabase
+          .from('coloring_pages')
+          .insert({
+            title: `${theme} ${i + 1}`,
+            image_url: uploadData.publicUrl,
+            category_id: category.id,
+            is_featured: false,
+          });
+
+        if (insertError) {
+          console.error(`保存第 ${i + 1} 张图片失败:`, insertError);
+          continue;
+        }
+        
+        successCount++;
+        toast.success(`已保存第 ${successCount}/${generatedImages.length} 张图片`);
       }
+      
+      if (successCount === 0) {
+        throw new Error('所有图片保存失败');
+      }
+      
+      return successCount;
     },
-    onSuccess: () => {
-      toast.success("涂色页面已保存！");
+    onSuccess: (count) => {
+      toast.success(`成功保存 ${count} 张涂色页面！`);
       queryClient.invalidateQueries({ queryKey: ['coloring-pages'] });
-      setGeneratedImage(null);
+      setGeneratedImages([]);
       setTheme("");
       setSelectedCategory("");
     },
@@ -144,18 +169,21 @@ export default function Admin() {
     },
   });
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!selectedCategory || !theme) {
       toast.error("请选择类目并输入主题");
       return;
     }
     setIsGenerating(true);
-    generateMutation.mutate();
-    setTimeout(() => setIsGenerating(false), 1000);
+    try {
+      await generateMutation.mutateAsync();
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleDiscard = () => {
-    setGeneratedImage(null);
+    setGeneratedImages([]);
     toast.info("已放弃当前生成");
   };
 
@@ -293,6 +321,22 @@ export default function Admin() {
                 />
               </div>
 
+              <div>
+                <Label htmlFor="count">生成数量</Label>
+                <Select value={generateCount} onValueChange={setGenerateCount}>
+                  <SelectTrigger id="count">
+                    <SelectValue placeholder="选择数量" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 张</SelectItem>
+                    <SelectItem value="2">2 张</SelectItem>
+                    <SelectItem value="3">3 张</SelectItem>
+                    <SelectItem value="4">4 张</SelectItem>
+                    <SelectItem value="5">5 张</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Button
                 onClick={handleGenerate}
                 disabled={isGenerating || generateMutation.isPending || !selectedCategory || !theme}
@@ -316,14 +360,18 @@ export default function Admin() {
           <Card className="p-6">
             <h2 className="text-2xl font-semibold mb-6">预览</h2>
             
-            {generatedImage ? (
+            {generatedImages.length > 0 ? (
               <div className="space-y-4">
-                <div className="aspect-square overflow-hidden rounded-lg border-2 bg-white">
-                  <img
-                    src={generatedImage}
-                    alt="Generated coloring page"
-                    className="w-full h-full object-contain"
-                  />
+                <div className="grid grid-cols-2 gap-4 max-h-[600px] overflow-y-auto">
+                  {generatedImages.map((image, index) => (
+                    <div key={index} className="aspect-square overflow-hidden rounded-lg border-2 bg-white">
+                      <img
+                        src={image}
+                        alt={`Generated coloring page ${index + 1}`}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  ))}
                 </div>
 
                 <div className="flex gap-2">
