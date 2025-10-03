@@ -15,9 +15,24 @@ interface ColoringCardProps {
   image: string;
   category: string;
   difficulty?: "easy" | "medium" | "hard";
+  seriesId?: string | null;
+  seriesTitle?: string | null;
+  seriesOrder?: number | null;
+  seriesTotal?: number | null;
 }
 
-export const ColoringCard = ({ id, slug, title, image, category, difficulty = "medium" }: ColoringCardProps) => {
+export const ColoringCard = ({ 
+  id, 
+  slug, 
+  title, 
+  image, 
+  category, 
+  difficulty = "medium",
+  seriesId,
+  seriesTitle,
+  seriesOrder,
+  seriesTotal
+}: ColoringCardProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -213,15 +228,25 @@ export const ColoringCard = ({ id, slug, title, image, category, difficulty = "m
       
       <div className="p-4 space-y-3">
         <div>
-          <div className="flex gap-2 mb-2">
+          <div className="flex flex-wrap gap-2 mb-2">
             <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
               {category}
             </span>
             <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full border ${config.color}`}>
               {config.icon} {config.label}
             </span>
+            {seriesId && seriesTitle && (
+              <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-secondary/20 to-accent/20 text-secondary-foreground border border-secondary/30">
+                📚 {seriesOrder}/{seriesTotal}
+              </span>
+            )}
           </div>
           <h3 className="font-semibold text-lg line-clamp-2">{title}</h3>
+          {seriesId && seriesTitle && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+              Part of: {seriesTitle}
+            </p>
+          )}
         </div>
         
         <div className="flex items-center gap-2">

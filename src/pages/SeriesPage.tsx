@@ -182,6 +182,10 @@ const SeriesPage = () => {
                       image={page.image_url}
                       category={category?.name || 'Series'}
                       difficulty={page.difficulty as "easy" | "medium" | "hard"}
+                      seriesId={page.series_id}
+                      seriesTitle={page.series_title}
+                      seriesOrder={page.series_order}
+                      seriesTotal={page.series_total}
                     />
                   </div>
                 ))}

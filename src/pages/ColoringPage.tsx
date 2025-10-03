@@ -55,6 +55,28 @@ const ColoringPage = () => {
     enabled: !!slug,
   });
 
+  // Query for series navigation if this page is part of a series
+  const { data: seriesPages } = useQuery({
+    queryKey: ['series-pages', page?.series_id],
+    queryFn: async () => {
+      if (!page?.series_id) return null;
+      
+      const { data, error } = await supabase
+        .from('coloring_pages')
+        .select('id, slug, title, series_order')
+        .eq('series_id', page.series_id)
+        .order('series_order', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!page?.series_id,
+  });
+
+  const currentIndex = seriesPages?.findIndex(p => p.id === page?.id) ?? -1;
+  const prevPage = currentIndex > 0 ? seriesPages?.[currentIndex - 1] : null;
+  const nextPage = currentIndex >= 0 && currentIndex < (seriesPages?.length ?? 0) - 1 ? seriesPages?.[currentIndex + 1] : null;
+
   const { data: isFavoritedData } = useQuery({
     queryKey: ['is-favorited', page?.id, user?.id],
     queryFn: async () => {
@@ -383,14 +405,64 @@ const ColoringPage = () => {
                     )}
                   </div>
 
-                  {page.description && (
-                    <p className="text-lg text-muted-foreground leading-relaxed">
-                      {page.description}
-                    </p>
-                  )}
-                </div>
+                   {page.description && (
+                     <p className="text-lg text-muted-foreground leading-relaxed">
+                       {page.description}
+                     </p>
+                   )}
+                 </div>
 
-                <div className="space-y-4 p-6 rounded-lg bg-muted/50 border">
+                 {/* Series Navigation */}
+                 {page.series_id && (prevPage || nextPage) && (
+                   <div className="p-4 rounded-lg bg-gradient-to-r from-secondary/10 to-accent/10 border-2 border-secondary/20">
+                     <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                       📚 Story Navigation
+                     </h3>
+                     <div className="flex gap-3">
+                       {prevPage ? (
+                         <Link to={`/coloring-page/${prevPage.slug}`} className="flex-1">
+                           <Button variant="outline" className="w-full gap-2 group">
+                             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                             <div className="text-left flex-1 min-w-0">
+                               <div className="text-xs text-muted-foreground">Previous</div>
+                               <div className="text-sm font-medium truncate">Ch. {prevPage.series_order}</div>
+                             </div>
+                           </Button>
+                         </Link>
+                       ) : (
+                         <div className="flex-1" />
+                       )}
+                       {nextPage ? (
+                         <Link to={`/coloring-page/${nextPage.slug}`} className="flex-1">
+                           <Button className="w-full gap-2 group">
+                             <div className="text-left flex-1 min-w-0">
+                               <div className="text-xs opacity-90">Next</div>
+                               <div className="text-sm font-medium truncate">Ch. {nextPage.series_order}</div>
+                             </div>
+                             <ArrowLeft className="h-4 w-4 rotate-180 transition-transform group-hover:translate-x-1" />
+                           </Button>
+                         </Link>
+                       ) : (
+                         <div className="flex-1" />
+                       )}
+                     </div>
+                     {seriesPages && (
+                       <div className="mt-3 flex items-center gap-2">
+                         <div className="flex-1 h-1.5 bg-secondary/20 rounded-full overflow-hidden">
+                           <div 
+                             className="h-full bg-gradient-to-r from-secondary to-accent transition-all duration-500"
+                             style={{ width: `${((currentIndex + 1) / seriesPages.length) * 100}%` }}
+                           />
+                         </div>
+                         <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                           {currentIndex + 1}/{seriesPages.length}
+                         </span>
+                       </div>
+                     )}
+                   </div>
+                 )}
+
+                 <div className="space-y-4 p-6 rounded-lg bg-muted/50 border">
                   <h2 className="text-xl font-semibold">How to Use This Coloring Page</h2>
                   <ol className="space-y-2 text-muted-foreground">
                     <li className="flex gap-2">

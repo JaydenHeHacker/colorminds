@@ -97,6 +97,10 @@ export const RecommendedPages = ({ currentPageId, category, difficulty }: Recomm
             image={page.image_url}
             category={page.categories?.name || 'Uncategorized'}
             difficulty={page.difficulty as "easy" | "medium" | "hard"}
+            seriesId={page.series_id}
+            seriesTitle={page.series_title}
+            seriesOrder={page.series_order}
+            seriesTotal={page.series_total}
           />
         ))}
       </div>
