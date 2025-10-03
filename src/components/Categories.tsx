@@ -21,6 +21,40 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
     },
   });
 
+  // Get page counts for each category
+  const { data: categoryCounts } = useQuery({
+    queryKey: ['category-counts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('coloring_pages')
+        .select('category_id');
+      
+      if (error) throw error;
+      
+      // Count pages per category
+      const counts: Record<string, number> = {};
+      data.forEach(page => {
+        if (page.category_id) {
+          counts[page.category_id] = (counts[page.category_id] || 0) + 1;
+        }
+      });
+      
+      return counts;
+    },
+  });
+
+  const { data: totalPages } = useQuery({
+    queryKey: ['total-pages'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('coloring_pages')
+        .select('*', { count: 'exact', head: true });
+      
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
   return (
     <section className="py-12 md:py-16 lg:py-20" id="categories">
       <div className="container px-4">
@@ -40,7 +74,7 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
             </div>
           ) : categories && categories.length > 0 ? (
             <>
-              <Card
+                <Card
                 onClick={() => onCategorySelect(null)}
                  className={cn(
                    "group cursor-pointer overflow-hidden border-2 transition-smooth shadow-sm hover:shadow-colorful active:scale-95 touch-manipulation",
@@ -54,6 +88,11 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                      🎨
                    </div>
                    <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center">All</h3>
+                   {totalPages && (
+                     <p className="text-xs text-muted-foreground mt-1">
+                       {totalPages} pages
+                     </p>
+                   )}
                  </div>
                </Card>
                {categories.map((category) => (
@@ -72,6 +111,11 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                        {category.icon}
                      </div>
                      <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center">{category.name}</h3>
+                     {categoryCounts && categoryCounts[category.id] && (
+                       <p className="text-xs text-muted-foreground mt-1">
+                         {categoryCounts[category.id]} pages
+                       </p>
+                     )}
                    </div>
                  </Card>
               ))}

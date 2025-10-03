@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { IntroSection } from "@/components/IntroSection";
 import { Categories } from "@/components/Categories";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ColoringCard } from "@/components/ColoringCard";
 import { SeriesCard } from "@/components/SeriesCard";
 import { RecommendedPages } from "@/components/RecommendedPages";
@@ -135,6 +137,11 @@ const Index = () => {
     ? seriesGroups.get(selectedSeriesId) || []
     : standalonePages;
 
+  // Get current series title for breadcrumbs
+  const currentSeriesTitle = selectedSeriesId 
+    ? seriesToDisplay.find(s => s.seriesId === selectedSeriesId)?.seriesTitle 
+    : null;
+
   const handlePageSelect = (pageId: string, selected: boolean) => {
     const newSelected = new Set(selectedPages);
     if (selected) {
@@ -192,6 +199,19 @@ const Index = () => {
       
       <main className="flex-1">
         <Hero />
+        
+        <IntroSection />
+        
+        {(selectedCategory || selectedSeriesId || searchQuery) && (
+          <Breadcrumbs 
+            items={[
+              { label: 'Home', href: '#' },
+              ...(selectedCategory ? [{ label: selectedCategory, isCurrentPage: !selectedSeriesId }] : []),
+              ...(selectedSeriesId && currentSeriesTitle ? [{ label: currentSeriesTitle, isCurrentPage: true }] : []),
+              ...(searchQuery && !selectedCategory && !selectedSeriesId ? [{ label: `Search: "${searchQuery}"`, isCurrentPage: true }] : []),
+            ]}
+          />
+        )}
         
         <Categories 
           selectedCategory={selectedCategory}
