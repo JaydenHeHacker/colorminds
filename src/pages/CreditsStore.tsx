@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Zap, Check, ArrowLeft } from "lucide-react";
+import { Crown, Zap, Check, ArrowLeft, Loader2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
@@ -17,6 +17,8 @@ export default function CreditsStore() {
   const [credits, setCredits] = useState<any>(null);
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [purchasingPackage, setPurchasingPackage] = useState<string | null>(null);
+  const [upgradingPremium, setUpgradingPremium] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -43,6 +45,7 @@ export default function CreditsStore() {
   };
 
   const handlePurchasePackage = async (priceId: string) => {
+    setPurchasingPackage(priceId);
     try {
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { priceId }
@@ -63,10 +66,13 @@ export default function CreditsStore() {
         description: error.message || "Failed to create payment session",
         variant: "destructive",
       });
+    } finally {
+      setPurchasingPackage(null);
     }
   };
 
   const handleUpgradePremium = async () => {
+    setUpgradingPremium(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout');
 
@@ -85,6 +91,8 @@ export default function CreditsStore() {
         description: error.message || "Failed to create subscription session",
         variant: "destructive",
       });
+    } finally {
+      setUpgradingPremium(false);
     }
   };
 
@@ -193,10 +201,20 @@ export default function CreditsStore() {
                   <Button
                     size="lg"
                     onClick={handleUpgradePremium}
+                    disabled={upgradingPremium}
                     className="w-full min-w-[200px] bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
                   >
-                    <Crown className="w-5 h-5 mr-2" />
-                    Subscribe Now
+                    {upgradingPremium ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Crown className="w-5 h-5 mr-2" />
+                        Subscribe Now
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -234,10 +252,18 @@ export default function CreditsStore() {
               
               <Button
                 onClick={() => handlePurchasePackage("price_1SEAptPtWzrgBXKbpdl2S4pC")}
+                disabled={purchasingPackage === "price_1SEAptPtWzrgBXKbpdl2S4pC"}
                 className="w-full"
                 variant="outline"
               >
-                Buy Now
+                {purchasingPackage === "price_1SEAptPtWzrgBXKbpdl2S4pC" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Buy Now"
+                )}
               </Button>
               
               <div className="mt-4 text-xs text-center text-muted-foreground">
@@ -271,9 +297,17 @@ export default function CreditsStore() {
               
               <Button
                 onClick={() => handlePurchasePackage("price_1SEApzPtWzrgBXKbzeqvik80")}
+                disabled={purchasingPackage === "price_1SEApzPtWzrgBXKbzeqvik80"}
                 className="w-full"
               >
-                Buy Now
+                {purchasingPackage === "price_1SEApzPtWzrgBXKbzeqvik80" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Buy Now"
+                )}
               </Button>
               
               <div className="mt-4 text-xs text-center text-muted-foreground">
@@ -303,10 +337,18 @@ export default function CreditsStore() {
               
               <Button
                 onClick={() => handlePurchasePackage("price_1SEAq0PtWzrgBXKbu45Aoc30")}
+                disabled={purchasingPackage === "price_1SEAq0PtWzrgBXKbu45Aoc30"}
                 className="w-full"
                 variant="outline"
               >
-                Buy Now
+                {purchasingPackage === "price_1SEAq0PtWzrgBXKbu45Aoc30" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Buy Now"
+                )}
               </Button>
               
               <div className="mt-4 text-xs text-center text-muted-foreground">

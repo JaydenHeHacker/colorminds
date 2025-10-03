@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Heart, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -37,6 +38,9 @@ export const ColoringCard = ({
   const [user, setUser] = useState<any>(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isCheckingFavorite, setIsCheckingFavorite] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -87,6 +91,7 @@ export const ColoringCard = ({
 
     if (!id) return;
 
+    setIsTogglingFavorite(true);
     try {
       if (isFavorited) {
         const { error } = await supabase
@@ -115,6 +120,8 @@ export const ColoringCard = ({
     } catch (error: any) {
       console.error('Error toggling favorite:', error);
       sonnerToast.error("Failed to update favorite");
+    } finally {
+      setIsTogglingFavorite(false);
     }
   };
 
@@ -134,18 +141,32 @@ export const ColoringCard = ({
         variant={isFavorited ? "default" : "secondary"}
         className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
         onClick={handleToggleFavorite}
-        disabled={isCheckingFavorite}
+        disabled={isCheckingFavorite || isTogglingFavorite}
       >
-        <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+        {isTogglingFavorite ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+        )}
       </Button>
 
       <Link to={slug ? `/coloring-page/${slug}` : '#'} className="block">
-        <div className="aspect-square overflow-hidden bg-muted">
+        <div className="aspect-square overflow-hidden bg-muted relative">
+          {!imageLoaded && !imageError && (
+            <Skeleton className="absolute inset-0" />
+          )}
           <img
-            src={image}
+            src={imageError ? '/placeholder.svg' : image}
             alt={`${title} - ${category} coloring page for kids and adults - Free printable`}
-            className="w-full h-full object-cover transition-smooth group-hover:scale-105"
+            className={`w-full h-full object-cover transition-smooth group-hover:scale-105 ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
             loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            onError={() => {
+              setImageError(true);
+              setImageLoaded(true);
+            }}
           />
         </div>
       </Link>
