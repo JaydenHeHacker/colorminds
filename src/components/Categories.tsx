@@ -17,10 +17,21 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
   const { data: categories, isLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
+      // Get "All" category first
+      const { data: allCategory, error: allError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', 'all')
+        .maybeSingle();
+      
+      if (allError) throw allError;
+      if (!allCategory) return [];
+      
+      // Then get its direct children
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('level', 1)  // Only show top-level categories
+        .eq('parent_id', allCategory.id)
         .order('order_position', { ascending: true })
         .order('name', { ascending: true });
       

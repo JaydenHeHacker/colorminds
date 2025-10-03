@@ -70,7 +70,7 @@ const CategoryPage = () => {
     queryFn: async () => {
       if (!rootCategory?.id) return [];
       
-      // For "all" category, get level 1 categories instead of children
+      // For "all" category, get its direct children (not by level, but by parent_id)
       let query = supabase
         .from('categories')
         .select(`
@@ -79,8 +79,8 @@ const CategoryPage = () => {
         `);
       
       if (isAllCategory) {
-        // Get level 1 categories (children of "all"), excluding "all" itself
-        query = query.eq('level', 1).neq('slug', 'all');
+        // Get direct children of "all" category
+        query = query.eq('parent_id', category.id);
       } else {
         query = query.eq('parent_id', rootCategory.id);
       }
