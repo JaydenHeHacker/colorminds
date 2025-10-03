@@ -7,10 +7,21 @@ interface ColoringCardProps {
   title: string;
   image: string;
   category: string;
+  difficulty?: "easy" | "medium" | "hard";
+  onSelect?: (selected: boolean) => void;
+  isSelected?: boolean;
 }
 
-export const ColoringCard = ({ title, image, category }: ColoringCardProps) => {
+export const ColoringCard = ({ title, image, category, difficulty = "medium", onSelect, isSelected = false }: ColoringCardProps) => {
   const { toast } = useToast();
+
+  const difficultyConfig = {
+    easy: { label: "简单", icon: "🟢", color: "bg-green-500/10 text-green-700 border-green-200" },
+    medium: { label: "中等", icon: "🟡", color: "bg-yellow-500/10 text-yellow-700 border-yellow-200" },
+    hard: { label: "困难", icon: "🔴", color: "bg-red-500/10 text-red-700 border-red-200" }
+  };
+
+  const config = difficultyConfig[difficulty];
 
   const handleDownload = async () => {
     try {
@@ -39,7 +50,17 @@ export const ColoringCard = ({ title, image, category }: ColoringCardProps) => {
     }
   };
   return (
-    <Card className="group overflow-hidden border-2 hover:border-primary/50 transition-smooth shadow-sm hover:shadow-colorful">
+    <Card className="group overflow-hidden border-2 hover:border-primary/50 transition-smooth shadow-sm hover:shadow-colorful relative">
+      {onSelect && (
+        <div className="absolute top-2 left-2 z-10">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={(e) => onSelect(e.target.checked)}
+            className="w-5 h-5 cursor-pointer"
+          />
+        </div>
+      )}
       <div className="aspect-square overflow-hidden bg-muted">
         <img
           src={image}
@@ -51,9 +72,14 @@ export const ColoringCard = ({ title, image, category }: ColoringCardProps) => {
       
       <div className="p-4 space-y-3">
         <div>
-          <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary mb-2">
-            {category}
-          </span>
+          <div className="flex gap-2 mb-2">
+            <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
+              {category}
+            </span>
+            <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full border ${config.color}`}>
+              {config.icon} {config.label}
+            </span>
+          </div>
           <h3 className="font-semibold text-lg line-clamp-2">{title}</h3>
         </div>
         

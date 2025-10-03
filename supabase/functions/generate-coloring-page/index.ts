@@ -11,29 +11,51 @@ serve(async (req) => {
   }
 
   try {
-    const { category, theme } = await req.json();
+    const { category, theme, difficulty = 'medium' } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('Generating coloring page:', { category, theme });
+    console.log('Generating coloring page:', { category, theme, difficulty });
+
+    // Difficulty-based prompt adjustments
+    const difficultyPrompts = {
+      easy: `Simple, bold outlines with large areas to color. Perfect for young children aged 3-5.
+- Very thick lines (5-8px)
+- Large, clear shapes
+- Minimal details
+- Big spaces for easy coloring
+- Simple subjects`,
+      medium: `Moderate detail level suitable for children aged 6-8.
+- Medium line weight (3-4px)
+- Balanced detail and simplicity
+- Some decorative elements
+- Mix of large and small areas`,
+      hard: `Detailed and intricate design for older children (9+) and adults.
+- Fine lines (1-2px)
+- Complex patterns and textures
+- Many small details
+- Intricate backgrounds
+- Suitable for advanced coloring`
+    };
 
     // Create detailed prompt for coloring page
     const prompt = `Create a black and white line art coloring page suitable for children. 
 Theme: ${theme}
 Category: ${category}
+Difficulty: ${difficulty}
+
+${difficultyPrompts[difficulty as keyof typeof difficultyPrompts]}
 
 Requirements:
-- Simple, clear outlines
 - Black lines on white background
 - No shading or gradients
-- Child-friendly design
 - High contrast for easy coloring
 - Fun and engaging subject matter
 
-Make it a detailed but simple line drawing perfect for printing and coloring.`;
+Make it a ${difficulty} level line drawing perfect for printing and coloring.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

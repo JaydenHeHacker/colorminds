@@ -46,6 +46,7 @@ export type Database = {
           category_id: string | null
           created_at: string
           description: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"] | null
           download_count: number
           id: string
           image_url: string
@@ -57,6 +58,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
           download_count?: number
           id?: string
           image_url: string
@@ -68,6 +70,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
           download_count?: number
           id?: string
           image_url?: string
@@ -121,6 +124,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      difficulty_level: "easy" | "medium" | "hard"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -249,6 +253,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      difficulty_level: ["easy", "medium", "hard"],
     },
   },
 } as const

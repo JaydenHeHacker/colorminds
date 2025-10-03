@@ -15,6 +15,7 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [theme, setTheme] = useState("");
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("medium");
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateCount, setGenerateCount] = useState("1");
@@ -81,7 +82,7 @@ export default function Admin() {
       
       for (let i = 0; i < count; i++) {
         const { data, error } = await supabase.functions.invoke('generate-coloring-page', {
-          body: { category: selectedCategory, theme }
+          body: { category: selectedCategory, theme, difficulty }
         });
 
         if (error) throw error;
@@ -139,6 +140,7 @@ export default function Admin() {
             title: `${theme} ${i + 1}`,
             image_url: uploadData.publicUrl,
             category_id: category.id,
+            difficulty: difficulty,
             is_featured: false,
           });
 
@@ -375,6 +377,20 @@ export default function Admin() {
                     <SelectItem value="3">3 张</SelectItem>
                     <SelectItem value="4">4 张</SelectItem>
                     <SelectItem value="5">5 张</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="difficulty">难度等级</Label>
+                <Select value={difficulty} onValueChange={(value: "easy" | "medium" | "hard") => setDifficulty(value)}>
+                  <SelectTrigger id="difficulty">
+                    <SelectValue placeholder="选择难度" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="easy">🟢 简单 - 3-5岁（粗线条，大色块）</SelectItem>
+                    <SelectItem value="medium">🟡 中等 - 6-8岁（适中细节）</SelectItem>
+                    <SelectItem value="hard">🔴 困难 - 9岁+（复杂精细）</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
