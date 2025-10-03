@@ -125,7 +125,11 @@ export default function KeywordAnalyzer() {
     return (
       <div key={category.slug} style={{ marginLeft: `${depth * 24}px` }} className="mb-2">
         <div className="flex items-center gap-2 p-2 bg-muted rounded">
-          <span className="text-xl">{category.icon}</span>
+          {category.icon?.startsWith('http') ? (
+            <img src={category.icon} alt={category.name} className="w-6 h-6 object-cover rounded" />
+          ) : (
+            <span className="text-xl">{category.icon}</span>
+          )}
           <div className="flex-1">
             <div className="font-medium">{category.name}</div>
             <div className="text-xs text-muted-foreground">/{category.slug}</div>

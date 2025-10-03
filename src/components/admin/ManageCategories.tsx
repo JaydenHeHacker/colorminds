@@ -531,7 +531,13 @@ export default function ManageCategories() {
               )}
               {!hasChildren && <div className="w-6" />}
               
-              {category.icon && <span className="text-2xl flex-shrink-0">{category.icon}</span>}
+              {category.icon && (
+                category.icon.startsWith('http') ? (
+                  <img src={category.icon} alt={category.name} className="w-8 h-8 object-cover rounded flex-shrink-0" />
+                ) : (
+                  <span className="text-2xl flex-shrink-0">{category.icon}</span>
+                )
+              )}
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">

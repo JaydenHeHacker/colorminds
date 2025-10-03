@@ -117,8 +117,12 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                       )}
                     >
                       <div className="aspect-square flex flex-col items-center justify-center p-4 md:p-6 gradient-card">
-                        <div className="text-4xl md:text-5xl lg:text-6xl mb-2 md:mb-4 transition-smooth group-hover:scale-110">
-                          {category.icon}
+                        <div className="mb-2 md:mb-4 transition-smooth group-hover:scale-110 flex items-center justify-center">
+                          {category.icon?.startsWith('http') ? (
+                            <img src={category.icon} alt={category.name} className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 object-cover rounded-lg" />
+                          ) : (
+                            <span className="text-4xl md:text-5xl lg:text-6xl">{category.icon}</span>
+                          )}
                         </div>
                         <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center">{category.name}</h3>
                         {categoryCounts && categoryCounts[category.id] && (

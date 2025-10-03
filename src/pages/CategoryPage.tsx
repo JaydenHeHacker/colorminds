@@ -182,7 +182,13 @@ const CategoryPage = () => {
             {/* Category Header */}
             <header className="mb-8 md:mb-12 text-center">
               {category.icon && (
-                <div className="text-6xl mb-4">{category.icon}</div>
+                <div className="mb-4 flex justify-center">
+                  {category.icon.startsWith('http') ? (
+                    <img src={category.icon} alt={category.name} className="w-32 h-32 object-cover rounded-lg" />
+                  ) : (
+                    <span className="text-6xl">{category.icon}</span>
+                  )}
+                </div>
               )}
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                 {category.name} Coloring Pages
