@@ -147,11 +147,11 @@ const Index = () => {
 
   const handleBatchDownload = async () => {
     if (selectedPages.size === 0) {
-      toast.error("请先选择要下载的涂色页");
+      toast.error("Please select coloring pages to download");
       return;
     }
 
-    toast.info(`开始下载 ${selectedPages.size} 张涂色页...`);
+    toast.info(`Downloading ${selectedPages.size} coloring pages...`);
     
     let successCount = 0;
     for (const pageId of selectedPages) {
@@ -182,7 +182,7 @@ const Index = () => {
       }
     }
 
-    toast.success(`成功下载 ${successCount} 张涂色页！`);
+    toast.success(`Successfully downloaded ${successCount} coloring pages!`);
     setSelectedPages(new Set());
   };
 
@@ -206,7 +206,7 @@ const Index = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="搜索涂色页标题、描述、分类或系列..."
+                  placeholder="Search coloring pages by title, description, category, or series..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 md:pl-10 h-11 md:h-12 text-sm md:text-base"
@@ -214,7 +214,7 @@ const Index = () => {
               </div>
               {searchQuery && (
                 <p className="text-xs md:text-sm text-muted-foreground mt-2 text-center">
-                  找到 {pagesToDisplay.length + (selectedSeriesId ? 0 : seriesToDisplay.length)} 个结果
+                  Found {pagesToDisplay.length + (selectedSeriesId ? 0 : seriesToDisplay.length)} results
                 </p>
               )}
             </div>
@@ -228,24 +228,24 @@ const Index = () => {
               <div className="text-center mb-6 md:mb-8">
                 <div className="flex items-center justify-center gap-2 mb-3 md:mb-4">
                   <Heart className="h-6 w-6 md:h-8 md:w-8 text-primary fill-primary" />
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold">我的收藏</h2>
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold">My Favorites</h2>
                 </div>
                 <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-                  你收藏的涂色页都在这里
+                  All your favorite coloring pages in one place
                 </p>
                 <Button
                   variant="outline"
                   onClick={() => setShowFavorites(false)}
                   className="mt-3 md:mt-4"
                 >
-                  返回浏览
+                  Back to Browse
                 </Button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {isLoadingFavorites ? (
                   <div className="col-span-full text-center py-12 text-muted-foreground">
-                    加载中...
+                    Loading...
                   </div>
                 ) : favoritePages && favoritePages.length > 0 ? (
                   favoritePages.map((page: any) => (
@@ -261,14 +261,14 @@ const Index = () => {
                 ) : (
                   <div className="col-span-full text-center py-12 text-muted-foreground">
                     <Heart className="h-16 w-16 mx-auto mb-4 opacity-20" />
-                    <p className="text-xl mb-2">还没有收藏任何涂色页</p>
-                    <p className="text-sm">浏览下方的涂色页，点击爱心图标收藏你喜欢的作品</p>
+                    <p className="text-xl mb-2">No favorites yet</p>
+                    <p className="text-sm">Browse coloring pages below and click the heart icon to save your favorites</p>
                     <Button
                       variant="default"
                       onClick={() => setShowFavorites(false)}
                       className="mt-4"
                     >
-                      开始浏览
+                      Start Browsing
                     </Button>
                   </div>
                 )}
@@ -284,16 +284,16 @@ const Index = () => {
                 {selectedSeriesId 
                   ? seriesToDisplay.find(s => s.seriesId === selectedSeriesId)?.seriesTitle 
                   : selectedCategory 
-                    ? `${selectedCategory} 涂色页` 
-                    : '热门涂色页'
+                    ? `${selectedCategory} Coloring Pages` 
+                    : 'Popular Coloring Pages'
                 }
               </h2>
               <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
                 {selectedSeriesId 
-                  ? '故事系列的所有章节' 
+                  ? 'All chapters from this story series' 
                   : selectedCategory 
-                    ? `浏览我们的 ${selectedCategory} 主题涂色页合集`
-                    : '最受欢迎和下载最多的涂色页'
+                    ? `Browse our collection of ${selectedCategory} themed coloring pages`
+                    : 'Most popular and downloaded coloring pages'
                 }
               </p>
               {selectedSeriesId && (
@@ -302,7 +302,7 @@ const Index = () => {
                   onClick={() => setSelectedSeriesId(null)}
                   className="mt-3 md:mt-4"
                 >
-                  返回全部
+                  Back to All
                 </Button>
               )}
             </div>
@@ -310,7 +310,7 @@ const Index = () => {
             {/* Show story series first if not viewing a specific series */}
             {!selectedSeriesId && seriesToDisplay.length > 0 && (
               <div className="mb-8 md:mb-12">
-                <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">📚 故事系列</h3>
+                <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">📚 Story Series</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                   {seriesToDisplay.map((series) => (
                     <SeriesCard
@@ -330,7 +330,7 @@ const Index = () => {
             {/* Show regular pages or series pages */}
             {pagesToDisplay.length > 0 && (
               <>
-                {!selectedSeriesId && <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">🎨 单张涂色页</h3>}
+                {!selectedSeriesId && <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">🎨 Individual Pages</h3>}
                 
                 <div className="mb-4 md:mb-6 flex flex-col sm:flex-row justify-center gap-2 md:gap-4 px-4 md:px-0">
                   <Button
@@ -342,7 +342,7 @@ const Index = () => {
                     size="sm"
                     className="w-full sm:w-auto"
                   >
-                    全选
+                    Select All
                   </Button>
                   <Button
                     onClick={() => setSelectedPages(new Set())}
@@ -350,7 +350,7 @@ const Index = () => {
                     size="sm"
                     className="w-full sm:w-auto"
                   >
-                    取消全选
+                    Deselect All
                   </Button>
                   <Button
                     onClick={handleBatchDownload}
@@ -359,7 +359,7 @@ const Index = () => {
                     className="gap-2 w-full sm:w-auto"
                   >
                     <Download className="h-4 w-4" />
-                    批量下载 ({selectedPages.size})
+                    Batch Download ({selectedPages.size})
                   </Button>
                 </div>
               </>
@@ -368,7 +368,7 @@ const Index = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {isLoading ? (
               <div className="col-span-full text-center py-12 text-muted-foreground">
-                加载涂色页中...
+                Loading coloring pages...
               </div>
               ) : pagesToDisplay.length > 0 ? (
                 pagesToDisplay.map((page) => (
@@ -385,7 +385,7 @@ const Index = () => {
                 ))
               ) : (
               <div className="col-span-full text-center py-12 text-muted-foreground">
-                {selectedSeriesId ? '该系列暂无页面' : '暂无涂色页，敬请期待！'}
+                {selectedSeriesId ? 'No pages in this series yet' : 'No coloring pages available yet. Check back soon!'}
               </div>
               )}
             </div>

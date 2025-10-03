@@ -10,8 +10,8 @@ import { ArrowLeft, Loader2, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-const emailSchema = z.string().email("请输入有效的邮箱地址");
-const passwordSchema = z.string().min(6, "密码至少需要6个字符");
+const emailSchema = z.string().email("Please enter a valid email address");
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -79,15 +79,15 @@ export default function Auth() {
 
       if (error) {
         if (error.message.includes("already registered")) {
-          toast.error("该邮箱已注册，请直接登录");
+          toast.error("Email already registered. Please log in.");
         } else {
-          toast.error("注册失败：" + error.message);
+          toast.error("Sign up failed: " + error.message);
         }
       } else {
-        toast.success("注册成功！正在跳转...");
+        toast.success("Sign up successful! Redirecting...");
       }
     } catch (error: any) {
-      toast.error("注册失败：" + error.message);
+      toast.error("Sign up failed: " + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -107,15 +107,15 @@ export default function Auth() {
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
-          toast.error("邮箱或密码错误");
+          toast.error("Invalid email or password");
         } else {
-          toast.error("登录失败：" + error.message);
+          toast.error("Login failed: " + error.message);
         }
       } else {
-        toast.success("登录成功！");
+        toast.success("Login successful!");
       }
     } catch (error: any) {
-      toast.error("登录失败：" + error.message);
+      toast.error("Login failed: " + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -130,29 +130,29 @@ export default function Auth() {
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          返回首页
+          Back to Home
         </Button>
 
         <Card className="p-6">
-        <div className="text-center mb-8 md:mb-12">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-            欢迎来到 Color Minds
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold gradient-rainbow bg-clip-text text-transparent mb-4">
+            Welcome to Color Minds
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-            登录或注册，开启你的创意涂色之旅
+          <p className="text-base text-muted-foreground">
+            Sign in or create an account to save your favorites
           </p>
         </div>
 
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">登录</TabsTrigger>
-              <TabsTrigger value="signup">注册</TabsTrigger>
+              <TabsTrigger value="signin">Log In</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div>
-                  <Label htmlFor="signin-email">邮箱</Label>
+                  <Label htmlFor="signin-email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -174,7 +174,7 @@ export default function Auth() {
                 </div>
 
                 <div>
-                  <Label htmlFor="signin-password">密码</Label>
+                  <Label htmlFor="signin-password">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -203,10 +203,10 @@ export default function Auth() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      登录中...
+                      Signing in...
                     </>
                   ) : (
-                    "登录"
+                    "Log In"
                   )}
                 </Button>
               </form>
@@ -215,7 +215,7 @@ export default function Auth() {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div>
-                  <Label htmlFor="signup-email">邮箱</Label>
+                  <Label htmlFor="signup-email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -237,7 +237,7 @@ export default function Auth() {
                 </div>
 
                 <div>
-                  <Label htmlFor="signup-password">密码</Label>
+                  <Label htmlFor="signup-password">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -249,7 +249,7 @@ export default function Auth() {
                         setPasswordError("");
                       }}
                       className="pl-9"
-                      placeholder="至少6个字符"
+                      placeholder="At least 6 characters"
                       required
                     />
                   </div>
@@ -257,7 +257,7 @@ export default function Auth() {
                     <p className="text-sm text-destructive mt-1">{passwordError}</p>
                   )}
                   <p className="text-xs text-muted-foreground mt-1">
-                    密码至少需要6个字符
+                    Password must be at least 6 characters
                   </p>
                 </div>
 
@@ -269,15 +269,15 @@ export default function Auth() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      注册中...
+                      Signing up...
                     </>
                   ) : (
-                    "注册"
+                    "Sign Up"
                   )}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  注册即表示您同意我们的服务条款和隐私政策
+                  By signing up, you agree to our Terms of Service and Privacy Policy
                 </p>
               </form>
             </TabsContent>

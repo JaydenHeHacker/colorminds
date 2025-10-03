@@ -19,14 +19,14 @@ export const Hero = () => {
         <div className="grid gap-8 lg:grid-cols-2 items-center">
           <div className="space-y-4 md:space-y-6">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
-              释放你的创造力
+              Unleash Your Creativity with
               <span className="block bg-clip-text text-transparent gradient-rainbow">
                 Color Minds
               </span>
             </h1>
             
             <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-xl">
-              探索数千个免费创意涂色页，适合儿童和成人。AI生成的故事系列，即刻下载打印，开启创意涂色之旅！
+              Explore thousands of free creative coloring pages for kids and adults. AI-generated story series, instant download and print!
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
@@ -36,7 +36,7 @@ export const Hero = () => {
                 onClick={scrollToCategories}
               >
                 <Download className="h-5 w-5" />
-                浏览作品集
+                Browse Collection
               </Button>
               <Button 
                 size="lg" 
@@ -45,7 +45,7 @@ export const Hero = () => {
                 onClick={scrollToPopular}
               >
                 <Palette className="h-5 w-5" />
-                热门作品
+                Popular Pages
               </Button>
             </div>
           </div>

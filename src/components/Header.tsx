@@ -33,7 +33,7 @@ export const Header = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast.success("已退出登录");
+    toast.success("Logged out successfully");
   };
 
   return (
@@ -49,10 +49,10 @@ export const Header = () => {
           
           <div className="hidden md:flex items-center gap-4">
             <a href="#categories" className="text-sm font-medium transition-smooth hover:text-primary">
-              分类
+              Categories
             </a>
             <a href="#popular" className="text-sm font-medium transition-smooth hover:text-primary">
-              热门
+              Popular
             </a>
             {user && (
               <button 
@@ -60,11 +60,11 @@ export const Header = () => {
                 className="text-sm font-medium transition-smooth hover:text-primary flex items-center gap-1"
               >
                 <Heart className="h-4 w-4" />
-                我的收藏
+                My Favorites
               </button>
             )}
             <a href="/admin" className="text-sm font-medium transition-smooth hover:text-primary">
-              管理
+              Admin
             </a>
           </div>
         </div>
@@ -81,19 +81,19 @@ export const Header = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate("/#favorites")}>
                   <Heart className="h-4 w-4 mr-2" />
-                  我的收藏
+                  My Favorites
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  退出登录
+                  Log Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <Button variant="default" size="sm" onClick={() => navigate("/auth")} className="gap-2">
               <LogIn className="h-4 w-4" />
-              <span className="hidden md:inline">登录</span>
+              <span className="hidden md:inline">Log In</span>
             </Button>
           )}
           
