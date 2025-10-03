@@ -108,7 +108,7 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                </Card>
                  {categories.map((category) => (
                    <Link key={category.id} to={`/category/${category.path}`}>
-                    <Card
+                     <Card
                       className={cn(
                         "group cursor-pointer overflow-hidden border-2 transition-smooth shadow-sm hover:shadow-colorful active:scale-95 touch-manipulation",
                         selectedCategory === category.name
@@ -116,23 +116,36 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                           : "hover:border-primary/50"
                       )}
                     >
-                      <div className="aspect-square flex flex-col items-center justify-center p-4 md:p-6 gradient-card">
-                        <div className="mb-2 md:mb-4 transition-smooth group-hover:scale-110 flex items-center justify-center w-full">
-                          {category.icon?.startsWith('http') ? (
+                      <div className="aspect-square relative overflow-hidden">
+                        {category.icon?.startsWith('http') ? (
+                          <>
                             <img 
                               src={category.icon} 
                               alt={category.name} 
-                              className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-cover rounded-lg shadow-md" 
+                              className="w-full h-full object-cover transition-smooth group-hover:scale-110" 
                             />
-                          ) : (
-                            <span className="text-4xl md:text-5xl lg:text-6xl">{category.icon}</span>
-                          )}
-                        </div>
-                        <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center">{category.name}</h3>
-                        {categoryCounts && categoryCounts[category.id] && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {categoryCounts[category.id]} pages
-                          </p>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 text-white">
+                              <h3 className="font-semibold text-sm md:text-base lg:text-lg mb-1">{category.name}</h3>
+                              {categoryCounts && categoryCounts[category.id] && (
+                                <p className="text-xs opacity-90">
+                                  {categoryCounts[category.id]} pages
+                                </p>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-6 gradient-card">
+                            <div className="text-4xl md:text-5xl lg:text-6xl mb-2 md:mb-4 transition-smooth group-hover:scale-110">
+                              {category.icon}
+                            </div>
+                            <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center">{category.name}</h3>
+                            {categoryCounts && categoryCounts[category.id] && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {categoryCounts[category.id]} pages
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
                     </Card>

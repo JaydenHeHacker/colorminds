@@ -180,31 +180,49 @@ const CategoryPage = () => {
         <section className="container px-4 py-8 md:py-12">
           <div className="max-w-6xl mx-auto">
             {/* Category Header */}
-            <header className="mb-8 md:mb-12 text-center">
-              {category.icon && (
-                <div className="mb-6 flex justify-center">
-                  {category.icon.startsWith('http') ? (
-                    <img 
-                      src={category.icon} 
-                      alt={category.name} 
-                      className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 object-cover rounded-2xl shadow-lg hover-scale transition-smooth" 
-                    />
-                  ) : (
-                    <span className="text-6xl md:text-7xl lg:text-8xl">{category.icon}</span>
+            <header className="mb-8 md:mb-12">
+              {category.icon && category.icon.startsWith('http') ? (
+                <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-2xl overflow-hidden mb-8 shadow-xl">
+                  <img 
+                    src={category.icon} 
+                    alt={category.name} 
+                    className="w-full h-full object-cover" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-10 text-white">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3">
+                      {category.name} Coloring Pages
+                    </h1>
+                    {category.description && (
+                      <p className="text-base md:text-lg lg:text-xl opacity-90 max-w-3xl">
+                        {category.description}
+                      </p>
+                    )}
+                    <div className="mt-3 text-sm md:text-base opacity-80">
+                      {coloringPages?.length || 0} free printable coloring pages available
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  {category.icon && (
+                    <div className="mb-6 flex justify-center">
+                      <span className="text-6xl md:text-7xl lg:text-8xl">{category.icon}</span>
+                    </div>
                   )}
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                    {category.name} Coloring Pages
+                  </h1>
+                  {category.description && (
+                    <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+                      {category.description}
+                    </p>
+                  )}
+                  <div className="mt-4 text-sm text-muted-foreground">
+                    {coloringPages?.length || 0} free printable coloring pages available
+                  </div>
                 </div>
               )}
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                {category.name} Coloring Pages
-              </h1>
-              {category.description && (
-                <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-                  {category.description}
-                </p>
-              )}
-              <div className="mt-4 text-sm text-muted-foreground">
-                {coloringPages?.length || 0} free printable coloring pages available
-              </div>
             </header>
 
             {/* Loading State */}
