@@ -66,13 +66,28 @@ export default function CreatePage() {
   };
 
   const loadUserData = async (userId: string) => {
-    const [subResult, creditsResult] = await Promise.all([
-      supabase.from("user_subscriptions").select("*").eq("user_id", userId).single(),
-      supabase.from("user_credits").select("*").eq("user_id", userId).single(),
-    ]);
+    try {
+      // First, sync subscription status from Stripe
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase.functions.invoke('check-subscription', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+      }
 
-    if (subResult.data) setSubscription(subResult.data);
-    if (creditsResult.data) setCredits(creditsResult.data);
+      // Then load the updated data
+      const [subResult, creditsResult] = await Promise.all([
+        supabase.from("user_subscriptions").select("*").eq("user_id", userId).single(),
+        supabase.from("user_credits").select("*").eq("user_id", userId).single(),
+      ]);
+
+      if (subResult.data) setSubscription(subResult.data);
+      if (creditsResult.data) setCredits(creditsResult.data);
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
   };
 
   const canGenerate = () => {
