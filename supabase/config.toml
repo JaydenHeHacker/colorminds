@@ -38,3 +38,6 @@ verify_jwt = true
 
 [functions.handle-payment-webhook]
 verify_jwt = false
+
+[functions.auto-publish-scheduled]
+verify_jwt = false
