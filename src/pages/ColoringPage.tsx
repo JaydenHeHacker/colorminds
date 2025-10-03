@@ -49,6 +49,7 @@ const ColoringPage = () => {
             path
           )
         `)
+        .eq('status', 'published')
         .eq('slug', slug)
         .maybeSingle();
       
@@ -67,6 +68,7 @@ const ColoringPage = () => {
       const { data, error } = await supabase
         .from('coloring_pages')
         .select('id, slug, title, series_order')
+        .eq('status', 'published')
         .eq('series_id', page.series_id)
         .order('series_order', { ascending: true });
       

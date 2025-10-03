@@ -9,7 +9,7 @@ export const Hero = () => {
     queryKey: ['site-stats'],
     queryFn: async () => {
       const [pagesCount, categoriesCount] = await Promise.all([
-        supabase.from('coloring_pages').select('*', { count: 'exact', head: true }),
+        supabase.from('coloring_pages').select('*', { count: 'exact', head: true }).eq('status', 'published'),
         supabase.from('categories').select('*', { count: 'exact', head: true }),
       ]);
       

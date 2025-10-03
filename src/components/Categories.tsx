@@ -48,7 +48,8 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
     queryFn: async () => {
       const { data, error } = await supabase
         .from('coloring_pages')
-        .select('category_id');
+        .select('category_id')
+        .eq('status', 'published');
       
       if (error) throw error;
       
@@ -70,7 +71,8 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
     queryFn: async () => {
       const { count, error } = await supabase
         .from('coloring_pages')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'published');
       
       if (error) throw error;
       return count || 0;
