@@ -1,6 +1,20 @@
 import { Heart } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 export const Footer = () => {
+  const navigate = useNavigate();
+  
+  const scrollToSection = (sectionId: string) => {
+    if (window.location.pathname !== '/') {
+      navigate(`/#${sectionId}`);
+      setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <footer className="border-t border-border/40 py-12 md:py-16">
       <div className="container">
@@ -17,29 +31,63 @@ export const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Categories</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#categories" className="hover:text-primary transition-smooth">Animals</a></li>
-              <li><a href="#categories" className="hover:text-primary transition-smooth">Nature</a></li>
-              <li><a href="#categories" className="hover:text-primary transition-smooth">Holidays</a></li>
-              <li><a href="#categories" className="hover:text-primary transition-smooth">Characters</a></li>
+              <li>
+                <button onClick={() => scrollToSection('categories')} className="hover:text-primary transition-smooth">
+                  All Categories
+                </button>
+              </li>
+              <li>
+                <Link to="/series" className="hover:text-primary transition-smooth">
+                  Story Series
+                </Link>
+              </li>
+              <li>
+                <button onClick={() => scrollToSection('popular')} className="hover:text-primary transition-smooth">
+                  Popular
+                </button>
+              </li>
             </ul>
           </div>
           
           <div>
             <h4 className="font-semibold mb-4">Resources</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#popular" className="hover:text-primary transition-smooth">Popular</a></li>
-              <li><a href="#popular" className="hover:text-primary transition-smooth">Story Series</a></li>
-              <li><a href="/admin" className="hover:text-primary transition-smooth">Create</a></li>
-              <li><a href="#" className="hover:text-primary transition-smooth">About</a></li>
+              <li>
+                <Link to="/favorites" className="hover:text-primary transition-smooth">
+                  My Favorites
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin" className="hover:text-primary transition-smooth">
+                  Create Pages
+                </Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-primary transition-smooth">
+                  About Us
+                </Link>
+              </li>
             </ul>
           </div>
           
           <div>
             <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary transition-smooth">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-primary transition-smooth">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-primary transition-smooth">Contact Us</a></li>
+              <li>
+                <Link to="/" className="hover:text-primary transition-smooth">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-primary transition-smooth">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-primary transition-smooth">
+                  Contact Us
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
