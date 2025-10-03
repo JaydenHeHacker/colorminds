@@ -71,7 +71,7 @@ const CategoryPage = () => {
       if (!rootCategory?.id) return [];
       
       // For "all" category, get level 1 categories instead of children
-      const query = supabase
+      let query = supabase
         .from('categories')
         .select(`
           *,
@@ -79,9 +79,10 @@ const CategoryPage = () => {
         `);
       
       if (isAllCategory) {
-        query.eq('level', 1);
+        // Get level 1 categories (children of "all"), excluding "all" itself
+        query = query.eq('level', 1).neq('slug', 'all');
       } else {
-        query.eq('parent_id', rootCategory.id);
+        query = query.eq('parent_id', rootCategory.id);
       }
       
       const { data, error } = await query
