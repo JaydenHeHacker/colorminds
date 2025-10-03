@@ -81,7 +81,7 @@ serve(async (req) => {
       productId = subscription.items.data[0].price.product as string;
 
       // Update user_subscriptions to premium tier
-      await supabaseClient
+      const { error: updateError } = await supabaseClient
         .from("user_subscriptions")
         .upsert({
           user_id: user.id,
@@ -91,10 +91,18 @@ serve(async (req) => {
           stripe_subscription_id: subscription.id,
           subscription_end_date: subscriptionEnd,
           updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id'
         });
+      
+      if (updateError) {
+        console.error("Error updating subscription:", updateError);
+      } else {
+        console.log("Successfully updated subscription to premium");
+      }
     } else {
       // Update to free tier if subscription ended
-      await supabaseClient
+      const { error: updateError } = await supabaseClient
         .from("user_subscriptions")
         .upsert({
           user_id: user.id,
@@ -102,7 +110,15 @@ serve(async (req) => {
           monthly_quota: 5,
           stripe_customer_id: customerId,
           updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id'
         });
+      
+      if (updateError) {
+        console.error("Error updating subscription to free:", updateError);
+      } else {
+        console.log("Updated subscription to free");
+      }
     }
 
     return new Response(JSON.stringify({
