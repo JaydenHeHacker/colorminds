@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, Heart, Share2 } from "lucide-react";
+import { Heart, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -128,91 +128,6 @@ export const ColoringCard = ({
 
   const config = difficultyConfig[difficulty];
 
-  const handlePrint = async () => {
-    try {
-      sonnerToast.info("Loading image for print...");
-      
-      // Create a hidden iframe for printing
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = 'none';
-      document.body.appendChild(iframe);
-      
-      const iframeDoc = iframe.contentWindow?.document;
-      if (!iframeDoc) {
-        throw new Error('Could not access iframe');
-      }
-      
-      iframeDoc.open();
-      iframeDoc.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Print ${title}</title>
-            <style>
-              body {
-                margin: 0;
-                padding: 0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-              }
-              img {
-                max-width: 100%;
-                height: auto;
-                display: block;
-              }
-              @media print {
-                body {
-                  margin: 0;
-                }
-                img {
-                  max-width: 100%;
-                  page-break-inside: avoid;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            <img src="${image}" alt="${title}" />
-          </body>
-        </html>
-      `);
-      iframeDoc.close();
-      
-      // Wait for image to load
-      const img = iframeDoc.querySelector('img');
-      if (img) {
-        img.onload = () => {
-          setTimeout(() => {
-            iframe.contentWindow?.print();
-            setTimeout(() => {
-              document.body.removeChild(iframe);
-            }, 100);
-          }, 250);
-        };
-        
-        img.onerror = () => {
-          sonnerToast.error("Failed to load image");
-          document.body.removeChild(iframe);
-        };
-      }
-      
-      // Increment download count
-      if (id) {
-        await supabase.rpc('increment_download_count', { page_id: id });
-      }
-      
-      sonnerToast.success("Print dialog will open shortly...");
-    } catch (error) {
-      console.error('Print error:', error);
-      sonnerToast.error("Print failed. Please try again.");
-    }
-  };
   return (
     <Card className="group overflow-hidden border-2 hover:border-primary/50 transition-smooth shadow-sm hover:shadow-colorful relative">
       <Link to={slug ? `/coloring-page/${slug}` : '#'} className="block">
@@ -250,12 +165,9 @@ export const ColoringCard = ({
         </div>
         
         <div className="flex items-center gap-2">
-          <Button size="sm" className="flex-1 gap-2" onClick={handlePrint}>
-            <Printer className="h-4 w-4" />
-            Print
-          </Button>
           <Button 
             size="sm" 
+            className="flex-1"
             variant={isFavorited ? "default" : "outline"}
             onClick={handleToggleFavorite}
             disabled={isCheckingFavorite}
@@ -264,6 +176,7 @@ export const ColoringCard = ({
           </Button>
           <Button 
             size="sm" 
+            className="flex-1"
             variant="outline"
             onClick={() => setIsShareOpen(true)}
           >
