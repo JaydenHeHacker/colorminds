@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Download, Heart, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast as sonnerToast } from "sonner";
 
 interface ColoringCardProps {
   id?: string;
@@ -16,6 +19,90 @@ interface ColoringCardProps {
 
 export const ColoringCard = ({ id, title, image, category, difficulty = "medium", onSelect, isSelected = false }: ColoringCardProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isCheckingFavorite, setIsCheckingFavorite] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (user && id) {
+      checkFavoriteStatus();
+    }
+  }, [user, id]);
+
+  const checkFavoriteStatus = async () => {
+    if (!id || !user) return;
+    
+    setIsCheckingFavorite(true);
+    try {
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('coloring_page_id', id)
+        .maybeSingle();
+      
+      if (!error) {
+        setIsFavorited(!!data);
+      }
+    } catch (error) {
+      console.error('Error checking favorite:', error);
+    } finally {
+      setIsCheckingFavorite(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      sonnerToast.error("请先登录以收藏涂色页");
+      navigate("/auth");
+      return;
+    }
+
+    if (!id) return;
+
+    try {
+      if (isFavorited) {
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('coloring_page_id', id);
+        
+        if (error) throw error;
+        
+        setIsFavorited(false);
+        sonnerToast.success("已取消收藏");
+      } else {
+        const { error } = await supabase
+          .from('favorites')
+          .insert({
+            user_id: user.id,
+            coloring_page_id: id
+          });
+        
+        if (error) throw error;
+        
+        setIsFavorited(true);
+        sonnerToast.success("已添加到收藏");
+      }
+    } catch (error: any) {
+      console.error('Error toggling favorite:', error);
+      sonnerToast.error("操作失败：" + error.message);
+    }
+  };
 
   const difficultyConfig = {
     easy: { label: "简单", icon: "🟢", color: "bg-green-500/10 text-green-700 border-green-200" },
@@ -95,8 +182,13 @@ export const ColoringCard = ({ id, title, image, category, difficulty = "medium"
             <Download className="h-4 w-4" />
             Download
           </Button>
-          <Button size="sm" variant="outline">
-            <Heart className="h-4 w-4" />
+          <Button 
+            size="sm" 
+            variant={isFavorited ? "default" : "outline"}
+            onClick={handleToggleFavorite}
+            disabled={isCheckingFavorite}
+          >
+            <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
           </Button>
           <Button size="sm" variant="outline">
             <Share2 className="h-4 w-4" />

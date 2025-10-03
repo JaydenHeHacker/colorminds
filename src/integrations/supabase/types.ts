@@ -100,6 +100,56 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          coloring_page_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          coloring_page_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          coloring_page_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_coloring_page_id_fkey"
+            columns: ["coloring_page_id"]
+            isOneToOne: false
+            referencedRelation: "coloring_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

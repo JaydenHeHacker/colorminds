@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { Categories } from "@/components/Categories";
@@ -9,14 +9,40 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Search } from "lucide-react";
+import { Download, Search, Heart } from "lucide-react";
 import { toast } from "sonner";
+import { User } from "@supabase/supabase-js";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [user, setUser] = useState<User | null>(null);
+  const [showFavorites, setShowFavorites] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (!session) {
+        setShowFavorites(false);
+      }
+    });
+
+    // Check if URL has #favorites hash
+    if (window.location.hash === '#favorites') {
+      setTimeout(() => {
+        setShowFavorites(true);
+        document.getElementById('favorites-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const { data: coloringPages, isLoading } = useQuery({
     queryKey: ['coloring-pages'],
@@ -33,6 +59,31 @@ const Index = () => {
       
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: favoritePages, isLoading: isLoadingFavorites } = useQuery({
+    queryKey: ['favorite-pages', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('favorites')
+        .select(`
+          coloring_page_id,
+          coloring_pages (
+            *,
+            categories (
+              name
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data.map(fav => fav.coloring_pages).filter(Boolean);
     },
   });
 
@@ -168,6 +219,62 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        {/* Favorites Section */}
+        {user && showFavorites && (
+          <section className="py-16 md:py-20 bg-background" id="favorites-section">
+            <div className="container">
+              <div className="text-center mb-8">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Heart className="h-8 w-8 text-primary fill-primary" />
+                  <h2 className="text-4xl md:text-5xl font-bold">我的收藏</h2>
+                </div>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                  你收藏的涂色页都在这里
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFavorites(false)}
+                  className="mt-4"
+                >
+                  返回浏览
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {isLoadingFavorites ? (
+                  <div className="col-span-full text-center py-12 text-muted-foreground">
+                    加载中...
+                  </div>
+                ) : favoritePages && favoritePages.length > 0 ? (
+                  favoritePages.map((page: any) => (
+                    <ColoringCard
+                      key={page.id}
+                      id={page.id}
+                      title={page.title}
+                      image={page.image_url}
+                      category={page.categories?.name || 'Uncategorized'}
+                      difficulty={page.difficulty as "easy" | "medium" | "hard"}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12 text-muted-foreground">
+                    <Heart className="h-16 w-16 mx-auto mb-4 opacity-20" />
+                    <p className="text-xl mb-2">还没有收藏任何涂色页</p>
+                    <p className="text-sm">浏览下方的涂色页，点击爱心图标收藏你喜欢的作品</p>
+                    <Button
+                      variant="default"
+                      onClick={() => setShowFavorites(false)}
+                      className="mt-4"
+                    >
+                      开始浏览
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
         
         <section className="py-16 md:py-20 bg-muted/30" id="popular">
           <div className="container">
