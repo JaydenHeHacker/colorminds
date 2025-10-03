@@ -1,8 +1,14 @@
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
-export const Categories = () => {
+interface CategoriesProps {
+  selectedCategory: string | null;
+  onCategorySelect: (category: string | null) => void;
+}
+
+export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesProps) => {
   const { data: categories, isLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -33,19 +39,43 @@ export const Categories = () => {
               Loading categories...
             </div>
           ) : categories && categories.length > 0 ? (
-            categories.map((category) => (
+            <>
               <Card
-                key={category.id}
-                className="group cursor-pointer overflow-hidden border-2 hover:border-primary/50 transition-smooth shadow-sm hover:shadow-colorful"
+                onClick={() => onCategorySelect(null)}
+                className={cn(
+                  "group cursor-pointer overflow-hidden border-2 transition-smooth shadow-sm hover:shadow-colorful",
+                  selectedCategory === null
+                    ? "border-primary bg-primary/5"
+                    : "hover:border-primary/50"
+                )}
               >
                 <div className="aspect-square flex flex-col items-center justify-center p-6 gradient-card">
                   <div className="text-5xl md:text-6xl mb-4 transition-smooth group-hover:scale-110">
-                    {category.icon}
+                    🎨
                   </div>
-                  <h3 className="font-semibold text-lg text-center">{category.name}</h3>
+                  <h3 className="font-semibold text-lg text-center">All</h3>
                 </div>
               </Card>
-            ))
+              {categories.map((category) => (
+                <Card
+                  key={category.id}
+                  onClick={() => onCategorySelect(category.name)}
+                  className={cn(
+                    "group cursor-pointer overflow-hidden border-2 transition-smooth shadow-sm hover:shadow-colorful",
+                    selectedCategory === category.name
+                      ? "border-primary bg-primary/5"
+                      : "hover:border-primary/50"
+                  )}
+                >
+                  <div className="aspect-square flex flex-col items-center justify-center p-6 gradient-card">
+                    <div className="text-5xl md:text-6xl mb-4 transition-smooth group-hover:scale-110">
+                      {category.icon}
+                    </div>
+                    <h3 className="font-semibold text-lg text-center">{category.name}</h3>
+                  </div>
+                </Card>
+              ))}
+            </>
           ) : (
             <div className="col-span-full text-center py-12 text-muted-foreground">
               No categories available

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { Categories } from "@/components/Categories";
@@ -7,6 +8,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
   const { data: coloringPages, isLoading } = useQuery({
     queryKey: ['coloring-pages'],
     queryFn: async () => {
@@ -25,6 +28,11 @@ const Index = () => {
     },
   });
 
+  // Filter coloring pages by selected category
+  const filteredPages = selectedCategory
+    ? coloringPages?.filter(page => page.categories?.name === selectedCategory)
+    : coloringPages;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -32,16 +40,22 @@ const Index = () => {
       <main className="flex-1">
         <Hero />
         
-        <Categories />
+        <Categories 
+          selectedCategory={selectedCategory}
+          onCategorySelect={setSelectedCategory}
+        />
         
         <section className="py-16 md:py-20 bg-muted/30" id="popular">
           <div className="container">
             <div className="text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Popular Coloring Pages
+                {selectedCategory ? `${selectedCategory} Coloring Pages` : 'Popular Coloring Pages'}
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Our most loved and downloaded coloring pages
+                {selectedCategory 
+                  ? `Browse our collection of ${selectedCategory.toLowerCase()} themed coloring pages`
+                  : 'Our most loved and downloaded coloring pages'
+                }
               </p>
             </div>
             
@@ -50,8 +64,8 @@ const Index = () => {
                 <div className="col-span-full text-center py-12 text-muted-foreground">
                   Loading coloring pages...
                 </div>
-              ) : coloringPages && coloringPages.length > 0 ? (
-                coloringPages.map((page) => (
+              ) : filteredPages && filteredPages.length > 0 ? (
+                filteredPages.map((page) => (
                   <ColoringCard
                     key={page.id}
                     title={page.title}
