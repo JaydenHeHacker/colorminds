@@ -39,6 +39,7 @@ serve(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        console.log(`Checkout completed: mode=${session.mode}, customer_email=${session.customer_email}`);
         
         if (session.mode === "payment") {
           // Handle credit pack purchase
@@ -91,6 +92,50 @@ serve(async (req) => {
 
             console.log(`Added ${credits} credits to user ${userId}`);
           }
+        } else if (session.mode === "subscription") {
+          // Handle subscription checkout completion
+          const customerEmail = session.customer_email || session.customer_details?.email;
+          if (!customerEmail) {
+            console.error("No customer email in session");
+            break;
+          }
+
+          // Get user by email using auth.users (via service role key)
+          const { data: { users }, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
+          if (usersError) {
+            console.error("Error listing users:", usersError);
+            break;
+          }
+
+          const user = users.find(u => u.email === customerEmail);
+          if (!user) {
+            console.error(`No user found with email: ${customerEmail}`);
+            break;
+          }
+
+          // Get subscription details
+          const subscriptionId = session.subscription as string;
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          const customerId = session.customer as string;
+
+          const tier = subscription.status === "active" ? "premium" : "free";
+          const monthlyQuota = tier === "premium" ? 100 : 5;
+
+          await supabaseAdmin
+            .from("user_subscriptions")
+            .upsert({
+              user_id: user.id,
+              tier,
+              monthly_quota: monthlyQuota,
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscription.id,
+              subscription_end_date: subscription.status === "active" 
+                ? new Date(subscription.current_period_end * 1000).toISOString()
+                : null,
+              updated_at: new Date().toISOString(),
+            });
+
+          console.log(`Subscription created for user ${user.id}, tier: ${tier}`);
         }
         break;
       }
@@ -101,34 +146,37 @@ serve(async (req) => {
         const customer = await stripe.customers.retrieve(subscription.customer as string);
         
         if ('email' in customer && customer.email) {
-          // Find user by email
-          const { data: profiles } = await supabaseAdmin
-            .from("profiles")
-            .select("id")
-            .eq("email", customer.email)
-            .single();
-          
-          if (profiles) {
-            const userId = profiles.id;
-            const tier = subscription.status === "active" ? "premium" : "free";
-            const monthlyQuota = tier === "premium" ? 100 : 5;
-
-            await supabaseAdmin
-              .from("user_subscriptions")
-              .upsert({
-                user_id: userId,
-                tier,
-                monthly_quota: monthlyQuota,
-                stripe_customer_id: customer.id,
-                stripe_subscription_id: subscription.id,
-                subscription_end_date: subscription.status === "active" 
-                  ? new Date(subscription.current_period_end * 1000).toISOString()
-                  : null,
-                updated_at: new Date().toISOString(),
-              });
-
-            console.log(`Updated subscription for user ${userId} to ${tier}`);
+          // Get user by email using auth.users
+          const { data: { users }, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
+          if (usersError) {
+            console.error("Error listing users:", usersError);
+            break;
           }
+
+          const user = users.find(u => u.email === customer.email);
+          if (!user) {
+            console.error(`No user found with email: ${customer.email}`);
+            break;
+          }
+
+          const tier = subscription.status === "active" ? "premium" : "free";
+          const monthlyQuota = tier === "premium" ? 100 : 5;
+
+          await supabaseAdmin
+            .from("user_subscriptions")
+            .upsert({
+              user_id: user.id,
+              tier,
+              monthly_quota: monthlyQuota,
+              stripe_customer_id: customer.id,
+              stripe_subscription_id: subscription.id,
+              subscription_end_date: subscription.status === "active" 
+                ? new Date(subscription.current_period_end * 1000).toISOString()
+                : null,
+              updated_at: new Date().toISOString(),
+            });
+
+          console.log(`Updated subscription for user ${user.id} to ${tier}`);
         }
         break;
       }
