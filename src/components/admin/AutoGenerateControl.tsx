@@ -5,10 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Zap, TrendingUp } from "lucide-react";
+import { Loader2, Zap, TrendingUp, Terminal } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface LogEntry {
+  time: string;
+  type: 'info' | 'success' | 'error';
+  message: string;
+}
 
 export function AutoGenerateControl() {
   const queryClient = useQueryClient();
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+
+  const addLog = (type: LogEntry['type'], message: string) => {
+    const time = new Date().toLocaleTimeString('zh-CN');
+    setLogs(prev => [...prev, { time, type, message }]);
+  };
 
   // 获取自动生成开关状态
   const { data: settings, isLoading } = useQuery({
@@ -65,9 +78,11 @@ export function AutoGenerateControl() {
   // 手动触发一次生成
   const generateNowMutation = useMutation({
     mutationFn: async () => {
+      addLog('info', '🚀 开始生成草稿...');
       console.log('🚀 开始生成草稿...');
-      toast.loading('正在生成中，请稍候...', { duration: 60000 }); // 60秒超时
+      toast.loading('正在生成中，请稍候...', { duration: 60000 });
       
+      addLog('info', '📡 调用生成函数...');
       const { data, error } = await supabase.functions.invoke('auto-generate-drafts', {
         body: {}
       });
@@ -76,14 +91,19 @@ export function AutoGenerateControl() {
       console.log('❌ 生成错误:', error);
       
       if (error) {
+        addLog('error', `❌ 调用失败: ${error.message}`);
         console.error('生成失败详情:', error);
         throw error;
       }
       
       if (!data.success) {
+        addLog('error', `❌ 生成失败: ${data.error || '未知错误'}`);
         console.error('生成失败:', data.error);
         throw new Error(data.error || '生成失败');
       }
+      
+      addLog('success', `✅ 函数执行成功`);
+      addLog('info', `📊 类目: ${data.category}, 难度: ${data.difficulty}, 类型: ${data.type}`);
       
       return data;
     },
@@ -91,20 +111,27 @@ export function AutoGenerateControl() {
       console.log('✅ 生成成功!', data);
       queryClient.invalidateQueries({ queryKey: ['generation-stats-today'] });
       
+      if (data.pages?.length > 0) {
+        addLog('success', `✅ 成功生成 ${data.pages.length} 个草稿页面`);
+        data.pages.forEach((page: any, index: number) => {
+          addLog('info', `  ${index + 1}. ${page.title}`);
+        });
+        console.log('生成的页面:', data.pages);
+      } else {
+        addLog('error', `⚠️ 生成完成但未创建页面`);
+      }
+      
       const message = data.pages?.length > 0 
         ? `✅ 成功生成 ${data.pages.length} 个草稿！\n类目: ${data.category}\n难度: ${data.difficulty}\n类型: ${data.type === 'series' ? '系列图(8张)' : '单图'}`
         : `⚠️ 生成完成但未创建页面\n类目: ${data.category}\n难度: ${data.difficulty}`;
       
-      toast.success(message, { duration: 8000 }); // 8秒显示
-      
-      if (data.pages?.length > 0) {
-        console.log('生成的页面:', data.pages);
-      }
+      toast.success(message, { duration: 8000 });
     },
     onError: (error: any) => {
       console.error('❌ 生成失败:', error);
       const errorMessage = error?.message || error?.error || '未知错误';
-      toast.error(`❌ 生成失败\n${errorMessage}`, { duration: 8000 }); // 8秒显示
+      addLog('error', `❌ 最终失败: ${errorMessage}`);
+      toast.error(`❌ 生成失败\n${errorMessage}`, { duration: 8000 });
     }
   });
 
@@ -163,7 +190,10 @@ export function AutoGenerateControl() {
 
         {/* 手动触发 */}
         <Button
-          onClick={() => generateNowMutation.mutate()}
+          onClick={() => {
+            setLogs([]);
+            generateNowMutation.mutate();
+          }}
           disabled={generateNowMutation.isPending}
           className="w-full"
           variant="outline"
@@ -180,6 +210,33 @@ export function AutoGenerateControl() {
             </>
           )}
         </Button>
+
+        {/* 实时日志 */}
+        {logs.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Terminal className="h-4 w-4" />
+              生成日志
+            </div>
+            <ScrollArea className="h-[200px] w-full rounded-md border bg-muted/50 p-4">
+              <div className="space-y-1 font-mono text-xs">
+                {logs.map((log, index) => (
+                  <div 
+                    key={index} 
+                    className={`flex gap-2 ${
+                      log.type === 'error' ? 'text-destructive' : 
+                      log.type === 'success' ? 'text-green-600' : 
+                      'text-muted-foreground'
+                    }`}
+                  >
+                    <span className="text-muted-foreground">[{log.time}]</span>
+                    <span>{log.message}</span>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
 
         {/* 说明 */}
         <div className="text-xs text-muted-foreground space-y-1 p-3 bg-muted/50 rounded">
