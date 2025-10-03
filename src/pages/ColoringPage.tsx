@@ -10,6 +10,7 @@ import { Download, Heart, Share2, ArrowLeft, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShareDialog } from "@/components/ShareDialog";
+import { StructuredData } from "@/components/StructuredData";
 
 const ColoringPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -192,8 +193,44 @@ const ColoringPage = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       
+      <StructuredData
+        type="ImageObject"
+        data={{
+          title: page.title,
+          description: page.description,
+          image: page.image_url,
+          category: page.categories?.name,
+          downloadCount: page.download_count,
+          datePublished: page.created_at,
+          dateModified: page.updated_at,
+          keywords: [
+            page.categories?.name,
+            page.difficulty,
+            "coloring page",
+            "printable",
+            "free",
+            "kids",
+            "adults"
+          ]
+        }}
+      />
+
+      <StructuredData
+        type="BreadcrumbList"
+        data={{
+          items: [
+            { label: 'Home', href: '/' },
+            ...(page.categories ? [{ 
+              label: page.categories.name, 
+              href: `/category/${page.categories.slug}` 
+            }] : []),
+            { label: page.title, isCurrentPage: true },
+          ]
+        }}
+      />
+      
       <main className="flex-1">
-        <Breadcrumbs 
+        <Breadcrumbs
           items={[
             { label: 'Home', href: '/' },
             ...(page.categories ? [{ 

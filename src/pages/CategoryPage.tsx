@@ -8,6 +8,7 @@ import { ColoringCard } from "@/components/ColoringCard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useEffect } from "react";
+import { StructuredData } from "@/components/StructuredData";
 
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -101,8 +102,21 @@ const CategoryPage = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       
+      <StructuredData
+        type="CollectionPage"
+        data={{
+          category: category.name,
+          description: category.description,
+          numberOfItems: coloringPages?.length || 0,
+          items: coloringPages?.map(page => ({
+            title: page.title,
+            image: page.image_url
+          }))
+        }}
+      />
+      
       <main className="flex-1">
-        <Breadcrumbs 
+        <Breadcrumbs
           items={[
             { label: 'Home', href: '/' },
             { label: category.name, isCurrentPage: true },

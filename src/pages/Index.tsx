@@ -370,6 +370,7 @@ const Index = () => {
                   {seriesToDisplay.map((series) => (
                     <SeriesCard
                       key={series.seriesId}
+                      seriesId={series.seriesId}
                       seriesTitle={series.seriesTitle}
                       seriesTotal={series.seriesTotal}
                       difficulty={series.difficulty as "easy" | "medium" | "hard"}
