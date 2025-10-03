@@ -1,7 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const IntroSection = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const { data: stats } = useQuery({
     queryKey: ['site-stats'],
     queryFn: async () => {
@@ -38,27 +42,53 @@ export const IntroSection = () => {
           
           <div className="space-y-4 text-left md:text-center">
             <h2 className="text-2xl md:text-3xl font-bold">
-              Free Coloring Pages for Kids and Adults - Print & Download Instantly
+              Free Coloring Pages for Kids and Adults
             </h2>
             
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-              Welcome to Color Minds, your ultimate destination for <strong>free printable coloring pages for kids</strong> and adults. 
-              Our ever-growing library features high-quality <strong>coloring pages printable</strong> designs—from easy <strong>coloring pages for toddlers</strong> to intricate <strong>adult coloring pages</strong> for advanced colorists. 
-              Whether you need <strong>coloring pages for girls</strong>, <strong>coloring pages for boys</strong>, or <strong>coloring pages for teens</strong>, we have something special for everyone.
+              Discover high-quality <strong>free printable coloring pages</strong> perfect for all ages. 
+              Browse animals, holidays, Disney characters, and exclusive AI-generated story series. 
+              Download instantly and print at home—completely free with no sign-up required!
             </p>
             
-            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-              Browse our extensive collection featuring popular themes: <strong>animal coloring pages</strong> (cats, dogs, dinosaurs, unicorns), <strong>holiday coloring pages</strong> (Christmas, Halloween, Easter, Thanksgiving), 
-              <strong>Disney coloring pages</strong>, <strong>princess coloring pages</strong>, and beloved characters like Hello Kitty, Sonic, Pokemon, and more. 
-              We also offer exclusive <strong>AI-generated story series</strong> that combine creativity with storytelling. Each <strong>free coloring page</strong> is carefully crafted to provide hours of relaxing, educational fun. 
-              Simply browse, download instantly, and <strong>print coloring pages</strong> at home—completely free with no sign-up required!
-            </p>
+            {isExpanded && (
+              <div className="space-y-4 pt-2">
+                <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                  Our ever-growing library features designs for everyone—from easy <strong>coloring pages for toddlers</strong> to intricate <strong>adult coloring pages</strong> for advanced colorists. 
+                  Whether you need <strong>coloring pages for girls</strong>, <strong>coloring pages for boys</strong>, or <strong>coloring pages for teens</strong>, we have something special for you.
+                </p>
+                
+                <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                  Browse our extensive collection featuring popular themes: <strong>animal coloring pages</strong> (cats, dogs, dinosaurs, unicorns), <strong>holiday coloring pages</strong> (Christmas, Halloween, Easter, Thanksgiving), 
+                  <strong>Disney coloring pages</strong>, <strong>princess coloring pages</strong>, and beloved characters like Hello Kitty, Sonic, Pokemon, and more. 
+                  Each <strong>free coloring page</strong> is carefully crafted to provide hours of relaxing, educational fun.
+                </p>
+                
+                <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                  Perfect for classrooms, homeschooling, rainy days, birthday parties, or quiet time, our <strong>printable coloring sheets</strong> help develop fine motor skills, 
+                  hand-eye coordination, color recognition, and encourage creativity while providing screen-free entertainment. Teachers and parents love our <strong>easy coloring pages</strong> for early learners 
+                  and <strong>cute coloring pages</strong> that keep children engaged.
+                </p>
+              </div>
+            )}
             
-            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-              Perfect for classrooms, homeschooling, rainy days, birthday parties, or quiet time, our <strong>printable coloring sheets</strong> help develop fine motor skills, 
-              hand-eye coordination, color recognition, and encourage creativity while providing screen-free entertainment. Teachers and parents love our <strong>easy coloring pages</strong> for early learners 
-              and <strong>cute coloring pages</strong> that keep children engaged. Start exploring today!
-            </p>
+            <Button
+              variant="ghost"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="gap-2 mx-auto"
+            >
+              {isExpanded ? (
+                <>
+                  Show Less
+                  <ChevronUp className="h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  Read More
+                  <ChevronDown className="h-4 w-4" />
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
