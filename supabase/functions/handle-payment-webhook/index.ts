@@ -54,23 +54,23 @@ serve(async (req) => {
 
           if (credits > 0) {
             // Add credits to user balance
-            const { data: balance } = await supabaseAdmin
-              .from("credit_balance")
+            const { data: userCredit } = await supabaseAdmin
+              .from("user_credits")
               .select("*")
               .eq("user_id", userId)
               .single();
 
-            if (balance) {
+            if (userCredit) {
               await supabaseAdmin
-                .from("credit_balance")
+                .from("user_credits")
                 .update({ 
-                  balance: balance.balance + credits,
+                  balance: userCredit.balance + credits,
                   updated_at: new Date().toISOString(),
                 })
                 .eq("user_id", userId);
             } else {
               await supabaseAdmin
-                .from("credit_balance")
+                .from("user_credits")
                 .insert({ 
                   user_id: userId,
                   balance: credits,
@@ -84,7 +84,7 @@ serve(async (req) => {
                 user_id: userId,
                 transaction_type: "purchase",
                 amount: credits,
-                balance_after: (balance?.balance || 0) + credits,
+                balance_after: (userCredit?.balance || 0) + credits,
                 description: `Purchased ${credits} credits`,
                 stripe_payment_id: session.payment_intent as string,
               });
