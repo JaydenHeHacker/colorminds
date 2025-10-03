@@ -223,12 +223,15 @@ export type Database = {
           id: string
           image_url: string
           is_featured: boolean
+          published_at: string | null
+          scheduled_publish_at: string | null
           series_id: string | null
           series_order: number | null
           series_slug: string | null
           series_title: string | null
           series_total: number | null
           slug: string
+          status: string | null
           title: string
           updated_at: string
         }
@@ -241,12 +244,15 @@ export type Database = {
           id?: string
           image_url: string
           is_featured?: boolean
+          published_at?: string | null
+          scheduled_publish_at?: string | null
           series_id?: string | null
           series_order?: number | null
           series_slug?: string | null
           series_title?: string | null
           series_total?: number | null
           slug: string
+          status?: string | null
           title: string
           updated_at?: string
         }
@@ -259,12 +265,15 @@ export type Database = {
           id?: string
           image_url?: string
           is_featured?: boolean
+          published_at?: string | null
+          scheduled_publish_at?: string | null
           series_id?: string | null
           series_order?: number | null
           series_slug?: string | null
           series_title?: string | null
           series_total?: number | null
           slug?: string
+          status?: string | null
           title?: string
           updated_at?: string
         }

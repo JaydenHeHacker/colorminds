@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ArrowLeft, LogOut, Settings, BarChart3, FolderTree, TrendingUp, Users } from "lucide-react";
+import { Loader2, ArrowLeft, LogOut, Settings, BarChart3, FolderTree, TrendingUp, Users, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ManageColoringPages from "@/components/admin/ManageColoringPages";
@@ -13,6 +13,7 @@ import ManageCategories from "@/components/admin/ManageCategories";
 import DashboardStats from "@/components/admin/DashboardStats";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import UserManagement from "@/components/admin/UserManagement";
+import PublishingSchedule from "@/components/admin/PublishingSchedule";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -163,7 +164,7 @@ export default function Admin() {
       </div>
       <div className="container py-4 sm:py-8 px-2 sm:px-4">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-4 sm:mb-8 h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-4 sm:mb-8 h-auto">
             <TabsTrigger value="dashboard" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">数据概览</span>
@@ -183,6 +184,11 @@ export default function Admin() {
               <FolderTree className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">管理分类</span>
               <span className="sm:hidden">分类</span>
+            </TabsTrigger>
+            <TabsTrigger value="publishing" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <CalendarClock className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">发布计划</span>
+              <span className="sm:hidden">发布</span>
             </TabsTrigger>
             <TabsTrigger value="manage" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
               <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -205,6 +211,10 @@ export default function Admin() {
 
           <TabsContent value="categories">
             <ManageCategories />
+          </TabsContent>
+
+          <TabsContent value="publishing">
+            <PublishingSchedule />
           </TabsContent>
 
           <TabsContent value="manage">
