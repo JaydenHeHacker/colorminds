@@ -14,6 +14,7 @@ import ManageColoringPages from "@/components/admin/ManageColoringPages";
 import ManageCategories from "@/components/admin/ManageCategories";
 import DashboardStats from "@/components/admin/DashboardStats";
 import KeywordAnalyzer from "@/components/admin/KeywordAnalyzer";
+import InitializeCategories from "@/components/admin/InitializeCategories";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -368,8 +369,12 @@ export default function Admin() {
         </div>
       </div>
       <div className="container py-8">
-        <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-5 mb-8">
+        <Tabs defaultValue="init" className="w-full">
+          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-6 mb-8">
+            <TabsTrigger value="init" className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              初始化
+            </TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               数据统计
@@ -379,7 +384,7 @@ export default function Admin() {
               SEO分析
             </TabsTrigger>
             <TabsTrigger value="generate" className="gap-2">
-              <Sparkles className="h-4 w-4" />
+              <Wand2 className="h-4 w-4" />
               生成涂色页
             </TabsTrigger>
             <TabsTrigger value="categories" className="gap-2">
@@ -391,6 +396,10 @@ export default function Admin() {
               管理涂色页
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="init">
+            <InitializeCategories />
+          </TabsContent>
 
           <TabsContent value="dashboard">
             <DashboardStats />
