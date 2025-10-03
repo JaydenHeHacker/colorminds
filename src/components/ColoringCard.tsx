@@ -1,12 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Share2 } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast as sonnerToast } from "sonner";
-import { ShareDialog } from "./ShareDialog";
 
 interface ColoringCardProps {
   id?: string;
@@ -38,7 +37,6 @@ export const ColoringCard = ({
   const [user, setUser] = useState<any>(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isCheckingFavorite, setIsCheckingFavorite] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -130,6 +128,17 @@ export const ColoringCard = ({
 
   return (
     <Card className="group overflow-hidden border-2 hover:border-primary/50 transition-smooth shadow-sm hover:shadow-colorful relative">
+      {/* Favorite button in top-right corner */}
+      <Button
+        size="icon"
+        variant={isFavorited ? "default" : "secondary"}
+        className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+        onClick={handleToggleFavorite}
+        disabled={isCheckingFavorite}
+      >
+        <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+      </Button>
+
       <Link to={slug ? `/coloring-page/${slug}` : '#'} className="block">
         <div className="aspect-square overflow-hidden bg-muted">
           <img
@@ -141,58 +150,27 @@ export const ColoringCard = ({
         </div>
       </Link>
       
-      <div className="p-4 space-y-3">
-        <div>
-          <div className="flex flex-wrap gap-2 mb-2">
-            <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
-              {category}
-            </span>
-            <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full border ${config.color}`}>
-              {config.icon} {config.label}
-            </span>
-            {seriesId && seriesTitle && (
-              <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-secondary/20 to-accent/20 text-secondary-foreground border border-secondary/30">
-                📚 {seriesOrder}/{seriesTotal}
-              </span>
-            )}
-          </div>
-          <h3 className="font-semibold text-lg line-clamp-2">{title}</h3>
+      <div className="p-4">
+        <div className="flex flex-wrap gap-2 mb-3">
+          <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
+            {category}
+          </span>
+          <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full border ${config.color}`}>
+            {config.icon} {config.label}
+          </span>
           {seriesId && seriesTitle && (
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-              Part of: {seriesTitle}
-            </p>
+            <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-secondary/20 to-accent/20 text-secondary-foreground border border-secondary/30">
+              📚 {seriesOrder}/{seriesTotal}
+            </span>
           )}
         </div>
-        
-        <div className="flex items-center gap-2">
-          <Button 
-            size="sm" 
-            className="flex-1"
-            variant={isFavorited ? "default" : "outline"}
-            onClick={handleToggleFavorite}
-            disabled={isCheckingFavorite}
-          >
-            <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-          </Button>
-          <Button 
-            size="sm" 
-            className="flex-1"
-            variant="outline"
-            onClick={() => setIsShareOpen(true)}
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
-        </div>
+        <h3 className="font-semibold text-lg line-clamp-2 mb-2">{title}</h3>
+        {seriesId && seriesTitle && (
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            Part of: {seriesTitle}
+          </p>
+        )}
       </div>
-
-      {id && (
-        <ShareDialog
-          isOpen={isShareOpen}
-          onClose={() => setIsShareOpen(false)}
-          title={title}
-          pageId={id}
-        />
-      )}
     </Card>
   );
 };
