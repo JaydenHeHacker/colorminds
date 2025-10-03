@@ -65,19 +65,46 @@ export function AutoGenerateControl() {
   // 手动触发一次生成
   const generateNowMutation = useMutation({
     mutationFn: async () => {
+      console.log('🚀 开始生成草稿...');
+      toast.info('正在生成中，请稍候...', { duration: 2000 });
+      
       const { data, error } = await supabase.functions.invoke('auto-generate-drafts', {
         body: {}
       });
       
-      if (error) throw error;
+      console.log('📦 生成结果:', data);
+      console.log('❌ 生成错误:', error);
+      
+      if (error) {
+        console.error('生成失败详情:', error);
+        throw error;
+      }
+      
+      if (!data.success) {
+        console.error('生成失败:', data.error);
+        throw new Error(data.error || '生成失败');
+      }
+      
       return data;
     },
     onSuccess: (data) => {
+      console.log('✅ 生成成功!', data);
       queryClient.invalidateQueries({ queryKey: ['generation-stats-today'] });
-      toast.success(`成功生成 ${data.pages?.length || 0} 个草稿页面！`);
+      
+      const message = data.pages?.length > 0 
+        ? `成功生成 ${data.pages.length} 个草稿！类目: ${data.category}, 难度: ${data.difficulty}, 类型: ${data.type}`
+        : `生成完成，但未创建页面。类目: ${data.category}, 难度: ${data.difficulty}`;
+      
+      toast.success(message, { duration: 5000 });
+      
+      if (data.pages?.length > 0) {
+        console.log('生成的页面:', data.pages);
+      }
     },
-    onError: (error) => {
-      toast.error("生成失败：" + error.message);
+    onError: (error: any) => {
+      console.error('❌ 生成失败:', error);
+      const errorMessage = error?.message || error?.error || '未知错误';
+      toast.error(`生成失败: ${errorMessage}`, { duration: 5000 });
     }
   });
 
