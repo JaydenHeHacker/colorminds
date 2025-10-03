@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Zap, Check, ArrowLeft, Loader2 } from "lucide-react";
+import { Crown, Zap, Check, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
@@ -19,9 +19,18 @@ export default function CreditsStore() {
   const [loading, setLoading] = useState(true);
   const [purchasingPackage, setPurchasingPackage] = useState<string | null>(null);
   const [upgradingPremium, setUpgradingPremium] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     loadData();
+    
+    // Auto-refresh subscription status when window gains focus (user returns from payment)
+    const handleFocus = () => {
+      syncSubscriptionStatus();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const loadData = async () => {
@@ -31,6 +40,9 @@ export default function CreditsStore() {
       return;
     }
     setUser(user);
+
+    // Sync subscription status from Stripe first
+    await syncSubscriptionStatus();
 
     const [subResult, creditsResult, packagesResult] = await Promise.all([
       supabase.from("user_subscriptions").select("*").eq("user_id", user.id).single(),
@@ -42,6 +54,44 @@ export default function CreditsStore() {
     if (creditsResult.data) setCredits(creditsResult.data);
     if (packagesResult.data) setPackages(packagesResult.data);
     setLoading(false);
+  };
+
+  const syncSubscriptionStatus = async () => {
+    try {
+      setIsSyncing(true);
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      
+      if (error) {
+        console.error('Error syncing subscription:', error);
+        return;
+      }
+
+      // Reload subscription data after sync
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: subData } = await supabase
+          .from("user_subscriptions")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+        
+        if (subData) {
+          setSubscription(subData);
+          
+          // Show success message if upgraded to premium
+          if (subData.tier === 'premium') {
+            toast({
+              title: "Premium Activated! 🎉",
+              description: "Your subscription has been successfully activated.",
+            });
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Sync error:', error);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handlePurchasePackage = async (priceId: string) => {
@@ -149,6 +199,27 @@ export default function CreditsStore() {
                 <p>Credits Balance: <span className="font-bold text-foreground">{credits?.balance || 0}</span></p>
               </div>
             </div>
+            
+            {/* Sync Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={syncSubscriptionStatus}
+              disabled={isSyncing}
+              className="gap-2"
+            >
+              {isSyncing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh Status
+                </>
+              )}
+            </Button>
           </div>
         </Card>
 
