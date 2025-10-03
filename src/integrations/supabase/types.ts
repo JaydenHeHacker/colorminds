@@ -387,6 +387,47 @@ export type Database = {
           },
         ]
       }
+      generation_stats: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          difficulty: string
+          generated_at: string
+          generation_type: string
+          id: string
+          pages_count: number
+          success: boolean
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          difficulty: string
+          generated_at: string
+          generation_type: string
+          id?: string
+          pages_count: number
+          success: boolean
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          difficulty?: string
+          generated_at?: string
+          generation_type?: string
+          id?: string
+          pages_count?: number
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_stats_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -405,6 +446,33 @@ export type Database = {
           email?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: string
         }
         Relationships: []
       }
