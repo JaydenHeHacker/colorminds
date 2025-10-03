@@ -306,17 +306,17 @@ export default function ManageCategories() {
 
     setIsSavingIcon(true);
     try {
-      // Upload to R2 first
+      // Upload to R2 - generatedIcon is already base64 format
       const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-to-r2', {
         body: { 
-          imageUrl: generatedIcon,
-          filename: `category-${generatingIconForCategory.slug}-${Date.now()}.png`
+          imageData: generatedIcon,  // base64 image data
+          fileName: `category-${generatingIconForCategory.slug}-${Date.now()}.png`  // Note: capital F
         }
       });
 
       if (uploadError) throw uploadError;
       
-      const r2Url = uploadData.url;
+      const r2Url = uploadData.publicUrl;
 
       // Update category with R2 URL
       const { error } = await supabase
