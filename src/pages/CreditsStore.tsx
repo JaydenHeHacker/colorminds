@@ -63,17 +63,29 @@ export default function CreditsStore() {
       
       if (error) {
         console.error('Error syncing subscription:', error);
+        toast({
+          title: "Sync Failed",
+          description: "Failed to sync subscription status. Please try again.",
+          variant: "destructive",
+        });
         return;
       }
+
+      console.log('Subscription sync response:', data);
 
       // Reload subscription data after sync
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: subData } = await supabase
+        const { data: subData, error: subError } = await supabase
           .from("user_subscriptions")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
+        
+        if (subError) {
+          console.error('Error fetching subscription:', subError);
+          return;
+        }
         
         if (subData) {
           setSubscription(subData);
@@ -89,6 +101,11 @@ export default function CreditsStore() {
       }
     } catch (error: any) {
       console.error('Sync error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred while syncing.",
+        variant: "destructive",
+      });
     } finally {
       setIsSyncing(false);
     }
