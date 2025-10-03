@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Save, X, ArrowLeft, LogOut } from "lucide-react";
+import { Loader2, Sparkles, Save, X, ArrowLeft, LogOut, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -18,6 +18,7 @@ export default function Admin() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateCount, setGenerateCount] = useState("1");
+  const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [email, setEmail] = useState("");
@@ -187,6 +188,31 @@ export default function Admin() {
     toast.info("已放弃当前生成");
   };
 
+  const handleGenerateTheme = async () => {
+    if (!selectedCategory) {
+      toast.error("请先选择类目");
+      return;
+    }
+
+    setIsGeneratingTheme(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-theme', {
+        body: { category: selectedCategory }
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      setTheme(data.theme);
+      toast.success("主题生成成功！");
+    } catch (error) {
+      console.error('Theme generation error:', error);
+      toast.error("生成失败：" + (error instanceof Error ? error.message : '未知错误'));
+    } finally {
+      setIsGeneratingTheme(false);
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -313,12 +339,28 @@ export default function Admin() {
 
               <div>
                 <Label htmlFor="theme">主题描述</Label>
-                <Input
-                  id="theme"
-                  placeholder="例如：可爱的小猫在花园里玩耍"
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value)}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="theme"
+                    placeholder="例如：可爱的小猫在花园里玩耍"
+                    value={theme}
+                    onChange={(e) => setTheme(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleGenerateTheme}
+                    disabled={isGeneratingTheme || !selectedCategory}
+                    variant="outline"
+                    size="icon"
+                    title="AI生成主题"
+                  >
+                    {isGeneratingTheme ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Wand2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
 
               <div>
