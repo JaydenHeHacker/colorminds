@@ -4,6 +4,7 @@ import { Hero } from "@/components/Hero";
 import { Categories } from "@/components/Categories";
 import { ColoringCard } from "@/components/ColoringCard";
 import { SeriesCard } from "@/components/SeriesCard";
+import { RecommendedPages } from "@/components/RecommendedPages";
 import { Footer } from "@/components/Footer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -198,21 +199,21 @@ const Index = () => {
         />
         
         {/* Search Bar */}
-        <section className="py-8 bg-background">
-          <div className="container">
+        <section className="py-6 md:py-8 bg-background">
+          <div className="container px-4">
             <div className="max-w-2xl mx-auto">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="搜索涂色页标题、描述、分类或系列..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 text-base"
+                  className="pl-9 md:pl-10 h-11 md:h-12 text-sm md:text-base"
                 />
               </div>
               {searchQuery && (
-                <p className="text-sm text-muted-foreground mt-2 text-center">
+                <p className="text-xs md:text-sm text-muted-foreground mt-2 text-center">
                   找到 {pagesToDisplay.length + (selectedSeriesId ? 0 : seriesToDisplay.length)} 个结果
                 </p>
               )}
@@ -222,26 +223,26 @@ const Index = () => {
 
         {/* Favorites Section */}
         {user && showFavorites && (
-          <section className="py-16 md:py-20 bg-background" id="favorites-section">
-            <div className="container">
-              <div className="text-center mb-8">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <Heart className="h-8 w-8 text-primary fill-primary" />
-                  <h2 className="text-4xl md:text-5xl font-bold">我的收藏</h2>
+          <section className="py-12 md:py-16 lg:py-20 bg-background" id="favorites-section">
+            <div className="container px-4">
+              <div className="text-center mb-6 md:mb-8">
+                <div className="flex items-center justify-center gap-2 mb-3 md:mb-4">
+                  <Heart className="h-6 w-6 md:h-8 md:w-8 text-primary fill-primary" />
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold">我的收藏</h2>
                 </div>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
                   你收藏的涂色页都在这里
                 </p>
                 <Button
                   variant="outline"
                   onClick={() => setShowFavorites(false)}
-                  className="mt-4"
+                  className="mt-3 md:mt-4"
                 >
                   返回浏览
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {isLoadingFavorites ? (
                   <div className="col-span-full text-center py-12 text-muted-foreground">
                     加载中...
@@ -276,10 +277,10 @@ const Index = () => {
           </section>
         )}
         
-        <section className="py-16 md:py-20 bg-muted/30" id="popular">
-          <div className="container">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
+        <section className="py-12 md:py-16 lg:py-20 bg-muted/30" id="popular">
+          <div className="container px-4">
+            <div className="text-center mb-6 md:mb-8">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
                 {selectedSeriesId 
                   ? seriesToDisplay.find(s => s.seriesId === selectedSeriesId)?.seriesTitle 
                   : selectedCategory 
@@ -287,7 +288,7 @@ const Index = () => {
                     : 'Popular Coloring Pages'
                 }
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
                 {selectedSeriesId 
                   ? '故事系列的所有章节' 
                   : selectedCategory 
@@ -299,7 +300,7 @@ const Index = () => {
                 <Button
                   variant="outline"
                   onClick={() => setSelectedSeriesId(null)}
-                  className="mt-4"
+                  className="mt-3 md:mt-4"
                 >
                   返回全部
                 </Button>
@@ -308,9 +309,9 @@ const Index = () => {
 
             {/* Show story series first if not viewing a specific series */}
             {!selectedSeriesId && seriesToDisplay.length > 0 && (
-              <div className="mb-12">
-                <h3 className="text-2xl font-semibold mb-6">📚 故事系列</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="mb-8 md:mb-12">
+                <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">📚 故事系列</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                   {seriesToDisplay.map((series) => (
                     <SeriesCard
                       key={series.seriesId}
@@ -329,28 +330,33 @@ const Index = () => {
             {/* Show regular pages or series pages */}
             {pagesToDisplay.length > 0 && (
               <>
-                {!selectedSeriesId && <h3 className="text-2xl font-semibold mb-6">🎨 单张涂色页</h3>}
+                {!selectedSeriesId && <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">🎨 单张涂色页</h3>}
                 
-                <div className="mb-6 flex justify-center gap-4">
+                <div className="mb-4 md:mb-6 flex flex-col sm:flex-row justify-center gap-2 md:gap-4 px-4 md:px-0">
                   <Button
                     onClick={() => {
                       const allIds = new Set(pagesToDisplay.map(p => p.id));
                       setSelectedPages(allIds);
                     }}
                     variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
                   >
                     全选
                   </Button>
                   <Button
                     onClick={() => setSelectedPages(new Set())}
                     variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
                   >
                     取消全选
                   </Button>
                   <Button
                     onClick={handleBatchDownload}
                     disabled={selectedPages.size === 0}
-                    className="gap-2"
+                    size="sm"
+                    className="gap-2 w-full sm:w-auto"
                   >
                     <Download className="h-4 w-4" />
                     批量下载 ({selectedPages.size})
@@ -359,7 +365,7 @@ const Index = () => {
               </>
             )}
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {isLoading ? (
                 <div className="col-span-full text-center py-12 text-muted-foreground">
                   Loading coloring pages...
@@ -383,6 +389,17 @@ const Index = () => {
                 </div>
               )}
             </div>
+
+            {/* Recommended Pages - Show when viewing specific series or filtered content */}
+            {(selectedSeriesId || selectedCategory) && pagesToDisplay.length > 0 && (
+              <div className="mt-16">
+                <RecommendedPages
+                  currentPageId={pagesToDisplay[0]?.id || ''}
+                  category={selectedCategory || pagesToDisplay[0]?.categories?.name}
+                  difficulty={pagesToDisplay[0]?.difficulty}
+                />
+              </div>
+            )}
           </div>
         </section>
       </main>

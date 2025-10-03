@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast as sonnerToast } from "sonner";
+import { ShareDialog } from "./ShareDialog";
 
 interface ColoringCardProps {
   id?: string;
@@ -23,6 +24,7 @@ export const ColoringCard = ({ id, title, image, category, difficulty = "medium"
   const [user, setUser] = useState<any>(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isCheckingFavorite, setIsCheckingFavorite] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -190,11 +192,24 @@ export const ColoringCard = ({ id, title, image, category, difficulty = "medium"
           >
             <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
           </Button>
-          <Button size="sm" variant="outline">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setIsShareOpen(true)}
+          >
             <Share2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
+
+      {id && (
+        <ShareDialog
+          isOpen={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+          title={title}
+          pageId={id}
+        />
+      )}
     </Card>
   );
 };

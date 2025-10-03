@@ -3,38 +3,55 @@ import { Download, Palette } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 
 export const Hero = () => {
+  const scrollToCategories = () => {
+    document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const scrollToPopular = () => {
+    document.getElementById('popular')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <section className="relative overflow-hidden py-20 md:py-28">
+    <section className="relative overflow-hidden py-12 md:py-20 lg:py-28">
       <div className="absolute inset-0 gradient-soft opacity-50" />
       
-      <div className="container relative z-10">
+      <div className="container relative z-10 px-4">
         <div className="grid gap-8 lg:grid-cols-2 items-center">
-          <div className="space-y-6">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
+          <div className="space-y-4 md:space-y-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
               Free Printable
               <span className="block bg-clip-text text-transparent gradient-rainbow">
                 Coloring Pages
               </span>
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
+            <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-xl">
               Discover thousands of free printable coloring pages for kids and adults. 
               Download instantly and start coloring today!
             </p>
             
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="gap-2 shadow-colorful">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+              <Button 
+                size="lg" 
+                className="gap-2 shadow-colorful w-full sm:w-auto"
+                onClick={scrollToCategories}
+              >
                 <Download className="h-5 w-5" />
                 Browse Collection
               </Button>
-              <Button size="lg" variant="outline" className="gap-2">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="gap-2 w-full sm:w-auto"
+                onClick={scrollToPopular}
+              >
                 <Palette className="h-5 w-5" />
                 Popular Pages
               </Button>
             </div>
           </div>
           
-          <div className="relative lg:block">
+          <div className="relative hidden md:block">
             <div className="aspect-video rounded-3xl overflow-hidden shadow-colorful">
               <img
                 src={heroBanner}
