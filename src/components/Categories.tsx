@@ -102,11 +102,8 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
             </div>
           ) : categories && categories.length > 0 ? (
             <>
+                <Link to="/browse">
                 <Card
-                onClick={() => {
-                  onCategorySelect(null);
-                  scrollToTop();
-                }}
                  className={cn(
                    "category-card group cursor-pointer overflow-hidden border-2 transition-all duration-500 hover:shadow-glow active:scale-95 touch-manipulation backdrop-blur-sm",
                    selectedCategory === null
@@ -155,9 +152,10 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                          </p>
                        )}
                      </div>
-                   )}
-                 </div>
-               </Card>
+                    )}
+                  </div>
+                </Card>
+                </Link>
                   {categories.map((category, index) => (
                    <Link 
                      key={category.id} 
