@@ -13,12 +13,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Search, Heart } from "lucide-react";
+import { Search, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 
 const Index = () => {
-  const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [user, setUser] = useState<User | null>(null);
   const [showFavorites, setShowFavorites] = useState(false);
 
@@ -167,66 +166,31 @@ const Index = () => {
     pages
   }));
 
+  // Get today's featured pages (rotates daily based on date)
+  const getTodaysFeatured = () => {
+    if (!standalonePages.length) return [];
+    const today = new Date();
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    const startIndex = (dayOfYear * 4) % standalonePages.length;
+    const featured = [];
+    for (let i = 0; i < Math.min(8, standalonePages.length); i++) {
+      featured.push(standalonePages[(startIndex + i) % standalonePages.length]);
+    }
+    return featured;
+  };
+
   // Pages to display (either selected series pages or standalone pages)
   const pagesToDisplay = selectedSeriesId
     ? seriesGroups.get(selectedSeriesId) || []
-    : standalonePages;
+    : selectedCategory || searchQuery
+    ? standalonePages
+    : getTodaysFeatured();
 
   // Get current series title for breadcrumbs
   const currentSeriesTitle = selectedSeriesId 
     ? seriesToDisplay.find(s => s.seriesId === selectedSeriesId)?.seriesTitle 
     : null;
 
-  const handlePageSelect = (pageId: string, selected: boolean) => {
-    const newSelected = new Set(selectedPages);
-    if (selected) {
-      newSelected.add(pageId);
-    } else {
-      newSelected.delete(pageId);
-    }
-    setSelectedPages(newSelected);
-  };
-
-  const handleBatchDownload = async () => {
-    if (selectedPages.size === 0) {
-      toast.error("Please select coloring pages to download");
-      return;
-    }
-
-    toast.info(`Downloading ${selectedPages.size} coloring pages...`);
-    
-    let successCount = 0;
-    for (const pageId of selectedPages) {
-      const page = coloringPages?.find(p => p.id === pageId);
-      if (!page) continue;
-
-      try {
-        const response = await fetch(page.image_url);
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${page.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
-        // Increment download count
-        await supabase.rpc('increment_download_count', { page_id: pageId });
-        
-        successCount++;
-        
-        // Add delay to avoid overwhelming the browser
-        await new Promise(resolve => setTimeout(resolve, 500));
-      } catch (error) {
-        console.error(`Failed to download ${page.title}:`, error);
-      }
-    }
-
-    toast.success(`Successfully downloaded ${successCount} coloring pages!`);
-    setSelectedPages(new Set());
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -341,7 +305,9 @@ const Index = () => {
                   ? seriesToDisplay.find(s => s.seriesId === selectedSeriesId)?.seriesTitle 
                   : selectedCategory 
                     ? `${selectedCategory} Coloring Pages` 
-                    : 'Popular Coloring Pages'
+                    : searchQuery
+                    ? 'Search Results'
+                    : "Today's Featured Coloring Pages"
                 }
               </h2>
               <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
@@ -349,7 +315,9 @@ const Index = () => {
                   ? 'All chapters from this story series' 
                   : selectedCategory 
                     ? `Browse our collection of ${selectedCategory} themed coloring pages`
-                    : 'Most popular and downloaded coloring pages'
+                    : searchQuery
+                    ? `Found ${pagesToDisplay.length} coloring pages matching your search`
+                    : 'Fresh picks curated for you today - Updated daily with new selections!'
                 }
               </p>
               {selectedSeriesId && (
@@ -385,41 +353,8 @@ const Index = () => {
             )}
 
             {/* Show regular pages or series pages */}
-            {pagesToDisplay.length > 0 && (
-              <>
-                {!selectedSeriesId && <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">🎨 Individual Pages</h3>}
-                
-                <div className="mb-4 md:mb-6 flex flex-col sm:flex-row justify-center gap-2 md:gap-4 px-4 md:px-0">
-                  <Button
-                    onClick={() => {
-                      const allIds = new Set(pagesToDisplay.map(p => p.id));
-                      setSelectedPages(allIds);
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    Select All
-                  </Button>
-                  <Button
-                    onClick={() => setSelectedPages(new Set())}
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    Deselect All
-                  </Button>
-                  <Button
-                    onClick={handleBatchDownload}
-                    disabled={selectedPages.size === 0}
-                    size="sm"
-                    className="gap-2 w-full sm:w-auto"
-                  >
-                    <Download className="h-4 w-4" />
-                    Batch Download ({selectedPages.size})
-                  </Button>
-                </div>
-              </>
+            {pagesToDisplay.length > 0 && !selectedSeriesId && (selectedCategory || searchQuery) && (
+              <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">🎨 Coloring Pages</h3>
             )}
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -437,8 +372,6 @@ const Index = () => {
                     image={page.image_url}
                     category={page.categories?.name || 'Uncategorized'}
                     difficulty={page.difficulty as "easy" | "medium" | "hard"}
-                    isSelected={selectedPages.has(page.id)}
-                    onSelect={(selected) => handlePageSelect(page.id, selected)}
                   />
                 ))
               ) : (

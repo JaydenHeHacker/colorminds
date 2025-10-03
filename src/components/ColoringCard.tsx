@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Heart, Share2 } from "lucide-react";
+import { Printer, Heart, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -15,11 +15,9 @@ interface ColoringCardProps {
   image: string;
   category: string;
   difficulty?: "easy" | "medium" | "hard";
-  onSelect?: (selected: boolean) => void;
-  isSelected?: boolean;
 }
 
-export const ColoringCard = ({ id, slug, title, image, category, difficulty = "medium", onSelect, isSelected = false }: ColoringCardProps) => {
+export const ColoringCard = ({ id, slug, title, image, category, difficulty = "medium" }: ColoringCardProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -115,18 +113,55 @@ export const ColoringCard = ({ id, slug, title, image, category, difficulty = "m
 
   const config = difficultyConfig[difficulty];
 
-  const handleDownload = async () => {
+  const handlePrint = async () => {
     try {
-      const response = await fetch(image);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      // Open print dialog for the image
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast({
+          title: "Please allow pop-ups",
+          description: "Pop-ups are needed to open the print dialog",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Print ${title}</title>
+            <style>
+              body {
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+              }
+              img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+              }
+              @media print {
+                body {
+                  margin: 0;
+                }
+                img {
+                  max-width: 100%;
+                  page-break-inside: avoid;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${image}" alt="${title}" onload="window.print(); window.close();" />
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
       
       // Increment download count
       if (id) {
@@ -134,13 +169,13 @@ export const ColoringCard = ({ id, slug, title, image, category, difficulty = "m
       }
       
       toast({
-        title: "Download started",
-        description: `Downloading ${title}...`,
+        title: "Opening print dialog...",
+        description: "Choose printer or save as PDF",
       });
     } catch (error) {
-      console.error('Download error:', error);
+      console.error('Print error:', error);
       toast({
-        title: "Download failed",
+        title: "Print failed",
         description: "Please try again later",
         variant: "destructive",
       });
@@ -148,16 +183,6 @@ export const ColoringCard = ({ id, slug, title, image, category, difficulty = "m
   };
   return (
     <Card className="group overflow-hidden border-2 hover:border-primary/50 transition-smooth shadow-sm hover:shadow-colorful relative">
-      {onSelect && (
-        <div className="absolute top-2 left-2 z-10">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={(e) => onSelect(e.target.checked)}
-            className="w-5 h-5 cursor-pointer"
-          />
-        </div>
-      )}
       <Link to={slug ? `/coloring-page/${slug}` : '#'} className="block">
         <div className="aspect-square overflow-hidden bg-muted">
           <img
@@ -183,9 +208,9 @@ export const ColoringCard = ({ id, slug, title, image, category, difficulty = "m
         </div>
         
         <div className="flex items-center gap-2">
-          <Button size="sm" className="flex-1 gap-2" onClick={handleDownload}>
-            <Download className="h-4 w-4" />
-            Download
+          <Button size="sm" className="flex-1 gap-2" onClick={handlePrint}>
+            <Printer className="h-4 w-4" />
+            Print
           </Button>
           <Button 
             size="sm" 
