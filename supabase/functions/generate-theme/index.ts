@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { category } = await req.json();
+    const { category, generationType, difficulty, seriesLength } = await req.json();
     
     if (!category) {
       throw new Error('Category is required');
@@ -22,7 +22,49 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    console.log('Generating theme for category:', category);
+    console.log('Generating theme for:', { category, generationType, difficulty, seriesLength });
+
+    // Build system prompt based on generation type
+    let systemPrompt = 'You are a creative assistant for generating coloring page themes for children. ';
+    let userPrompt = '';
+
+    if (generationType === 'series') {
+      systemPrompt += `Generate a story-based theme suitable for a ${seriesLength}-page coloring book series. `;
+      systemPrompt += 'The theme should have:\n';
+      systemPrompt += '- A clear narrative arc with beginning, middle, and end\n';
+      systemPrompt += '- Age-appropriate content for children\n';
+      systemPrompt += '- Visual variety across scenes\n';
+      systemPrompt += '- Engaging characters or subjects that can develop through the story\n';
+      
+      if (difficulty === 'easy') {
+        systemPrompt += '- Simple, clear storylines suitable for young children (ages 3-5)\n';
+      } else if (difficulty === 'medium') {
+        systemPrompt += '- Moderate complexity suitable for children ages 6-8\n';
+      } else {
+        systemPrompt += '- More detailed storylines suitable for older children (ages 9-12)\n';
+      }
+      
+      systemPrompt += '\nReturn ONLY the theme title in English (10-30 words). No explanations, no descriptions, just the theme title.';
+      userPrompt = `Generate a story series theme for the category "${category}" with ${seriesLength} chapters, difficulty level: ${difficulty}`;
+      
+    } else {
+      systemPrompt += 'Generate a fun, specific theme for a single coloring page. ';
+      systemPrompt += 'The theme should be:\n';
+      systemPrompt += '- Visual and concrete\n';
+      systemPrompt += '- Age-appropriate for children\n';
+      systemPrompt += '- Suitable for the specified difficulty level\n';
+      
+      if (difficulty === 'easy') {
+        systemPrompt += '- Simple subjects with clear shapes (ages 3-5)\n';
+      } else if (difficulty === 'medium') {
+        systemPrompt += '- Moderate detail level (ages 6-8)\n';
+      } else {
+        systemPrompt += '- More intricate designs (ages 9-12)\n';
+      }
+      
+      systemPrompt += '\nReturn ONLY the theme description in English (5-15 words). No explanations, just the theme.';
+      userPrompt = `Generate a coloring page theme for the category "${category}", difficulty: ${difficulty}`;
+    }
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -35,11 +77,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: '你是一个儿童涂色页面主题生成助手。根据用户给定的类目，生成一个简短、有趣、适合儿童的涂色页面主题描述。主题描述应该生动、具体，长度在10-20个字之间。只返回主题描述本身，不要有任何额外的解释或标点符号。'
+            content: systemPrompt
           },
           {
             role: 'user',
-            content: `请为"${category}"类目生成一个涂色页面主题描述`
+            content: userPrompt
           }
         ],
       }),

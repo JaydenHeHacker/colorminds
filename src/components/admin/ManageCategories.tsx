@@ -75,6 +75,7 @@ export default function ManageCategories() {
   const [generatedPagesData, setGeneratedPagesData] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ['admin-categories'],
@@ -255,6 +256,39 @@ export default function ManageCategories() {
     setGenerateCount("1");
     setGeneratedImages([]);
     setGeneratedPagesData([]);
+  };
+
+  const handleGenerateTheme = async () => {
+    if (!generatingForCategory) {
+      toast.error("未选择分类");
+      return;
+    }
+
+    setIsGeneratingTheme(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-theme', {
+        body: { 
+          category: generatingForCategory.name,
+          generationType,
+          difficulty,
+          seriesLength: generationType === "series" ? parseInt(seriesLength) : undefined
+        }
+      });
+
+      if (error) throw error;
+      
+      if (data?.theme) {
+        setTheme(data.theme);
+        toast.success("主题生成成功！");
+      } else {
+        throw new Error("未收到主题数据");
+      }
+    } catch (error: any) {
+      console.error('主题生成错误:', error);
+      toast.error("生成失败：" + error.message);
+    } finally {
+      setIsGeneratingTheme(false);
+    }
   };
 
   const handleGenerate = async () => {
@@ -676,18 +710,46 @@ export default function ManageCategories() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="gen-theme">主题 *</Label>
+            <div className="space-y-2">
+              <Label htmlFor="gen-theme">主题 *</Label>
+              <div className="flex gap-2">
                 <Input
                   id="gen-theme"
                   value={theme}
                   onChange={(e) => setTheme(e.target.value)}
-                  placeholder="例如：可爱的猫咪"
+                  placeholder="例如：A cute cat playing with yarn"
                   disabled={isGenerating || generatedImages.length > 0}
+                  className="flex-1"
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGenerateTheme}
+                  disabled={isGeneratingTheme || isGenerating || generatedImages.length > 0}
+                  className="gap-2 flex-shrink-0"
+                >
+                  {isGeneratingTheme ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4" />
+                      AI 生成
+                    </>
+                  )}
+                </Button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                {generationType === "series" 
+                  ? "AI will generate a story theme with narrative arc and character development"
+                  : "AI will suggest a creative theme suitable for the difficulty level"
+                }
+              </p>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="gen-difficulty">难度</Label>
                 <Select 
@@ -699,15 +761,13 @@ export default function ManageCategories() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="easy">简单</SelectItem>
-                    <SelectItem value="medium">中等</SelectItem>
-                    <SelectItem value="hard">困难</SelectItem>
+                    <SelectItem value="easy">简单 (Ages 3-5)</SelectItem>
+                    <SelectItem value="medium">中等 (Ages 6-8)</SelectItem>
+                    <SelectItem value="hard">困难 (Ages 9-12)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="gen-type">生成类型</Label>
                 <Select 
@@ -724,37 +784,37 @@ export default function ManageCategories() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
-              <div>
-                <Label htmlFor="gen-count">
-                  {generationType === "series" ? "系列长度" : "生成数量"}
-                </Label>
-                <Select 
-                  value={generationType === "series" ? seriesLength : generateCount}
-                  onValueChange={(v) => generationType === "series" ? setSeriesLength(v) : setGenerateCount(v)}
-                  disabled={isGenerating || generatedImages.length > 0}
-                >
-                  <SelectTrigger id="gen-count">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {generationType === "series" ? (
-                      <>
-                        <SelectItem value="3">3 张</SelectItem>
-                        <SelectItem value="5">5 张</SelectItem>
-                        <SelectItem value="8">8 张</SelectItem>
-                      </>
-                    ) : (
-                      <>
-                        <SelectItem value="1">1 张</SelectItem>
-                        <SelectItem value="2">2 张</SelectItem>
-                        <SelectItem value="3">3 张</SelectItem>
-                        <SelectItem value="5">5 张</SelectItem>
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label htmlFor="gen-count">
+                {generationType === "series" ? "系列长度" : "生成数量"}
+              </Label>
+              <Select 
+                value={generationType === "series" ? seriesLength : generateCount}
+                onValueChange={(v) => generationType === "series" ? setSeriesLength(v) : setGenerateCount(v)}
+                disabled={isGenerating || generatedImages.length > 0}
+              >
+                <SelectTrigger id="gen-count">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {generationType === "series" ? (
+                    <>
+                      <SelectItem value="3">3 章节</SelectItem>
+                      <SelectItem value="5">5 章节</SelectItem>
+                      <SelectItem value="8">8 章节</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="1">1 张</SelectItem>
+                      <SelectItem value="2">2 张</SelectItem>
+                      <SelectItem value="3">3 张</SelectItem>
+                      <SelectItem value="5">5 张</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
             {generatedImages.length === 0 ? (
