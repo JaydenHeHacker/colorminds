@@ -52,23 +52,23 @@ export const ShareDialog = ({
     return url.toString();
   };
 
-  // 多种分享文案模板
+  // Share text templates
   const shareTemplates = [
     {
-      name: "热情推荐",
-      text: `🎨 发现了超棒的涂色页！\n\n"${title}"\n\n${description || '快来一起涂色，释放创意！'}\n\n✨ ${difficulty ? `难度: ${difficulty}` : ''} | 📁 ${categoryName || '精选'}\n\n#涂色 #创意 #艺术 #${categoryName || '涂色页'}`
+      name: "Enthusiastic",
+      text: `🎨 Found an amazing coloring page!\n\n"${title}"\n\n${description || 'Come color with me and unleash your creativity!'}\n\n✨ ${difficulty ? `Level: ${difficulty}` : ''} | 📁 ${categoryName || 'Featured'}\n\n#coloring #creative #art #${categoryName || 'coloringpage'}`
     },
     {
-      name: "简洁分享",
-      text: `🎨 ${title}\n\n${description || '来看看这个有趣的涂色页！'}\n\n👉 `
+      name: "Simple",
+      text: `🎨 ${title}\n\n${description || 'Check out this fun coloring page!'}\n\n👉 `
     },
     {
-      name: "亲子推荐",
-      text: `👨‍👩‍👧‍👦 适合亲子时光的涂色页！\n\n"${title}"\n\n让孩子们发挥想象力，享受涂色的乐趣～\n${difficulty ? `\n🎯 难度: ${difficulty}` : ''}\n\n#亲子活动 #儿童涂色 #创意启蒙`
+      name: "Family Fun",
+      text: `👨‍👩‍👧‍👦 Perfect for family time!\n\n"${title}"\n\nLet kids unleash their imagination and enjoy coloring together～\n${difficulty ? `\n🎯 Level: ${difficulty}` : ''}\n\n#familytime #kidscoloring #creative`
     },
     {
-      name: "教育分享",
-      text: `📚 寓教于乐的涂色素材\n\n"${title}"\n\n${description || '通过涂色培养专注力和创造力'}\n\n💡 ${categoryName ? `主题: ${categoryName}` : ''}\n⭐ ${difficulty ? `适合: ${difficulty}级别` : ''}\n\n#教育资源 #涂色教学`
+      name: "Educational",
+      text: `📚 Fun learning coloring material\n\n"${title}"\n\n${description || 'Develop focus and creativity through coloring'}\n\n💡 ${categoryName ? `Theme: ${categoryName}` : ''}\n⭐ ${difficulty ? `Suitable for: ${difficulty} level` : ''}\n\n#education #coloringforkids`
     }
   ];
 
@@ -81,10 +81,10 @@ export const ShareDialog = ({
         : getShareUrl('copy');
       await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
-      toast.success(withText ? "分享内容已复制！" : "链接已复制到剪贴板！");
+      toast.success(withText ? "Share content copied!" : "Link copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast.error("复制失败，请手动复制");
+      toast.error("Copy failed, please copy manually");
     }
   };
 
@@ -109,8 +109,8 @@ export const ShareDialog = ({
   };
 
   const shareViaEmail = () => {
-    const subject = encodeURIComponent(`🎨 ${title} - 涂色页分享`);
-    const body = encodeURIComponent(`${currentTemplate.text}\n\n查看涂色页：\n${getShareUrl('email')}\n\n---\n来自涂色乐园的分享`);
+    const subject = encodeURIComponent(`🎨 ${title} - Coloring Page`);
+    const body = encodeURIComponent(`${currentTemplate.text}\n\nView coloring page:\n${getShareUrl('email')}\n\n---\nShared from Coloring Paradise`);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
@@ -122,10 +122,10 @@ export const ShareDialog = ({
           text: currentTemplate.text,
           url: getShareUrl('native'),
         });
-        toast.success("分享成功！");
+        toast.success("Shared successfully!");
       } catch (error: any) {
         if (error.name !== 'AbortError') {
-          toast.error("分享失败");
+          toast.error("Share failed");
         }
       }
     } else {
@@ -139,10 +139,10 @@ export const ShareDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
-            分享涂色页
+            Share Coloring Page
           </DialogTitle>
           <DialogDescription>
-            选择模板，一键分享到社交媒体
+            Choose a template and share to social media
           </DialogDescription>
         </DialogHeader>
         
@@ -180,13 +180,13 @@ export const ShareDialog = ({
               <TabsContent key={index} value={index.toString()} className="space-y-4">
                 {/* 分享文案预览 */}
                 <div className="p-4 bg-muted rounded-lg space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">分享文案预览：</p>
+                  <p className="text-sm font-medium text-muted-foreground">Share preview:</p>
                   <div className="text-sm whitespace-pre-wrap">{template.text}</div>
                 </div>
 
                 {/* 复制链接 */}
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">分享链接：</p>
+                  <p className="text-sm font-medium text-muted-foreground">Share link:</p>
                   <div className="flex items-center gap-2">
                     <Input
                       value={getShareUrl('preview')}
@@ -201,12 +201,12 @@ export const ShareDialog = ({
                       {copied ? (
                         <>
                           <Check className="h-4 w-4 mr-1 text-green-600" />
-                          已复制
+                          Copied
                         </>
                       ) : (
                         <>
                           <Link2 className="h-4 w-4 mr-1" />
-                          复制链接
+                          Copy Link
                         </>
                       )}
                     </Button>
@@ -220,7 +220,7 @@ export const ShareDialog = ({
                   className="w-full"
                 >
                   <Check className="h-4 w-4 mr-2" />
-                  复制完整分享内容
+                  Copy Full Share Content
                 </Button>
               </TabsContent>
             ))}
@@ -228,7 +228,7 @@ export const ShareDialog = ({
 
           {/* 分享按钮 */}
           <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">快速分享到：</p>
+            <p className="text-sm font-medium text-muted-foreground">Quick share to:</p>
             <div className="grid grid-cols-2 gap-3">
               <Button
                 variant="outline"
@@ -263,7 +263,7 @@ export const ShareDialog = ({
                 className="gap-2 hover-scale"
               >
                 <Mail className="h-5 w-5 text-muted-foreground" />
-                邮件
+                Email
               </Button>
             </div>
 
@@ -275,7 +275,7 @@ export const ShareDialog = ({
                 className="w-full gap-2"
               >
                 <Share2 className="h-4 w-4" />
-                更多分享选项
+                More Share Options
               </Button>
             )}
           </div>
