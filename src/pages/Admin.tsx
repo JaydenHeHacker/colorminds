@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Save, X, ArrowLeft, LogOut, Wand2, Settings } from "lucide-react";
+import { Loader2, Sparkles, Save, X, ArrowLeft, LogOut, Wand2, Settings, BarChart3, FolderTree } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ManageColoringPages from "@/components/admin/ManageColoringPages";
+import ManageCategories from "@/components/admin/ManageCategories";
+import DashboardStats from "@/components/admin/DashboardStats";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -74,7 +76,9 @@ export default function Admin() {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .order('name');
+        .order('level', { ascending: true })
+        .order('order_position', { ascending: true })
+        .order('name', { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -363,17 +367,29 @@ export default function Admin() {
         </div>
       </div>
       <div className="container py-8">
-        <Tabs defaultValue="generate" className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4 mb-8">
+            <TabsTrigger value="dashboard" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              数据统计
+            </TabsTrigger>
             <TabsTrigger value="generate" className="gap-2">
               <Sparkles className="h-4 w-4" />
               生成涂色页
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="gap-2">
+              <FolderTree className="h-4 w-4" />
+              分类管理
             </TabsTrigger>
             <TabsTrigger value="manage" className="gap-2">
               <Settings className="h-4 w-4" />
               管理涂色页
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard">
+            <DashboardStats />
+          </TabsContent>
 
           <TabsContent value="generate">
 
@@ -391,7 +407,7 @@ export default function Admin() {
                   <SelectContent>
                     {categories?.map((cat) => (
                       <SelectItem key={cat.id} value={cat.name}>
-                        {cat.icon} {cat.name}
+                        {"  ".repeat(cat.level - 1)}{cat.icon} {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -579,6 +595,10 @@ export default function Admin() {
             )}
           </Card>
         </div>
+          </TabsContent>
+
+          <TabsContent value="categories">
+            <ManageCategories />
           </TabsContent>
 
           <TabsContent value="manage">
