@@ -22,16 +22,20 @@ export default function Auth() {
   const [passwordError, setPasswordError] = useState("");
 
   useEffect(() => {
+    // Get redirect parameter from URL
+    const params = new URLSearchParams(window.location.search);
+    const redirectPath = params.get('redirect');
+    
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/");
+        navigate(redirectPath || "/");
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate("/");
+        navigate(redirectPath || "/");
       }
     });
 

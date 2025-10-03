@@ -48,6 +48,21 @@ export default function CreatePage() {
 
   useEffect(() => {
     checkAuth();
+    
+    // Restore saved form state
+    const savedState = localStorage.getItem('createPageState');
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState);
+        setPrompt(state.prompt || '');
+        setSelectedCategoryId(state.selectedCategoryId || '');
+        setImageQuantity(state.imageQuantity || '1');
+        setIsPrivate(state.isPrivate || false);
+        localStorage.removeItem('createPageState'); // Clear after restoring
+      } catch (error) {
+        console.error('Error restoring form state:', error);
+      }
+    }
   }, []);
 
   const checkAuth = async () => {
@@ -121,12 +136,20 @@ export default function CreatePage() {
   const handleGenerate = async () => {
     // Check if user is logged in first
     if (!user) {
+      // Save current form state before redirecting to login
+      localStorage.setItem('createPageState', JSON.stringify({
+        prompt,
+        selectedCategoryId,
+        imageQuantity,
+        isPrivate,
+      }));
+      
       toast({
         title: "Please log in first",
         description: "You need to log in to generate coloring pages",
         variant: "destructive",
       });
-      navigate("/auth");
+      navigate("/auth?redirect=/create");
       return;
     }
 
