@@ -87,7 +87,8 @@ const Index = () => {
         .select(`
           *,
           categories (
-            name
+            name,
+            slug
           )
         `)
         .order('created_at', { ascending: false });
@@ -110,7 +111,8 @@ const Index = () => {
           coloring_pages (
             *,
             categories (
-              name
+              name,
+              slug
             )
           )
         `)
@@ -304,6 +306,7 @@ const Index = () => {
                     <ColoringCard
                       key={page.id}
                       id={page.id}
+                      slug={page.slug}
                       title={page.title}
                       image={page.image_url}
                       category={page.categories?.name || 'Uncategorized'}
@@ -427,6 +430,7 @@ const Index = () => {
                   <ColoringCard
                     key={page.id}
                     id={page.id}
+                    slug={page.slug}
                     title={page.title}
                     image={page.image_url}
                     category={page.categories?.name || 'Uncategorized'}

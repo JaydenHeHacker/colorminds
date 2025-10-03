@@ -55,6 +55,7 @@ export type Database = {
           series_order: number | null
           series_title: string | null
           series_total: number | null
+          slug: string
           title: string
           updated_at: string
         }
@@ -71,6 +72,7 @@ export type Database = {
           series_order?: number | null
           series_title?: string | null
           series_total?: number | null
+          slug: string
           title: string
           updated_at?: string
         }
@@ -87,6 +89,7 @@ export type Database = {
           series_order?: number | null
           series_title?: string | null
           series_total?: number | null
+          slug?: string
           title?: string
           updated_at?: string
         }

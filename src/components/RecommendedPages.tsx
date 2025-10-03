@@ -19,7 +19,8 @@ export const RecommendedPages = ({ currentPageId, category, difficulty }: Recomm
         .select(`
           *,
           categories (
-            name
+            name,
+            slug
           )
         `)
         .neq('id', currentPageId)
@@ -54,7 +55,8 @@ export const RecommendedPages = ({ currentPageId, category, difficulty }: Recomm
           .select(`
             *,
             categories (
-              name
+              name,
+              slug
             )
           `)
           .neq('id', currentPageId)
@@ -90,6 +92,7 @@ export const RecommendedPages = ({ currentPageId, category, difficulty }: Recomm
           <ColoringCard
             key={page.id}
             id={page.id}
+            slug={page.slug}
             title={page.title}
             image={page.image_url}
             category={page.categories?.name || 'Uncategorized'}

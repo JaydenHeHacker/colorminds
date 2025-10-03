@@ -7,10 +7,10 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast as sonnerToast } from "sonner";
 import { ShareDialog } from "./ShareDialog";
-import { generatePageSlug } from "@/lib/slugify";
 
 interface ColoringCardProps {
   id?: string;
+  slug?: string;
   title: string;
   image: string;
   category: string;
@@ -19,7 +19,7 @@ interface ColoringCardProps {
   isSelected?: boolean;
 }
 
-export const ColoringCard = ({ id, title, image, category, difficulty = "medium", onSelect, isSelected = false }: ColoringCardProps) => {
+export const ColoringCard = ({ id, slug, title, image, category, difficulty = "medium", onSelect, isSelected = false }: ColoringCardProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -158,7 +158,7 @@ export const ColoringCard = ({ id, title, image, category, difficulty = "medium"
           />
         </div>
       )}
-      <Link to={id ? `/coloring-page/${generatePageSlug(title, id)}` : '#'} className="block">
+      <Link to={slug ? `/coloring-page/${slug}` : '#'} className="block">
         <div className="aspect-square overflow-hidden bg-muted">
           <img
             src={image}

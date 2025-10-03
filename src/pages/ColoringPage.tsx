@@ -7,7 +7,6 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecommendedPages } from "@/components/RecommendedPages";
 import { Button } from "@/components/ui/button";
 import { Download, Heart, Share2, ArrowLeft, Loader2 } from "lucide-react";
-import { extractIdFromSlug } from "@/lib/slugify";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShareDialog } from "@/components/ShareDialog";
@@ -18,8 +17,6 @@ const ColoringPage = () => {
   const [user, setUser] = useState<any>(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
-
-  const pageId = slug ? extractIdFromSlug(slug) : null;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -34,9 +31,9 @@ const ColoringPage = () => {
   }, []);
 
   const { data: page, isLoading } = useQuery({
-    queryKey: ['coloring-page', pageId],
+    queryKey: ['coloring-page', slug],
     queryFn: async () => {
-      if (!pageId) throw new Error('Invalid page ID');
+      if (!slug) throw new Error('Invalid slug');
       
       const { data, error } = await supabase
         .from('coloring_pages')
@@ -47,30 +44,30 @@ const ColoringPage = () => {
             slug
           )
         `)
-        .eq('id', pageId)
-        .single();
+        .eq('slug', slug)
+        .maybeSingle();
       
       if (error) throw error;
       return data;
     },
-    enabled: !!pageId,
+    enabled: !!slug,
   });
 
   const { data: isFavoritedData } = useQuery({
-    queryKey: ['is-favorited', pageId, user?.id],
+    queryKey: ['is-favorited', page?.id, user?.id],
     queryFn: async () => {
-      if (!pageId || !user) return false;
+      if (!page?.id || !user) return false;
       
       const { data } = await supabase
         .from('favorites')
         .select('id')
         .eq('user_id', user.id)
-        .eq('coloring_page_id', pageId)
+        .eq('coloring_page_id', page.id)
         .maybeSingle();
       
       return !!data;
     },
-    enabled: !!pageId && !!user,
+    enabled: !!page?.id && !!user,
   });
 
   useEffect(() => {
@@ -99,7 +96,7 @@ const ColoringPage = () => {
       return;
     }
 
-    if (!pageId) return;
+    if (!page?.id) return;
 
     try {
       if (isFavorited) {
@@ -107,7 +104,7 @@ const ColoringPage = () => {
           .from('favorites')
           .delete()
           .eq('user_id', user.id)
-          .eq('coloring_page_id', pageId);
+          .eq('coloring_page_id', page.id);
         
         if (error) throw error;
         
@@ -118,7 +115,7 @@ const ColoringPage = () => {
           .from('favorites')
           .insert({
             user_id: user.id,
-            coloring_page_id: pageId
+            coloring_page_id: page.id
           });
         
         if (error) throw error;
@@ -147,7 +144,7 @@ const ColoringPage = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      await supabase.rpc('increment_download_count', { page_id: pageId });
+      await supabase.rpc('increment_download_count', { page_id: page.id });
       toast.success(`Downloading ${page.title}...`);
     } catch (error) {
       console.error('Download error:', error);
@@ -313,7 +310,7 @@ const ColoringPage = () => {
         {/* Recommended Pages */}
         {page.categories && (
           <RecommendedPages 
-            currentPageId={pageId!}
+            currentPageId={page.id}
             category={page.categories.name}
             difficulty={page.difficulty || 'medium'}
           />
@@ -326,7 +323,7 @@ const ColoringPage = () => {
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
         title={page.title}
-        pageId={pageId!}
+        pageId={page.id}
       />
     </div>
   );
