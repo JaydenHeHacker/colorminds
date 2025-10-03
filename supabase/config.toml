@@ -1,1 +1,4 @@
 project_id = "gggmfhgavzworznuagzv"
+
+[functions.generate-coloring-page]
+verify_jwt = false

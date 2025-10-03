@@ -20,8 +20,8 @@ export const Header = () => {
             <a href="#popular" className="text-sm font-medium transition-smooth hover:text-primary">
               Popular
             </a>
-            <a href="#new" className="text-sm font-medium transition-smooth hover:text-primary">
-              New
+            <a href="/admin" className="text-sm font-medium transition-smooth hover:text-primary">
+              Admin
             </a>
           </div>
         </div>
