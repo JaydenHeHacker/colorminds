@@ -1,3 +1,29 @@
+# robots.txt for Color Minds
+# https://www.robotstxt.org/
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://coloringfun.lovable.app/sitemap.xml
+
+# Crawl delay for good behavior
+Crawl-delay: 1
+
+# Disallow admin and auth pages
+Disallow: /admin
+Disallow: /auth
+
+# Allow all images
+User-agent: Googlebot-Image
+Allow: /
+
+# Allow all important content
+Allow: /category/
+Allow: /coloring-page/
+Allow: /series/
+
+# Special bots
 User-agent: Googlebot
 Allow: /
 
@@ -8,7 +34,4 @@ User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
-Allow: /
-
-User-agent: *
 Allow: /

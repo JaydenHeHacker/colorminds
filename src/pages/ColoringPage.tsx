@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShareDialog } from "@/components/ShareDialog";
 import { StructuredData } from "@/components/StructuredData";
+import { SocialMeta } from "@/components/SocialMeta";
 
 const ColoringPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -192,6 +193,26 @@ const ColoringPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      
+      <SocialMeta
+        title={`${page.title} - Free Printable ${page.categories?.name || 'Coloring'} Page`}
+        description={`${page.description || `Download and print this free ${page.title} coloring page.`} Perfect for kids and adults. High-quality printable design.`}
+        image={page.image_url}
+        type="article"
+        author="Color Minds"
+        publishedTime={page.created_at}
+        modifiedTime={page.updated_at}
+        keywords={[
+          page.categories?.name || 'coloring',
+          page.difficulty || 'medium',
+          'coloring page',
+          'printable',
+          'free',
+          'kids',
+          'adults',
+          page.title
+        ]}
+      />
       
       <StructuredData
         type="ImageObject"

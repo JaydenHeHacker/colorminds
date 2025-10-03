@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, BookOpen } from "lucide-react";
 import { useEffect } from "react";
 import { StructuredData } from "@/components/StructuredData";
+import { SocialMeta } from "@/components/SocialMeta";
 
 const SeriesPage = () => {
   const { seriesId } = useParams<{ seriesId: string }>();
@@ -86,6 +87,23 @@ const SeriesPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      
+      <SocialMeta
+        title={`${seriesTitle} Series - Complete Story Collection`}
+        description={`Explore the complete ${seriesTitle} coloring page series with ${totalPages} chapters. Download and print free high-quality coloring pages for kids and adults.`}
+        image={seriesPages[0]?.image_url}
+        type="website"
+        keywords={[
+          seriesTitle || 'series',
+          category?.name || 'coloring',
+          'story series',
+          'coloring pages',
+          'printable',
+          'free',
+          'kids',
+          'adults'
+        ]}
+      />
       
       <StructuredData
         type="CollectionPage"

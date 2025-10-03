@@ -21,6 +21,19 @@ export default {
       '2xl': '1536px',
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      },
+      transitionProperty: {
+        'smooth': 'all',
+      },
+      transitionDuration: {
+        '400': '400ms',
+      },
+      boxShadow: {
+        'colorful': '0 10px 40px -10px rgba(var(--primary-rgb), 0.2)',
+        'elegant': '0 10px 30px -10px rgba(0, 0, 0, 0.1)',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

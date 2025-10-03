@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { StructuredData } from "@/components/StructuredData";
+import { SocialMeta } from "@/components/SocialMeta";
 
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -101,6 +102,22 @@ const CategoryPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      
+      <SocialMeta
+        title={`${category.name} Coloring Pages - Free Printables`}
+        description={`Discover ${coloringPages?.length || 0} free printable ${category.name.toLowerCase()} coloring pages. ${category.description || ''} Download and print high-quality designs for kids and adults.`}
+        image={coloringPages?.[0]?.image_url}
+        type="website"
+        keywords={[
+          category.name,
+          'coloring pages',
+          'printable',
+          'free',
+          'kids',
+          'adults',
+          'download'
+        ]}
+      />
       
       <StructuredData
         type="CollectionPage"
