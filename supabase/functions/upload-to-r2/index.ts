@@ -52,7 +52,7 @@ serve(async (req) => {
     });
 
     // Construct public URL
-    const publicUrl = `https://pub-${R2_ACCOUNT_ID}.r2.dev/${fileName}`;
+    const publicUrl = `https://pub-c60d2f46067e4d25acda5bd5ac88504c.r2.dev/${fileName}`;
 
     console.log('Upload successful:', publicUrl);
 
