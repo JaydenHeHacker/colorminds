@@ -58,9 +58,9 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/admin" className="hover:text-primary transition-smooth">
-                  Create Pages
-                </Link>
+                <button onClick={() => scrollToSection('popular')} className="hover:text-primary transition-smooth">
+                  Popular Pages
+                </button>
               </li>
               <li>
                 <Link to="/" className="hover:text-primary transition-smooth">
