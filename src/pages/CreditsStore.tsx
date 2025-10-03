@@ -40,12 +40,28 @@ export default function CreditsStore() {
     setLoading(false);
   };
 
-  const handlePurchasePackage = async (packageId: string, credits: number, price: number) => {
-    toast({
-      title: "Feature in Development",
-      description: "Payment integration coming soon!",
-    });
-    // TODO: Integrate with Stripe
+  const handlePurchasePackage = async (priceId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { priceId }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast({
+          title: "Redirecting to payment",
+          description: "Opening Stripe checkout...",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Payment Error",
+        description: error.message || "Failed to create payment session",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleUpgradePremium = () => {
@@ -174,50 +190,107 @@ export default function CreditsStore() {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {packages.map((pkg) => {
-              const pricePerCredit = (Number(pkg.price_usd) / pkg.credits).toFixed(2);
-              const isPopular = pkg.credits === 30;
+            {/* 100 Credits Pack */}
+            <Card className="p-6 relative">
+              <div className="text-center mb-6">
+                <Zap className="w-12 h-12 mx-auto mb-3 text-primary" />
+                <h3 className="text-xl font-bold mb-1">Starter Pack</h3>
+                <p className="text-3xl font-bold text-primary mb-1">
+                  100 Credits
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  $0.05 / page
+                </p>
+              </div>
               
-              return (
-                <Card key={pkg.id} className={`p-6 relative ${isPopular ? 'border-2 border-primary' : ''}`}>
-                  {isPopular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      Best Value
-                    </Badge>
-                  )}
-                  
-                  <div className="text-center mb-6">
-                    <Zap className="w-12 h-12 mx-auto mb-3 text-primary" />
-                    <h3 className="text-xl font-bold mb-1">{pkg.name}</h3>
-                    <p className="text-3xl font-bold text-primary mb-1">
-                      {pkg.credits} Credits
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      ${pricePerCredit} / page
-                    </p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="text-3xl font-bold text-center mb-1">
-                      ${Number(pkg.price_usd).toFixed(2)}
-                    </div>
-                    <p className="text-sm text-center text-muted-foreground">One-time purchase</p>
-                  </div>
-                  
-                  <Button
-                    onClick={() => handlePurchasePackage(pkg.id, pkg.credits, Number(pkg.price_usd))}
-                    className="w-full"
-                    variant={isPopular ? "default" : "outline"}
-                  >
-                    Buy Now
-                  </Button>
-                  
-                  <div className="mt-4 text-xs text-center text-muted-foreground">
-                    • Never expires • Stackable
-                  </div>
-                </Card>
-              );
-            })}
+              <div className="mb-6">
+                <div className="text-3xl font-bold text-center mb-1">
+                  $4.99
+                </div>
+                <p className="text-sm text-center text-muted-foreground">One-time purchase</p>
+              </div>
+              
+              <Button
+                onClick={() => handlePurchasePackage("price_1SEA5BCTw9zay88K5UTJGHeo")}
+                className="w-full"
+                variant="outline"
+              >
+                Buy Now
+              </Button>
+              
+              <div className="mt-4 text-xs text-center text-muted-foreground">
+                • Never expires • Stackable
+              </div>
+            </Card>
+
+            {/* 300 Credits Pack - Best Value */}
+            <Card className="p-6 relative border-2 border-primary">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
+                Best Value
+              </Badge>
+              
+              <div className="text-center mb-6">
+                <Zap className="w-12 h-12 mx-auto mb-3 text-primary" />
+                <h3 className="text-xl font-bold mb-1">Popular Pack</h3>
+                <p className="text-3xl font-bold text-primary mb-1">
+                  300 Credits
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  $0.04 / page
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <div className="text-3xl font-bold text-center mb-1">
+                  $12.99
+                </div>
+                <p className="text-sm text-center text-muted-foreground">One-time purchase</p>
+              </div>
+              
+              <Button
+                onClick={() => handlePurchasePackage("price_1SEA5CCTw9zay88KgH909p99")}
+                className="w-full"
+              >
+                Buy Now
+              </Button>
+              
+              <div className="mt-4 text-xs text-center text-muted-foreground">
+                • Never expires • Stackable
+              </div>
+            </Card>
+
+            {/* 1000 Credits Pack */}
+            <Card className="p-6 relative">
+              <div className="text-center mb-6">
+                <Zap className="w-12 h-12 mx-auto mb-3 text-primary" />
+                <h3 className="text-xl font-bold mb-1">Premium Pack</h3>
+                <p className="text-3xl font-bold text-primary mb-1">
+                  1000 Credits
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  $0.04 / page
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <div className="text-3xl font-bold text-center mb-1">
+                  $39.99
+                </div>
+                <p className="text-sm text-center text-muted-foreground">One-time purchase</p>
+              </div>
+              
+              <Button
+                onClick={() => handlePurchasePackage("price_1SEA5DCTw9zay88KrzLJZedY")}
+                className="w-full"
+                variant="outline"
+              >
+                Buy Now
+              </Button>
+              
+              <div className="mt-4 text-xs text-center text-muted-foreground">
+                • Never expires • Stackable
+              </div>
+            </Card>
           </div>
         </div>
 
