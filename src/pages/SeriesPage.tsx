@@ -12,13 +12,13 @@ import { StructuredData } from "@/components/StructuredData";
 import { SocialMeta } from "@/components/SocialMeta";
 
 const SeriesPage = () => {
-  const { seriesId } = useParams<{ seriesId: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
   const { data: seriesPages, isLoading } = useQuery({
-    queryKey: ['series-pages', seriesId],
+    queryKey: ['series-pages', slug],
     queryFn: async () => {
-      if (!seriesId) throw new Error('Invalid series ID');
+      if (!slug) throw new Error('Invalid series slug');
       
       const { data, error } = await supabase
         .from('coloring_pages')
@@ -26,16 +26,17 @@ const SeriesPage = () => {
           *,
           categories (
             name,
-            slug
+            slug,
+            path
           )
         `)
-        .eq('series_id', seriesId)
+        .eq('series_slug', slug)
         .order('series_order', { ascending: true });
       
       if (error) throw error;
       return data;
     },
-    enabled: !!seriesId,
+    enabled: !!slug,
   });
 
   const seriesTitle = seriesPages?.[0]?.series_title;
@@ -124,7 +125,7 @@ const SeriesPage = () => {
             { label: 'Home', href: '/' },
             ...(category ? [{ 
               label: category.name, 
-              href: `/category/${category.slug}` 
+              href: `/category/${category.path || category.slug}` 
             }] : []),
             { label: seriesTitle || 'Series', isCurrentPage: true },
           ]}

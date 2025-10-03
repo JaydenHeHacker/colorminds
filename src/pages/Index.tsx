@@ -158,6 +158,7 @@ const Index = () => {
   // Get series to display
   const seriesToDisplay = Array.from(seriesGroups.entries()).map(([seriesId, pages]) => ({
     seriesId,
+    seriesSlug: pages[0]?.series_slug || '',
     seriesTitle: pages[0]?.series_title || '',
     seriesTotal: pages[0]?.series_total || pages.length,
     difficulty: pages[0]?.difficulty || 'medium',
@@ -342,6 +343,7 @@ const Index = () => {
                     <SeriesCard
                       key={series.seriesId}
                       seriesId={series.seriesId}
+                      seriesSlug={series.seriesSlug}
                       seriesTitle={series.seriesTitle}
                       seriesTotal={series.seriesTotal}
                       difficulty={series.difficulty as "easy" | "medium" | "hard"}

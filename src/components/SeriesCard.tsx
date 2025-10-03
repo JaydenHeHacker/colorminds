@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 
 interface SeriesCardProps {
   seriesId: string;
+  seriesSlug: string;
   seriesTitle: string;
   seriesTotal: number;
   difficulty: "easy" | "medium" | "hard";
@@ -15,6 +16,7 @@ interface SeriesCardProps {
 
 export const SeriesCard = ({ 
   seriesId,
+  seriesSlug,
   seriesTitle, 
   seriesTotal, 
   difficulty, 
@@ -31,7 +33,7 @@ export const SeriesCard = ({
   const config = difficultyConfig[difficulty];
 
   return (
-    <Link to={`/series/${seriesId}`}>
+    <Link to={`/series/${seriesSlug}`}>
       <Card className="group overflow-hidden border-2 hover:border-primary/50 transition-smooth shadow-sm hover:shadow-colorful active:scale-98 touch-manipulation">
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img

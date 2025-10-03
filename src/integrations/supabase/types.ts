@@ -73,6 +73,7 @@ export type Database = {
           is_featured: boolean
           series_id: string | null
           series_order: number | null
+          series_slug: string | null
           series_title: string | null
           series_total: number | null
           slug: string
@@ -90,6 +91,7 @@ export type Database = {
           is_featured?: boolean
           series_id?: string | null
           series_order?: number | null
+          series_slug?: string | null
           series_title?: string | null
           series_total?: number | null
           slug: string
@@ -107,6 +109,7 @@ export type Database = {
           is_featured?: boolean
           series_id?: string | null
           series_order?: number | null
+          series_slug?: string | null
           series_title?: string | null
           series_total?: number | null
           slug?: string

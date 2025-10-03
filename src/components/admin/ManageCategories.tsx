@@ -487,10 +487,11 @@ export default function ManageCategories() {
 
         // Add series metadata for story series
         if (generationType === "series" && seriesId) {
-          insertData.series_id = seriesId;
-          insertData.series_title = theme;
-          insertData.series_order = i + 1;
-          insertData.series_total = totalPages;
+            insertData.series_id = seriesId;
+            insertData.series_title = theme;
+            insertData.series_order = i + 1;
+            insertData.series_total = totalPages;
+            insertData.series_slug = slugify(theme);
         }
 
         const { error } = await supabase
