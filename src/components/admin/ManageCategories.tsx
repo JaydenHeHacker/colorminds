@@ -306,23 +306,33 @@ export default function ManageCategories() {
 
     setIsSavingIcon(true);
     try {
+      console.log('=== 开始保存类目图 ===');
+      console.log('类目:', generatingIconForCategory.name, '(ID:', generatingIconForCategory.id, ')');
+      console.log('生成的图片数据长度:', generatedIcon.length);
+      
       // Upload to R2 - generatedIcon is already base64 format
       const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-to-r2', {
         body: { 
           imageData: generatedIcon,  // base64 image data
-          fileName: `category-${generatingIconForCategory.slug}-${Date.now()}.png`  // Note: capital F
+          fileName: `category-${generatingIconForCategory.slug}-${Date.now()}.png`
         }
       });
+
+      console.log('R2上传结果:', { uploadData, uploadError });
 
       if (uploadError) throw uploadError;
       
       const r2Url = uploadData.publicUrl;
+      console.log('准备保存的R2 URL:', r2Url);
 
       // Update category with R2 URL
-      const { error } = await supabase
+      const { data: updateData, error } = await supabase
         .from('categories')
         .update({ icon: r2Url })
-        .eq('id', generatingIconForCategory.id);
+        .eq('id', generatingIconForCategory.id)
+        .select();
+
+      console.log('数据库更新结果:', { updateData, error });
 
       if (error) throw error;
 
@@ -331,7 +341,7 @@ export default function ManageCategories() {
       setGeneratingIconForCategory(null);
       setGeneratedIcon("");
     } catch (error: any) {
-      console.error('保存类目图错误:', error);
+      console.error('=== 保存类目图失败 ===', error);
       toast.error("保存失败：" + error.message);
     } finally {
       setIsSavingIcon(false);
