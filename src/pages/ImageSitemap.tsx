@@ -23,6 +23,7 @@ const ImageSitemap = () => {
             slug
           )
         `)
+        .eq('status', 'published')
         .order('updated_at', { ascending: false });
       
       if (error) throw error;

@@ -30,6 +30,7 @@ const SeriesPage = () => {
             path
           )
         `)
+        .eq('status', 'published')
         .eq('series_slug', slug)
         .order('series_order', { ascending: true });
       

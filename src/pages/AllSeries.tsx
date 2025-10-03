@@ -35,6 +35,7 @@ const AllSeries = () => {
             slug
           )
         `)
+        .eq('status', 'published')
         .not('series_id', 'is', null)
         .order('created_at', { ascending: false });
       

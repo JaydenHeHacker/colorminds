@@ -9,6 +9,7 @@ const Sitemap = () => {
       const { data, error } = await supabase
         .from('coloring_pages')
         .select('slug, updated_at')
+        .eq('status', 'published')
         .order('updated_at', { ascending: false });
       
       if (error) throw error;

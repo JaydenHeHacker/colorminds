@@ -112,6 +112,7 @@ const CategoryPage = () => {
               slug
             )
           `)
+          .eq('status', 'published')
           .order('created_at', { ascending: false });
         
         if (error) throw error;
@@ -133,6 +134,7 @@ const CategoryPage = () => {
             slug
           )
         `)
+        .eq('status', 'published')
         .in('category_id', categoryIds)
         .order('created_at', { ascending: false });
       

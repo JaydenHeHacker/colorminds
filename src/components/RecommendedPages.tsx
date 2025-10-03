@@ -23,6 +23,7 @@ export const RecommendedPages = ({ currentPageId, category, difficulty }: Recomm
             slug
           )
         `)
+        .eq('status', 'published')
         .neq('id', currentPageId)
         .limit(4);
 
@@ -59,6 +60,7 @@ export const RecommendedPages = ({ currentPageId, category, difficulty }: Recomm
               slug
             )
           `)
+          .eq('status', 'published')
           .neq('id', currentPageId)
           .limit(4 - data.length)
           .order('download_count', { ascending: false });
