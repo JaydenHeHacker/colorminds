@@ -341,7 +341,6 @@ export default function CreatePage() {
                 <SelectContent className="bg-background z-50">
                   {categories?.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
-                      {category.icon && <span className="mr-2">{category.icon}</span>}
                       {category.name}
                     </SelectItem>
                   ))}
