@@ -31,6 +31,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/coloring-page/:slug" element={<ColoringPage />} />
           <Route path="/ai-coloring-page/:id" element={<AIColoringPage />} />
+          <Route path="/my-creations/:id" element={<AIColoringPage />} />
           <Route path="/category/*" element={<CategoryPage />} />
           <Route path="/series" element={<AllSeries />} />
           <Route path="/series/:slug" element={<SeriesPage />} />
