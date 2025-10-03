@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { S3Client } from "https://deno.land/x/s3_lite_client@0.7.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -94,6 +95,26 @@ Return ONLY a JSON array of ${seriesLength} scene descriptions in English. Forma
 - Intricate backgrounds`
     };
 
+    // Get R2 credentials
+    const R2_ACCESS_KEY_ID = Deno.env.get('R2_ACCESS_KEY_ID');
+    const R2_SECRET_ACCESS_KEY = Deno.env.get('R2_SECRET_ACCESS_KEY');
+    const R2_ACCOUNT_ID = Deno.env.get('R2_ACCOUNT_ID');
+    const R2_BUCKET_NAME = Deno.env.get('R2_BUCKET_NAME');
+
+    if (!R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_ACCOUNT_ID || !R2_BUCKET_NAME) {
+      throw new Error('R2 credentials not configured');
+    }
+
+    // Create S3 client for R2
+    const s3Client = new S3Client({
+      endPoint: `${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      region: 'auto',
+      accessKey: R2_ACCESS_KEY_ID,
+      secretKey: R2_SECRET_ACCESS_KEY,
+      useSSL: true,
+      port: 443,
+    });
+
     // Step 2: Generate images for each scene (with English titles)
     const imageUrls = [];
     for (let i = 0; i < scenes.length; i++) {
@@ -144,8 +165,31 @@ Make it a ${difficulty} level line drawing perfect for printing and coloring.`;
       const imageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
       if (imageUrl) {
+        // Upload image to R2
+        console.log(`Uploading image ${i + 1} to R2...`);
+        
+        // Fetch image from data URI
+        const imgResponse = await fetch(imageUrl);
+        const imageBuffer = await imgResponse.arrayBuffer();
+        const imageBytes = new Uint8Array(imageBuffer);
+
+        // Generate unique filename
+        const timestamp = Date.now();
+        const fileName = `series-${category}-${timestamp}-${i + 1}.png`;
+
+        // Upload to R2
+        await s3Client.putObject(fileName, imageBytes, {
+          bucketName: R2_BUCKET_NAME,
+          metadata: {
+            'Content-Type': 'image/png',
+          },
+        });
+
+        // Construct public URL
+        const publicUrl = `https://pub-c60d2f46067e4d25acda5bd5ac88504c.r2.dev/${fileName}`;
+        
         imageUrls.push({
-          imageUrl,
+          imageUrl: publicUrl,
           sceneDescription: scenes[i],
           order: i + 1
         });
