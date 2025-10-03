@@ -1,27 +1,20 @@
 import { Card } from "@/components/ui/card";
-import { 
-  Rabbit, 
-  Trees, 
-  Heart, 
-  Star, 
-  Flower, 
-  Fish,
-  Car,
-  Home
-} from "lucide-react";
-
-const categories = [
-  { name: "Animals", icon: Rabbit, color: "text-primary" },
-  { name: "Nature", icon: Trees, color: "text-success" },
-  { name: "Love", icon: Heart, color: "text-accent" },
-  { name: "Space", icon: Star, color: "text-warning" },
-  { name: "Flowers", icon: Flower, color: "text-secondary" },
-  { name: "Ocean", icon: Fish, color: "text-primary" },
-  { name: "Vehicles", icon: Car, color: "text-success" },
-  { name: "Buildings", icon: Home, color: "text-accent" },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Categories = () => {
+  const { data: categories, isLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <section className="py-16 md:py-20" id="categories">
       <div className="container">
@@ -35,20 +28,29 @@ export const Categories = () => {
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {categories.map((category) => {
-            const Icon = category.icon;
-            return (
+          {isLoading ? (
+            <div className="col-span-full text-center py-12 text-muted-foreground">
+              Loading categories...
+            </div>
+          ) : categories && categories.length > 0 ? (
+            categories.map((category) => (
               <Card
-                key={category.name}
+                key={category.id}
                 className="group cursor-pointer overflow-hidden border-2 hover:border-primary/50 transition-smooth shadow-sm hover:shadow-colorful"
               >
                 <div className="aspect-square flex flex-col items-center justify-center p-6 gradient-card">
-                  <Icon className={`h-12 w-12 md:h-16 md:w-16 mb-4 transition-smooth group-hover:scale-110 ${category.color}`} />
+                  <div className="text-5xl md:text-6xl mb-4 transition-smooth group-hover:scale-110">
+                    {category.icon}
+                  </div>
                   <h3 className="font-semibold text-lg text-center">{category.name}</h3>
                 </div>
               </Card>
-            );
-          })}
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12 text-muted-foreground">
+              No categories available
+            </div>
+          )}
         </div>
       </div>
     </section>

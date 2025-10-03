@@ -3,63 +3,28 @@ import { Hero } from "@/components/Hero";
 import { Categories } from "@/components/Categories";
 import { ColoringCard } from "@/components/ColoringCard";
 import { Footer } from "@/components/Footer";
-import unicornImage from "@/assets/coloring-unicorn.jpg";
-import dinosaurImage from "@/assets/coloring-dinosaur.jpg";
-import butterflyImage from "@/assets/coloring-butterfly.jpg";
-import oceanImage from "@/assets/coloring-ocean.jpg";
-
-const coloringPages = [
-  {
-    id: 1,
-    title: "Magical Unicorn with Stars",
-    image: unicornImage,
-    category: "Animals"
-  },
-  {
-    id: 2,
-    title: "Friendly Dinosaur Adventure",
-    image: dinosaurImage,
-    category: "Animals"
-  },
-  {
-    id: 3,
-    title: "Beautiful Butterfly Garden",
-    image: butterflyImage,
-    category: "Nature"
-  },
-  {
-    id: 4,
-    title: "Underwater Ocean Scene",
-    image: oceanImage,
-    category: "Ocean"
-  },
-  {
-    id: 5,
-    title: "Magical Unicorn with Stars",
-    image: unicornImage,
-    category: "Animals"
-  },
-  {
-    id: 6,
-    title: "Friendly Dinosaur Adventure",
-    image: dinosaurImage,
-    category: "Animals"
-  },
-  {
-    id: 7,
-    title: "Beautiful Butterfly Garden",
-    image: butterflyImage,
-    category: "Nature"
-  },
-  {
-    id: 8,
-    title: "Underwater Ocean Scene",
-    image: oceanImage,
-    category: "Ocean"
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const { data: coloringPages, isLoading } = useQuery({
+    queryKey: ['coloring-pages'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('coloring_pages')
+        .select(`
+          *,
+          categories (
+            name
+          )
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -81,14 +46,24 @@ const Index = () => {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {coloringPages.map((page) => (
-                <ColoringCard
-                  key={page.id}
-                  title={page.title}
-                  image={page.image}
-                  category={page.category}
-                />
-              ))}
+              {isLoading ? (
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  Loading coloring pages...
+                </div>
+              ) : coloringPages && coloringPages.length > 0 ? (
+                coloringPages.map((page) => (
+                  <ColoringCard
+                    key={page.id}
+                    title={page.title}
+                    image={page.image_url}
+                    category={page.categories?.name || 'Uncategorized'}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  No coloring pages available yet. Check back soon!
+                </div>
+              )}
             </div>
           </div>
         </section>
