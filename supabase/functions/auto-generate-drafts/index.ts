@@ -130,6 +130,7 @@ serve(async (req) => {
       // 保存系列图到数据库（草稿状态）
       for (let i = 0; i < images.length; i++) {
         const pageId = crypto.randomUUID();
+        const imageData = images[i];
         const title = `${theme} - Chapter ${i + 1}`;
         const slug = generatePageSlug(title, pageId);
         
@@ -139,8 +140,8 @@ serve(async (req) => {
             id: pageId,
             title,
             slug,
-            description: story?.chapters?.[i] || `Part ${i + 1} of ${theme}`,
-            image_url: images[i],
+            description: imageData.sceneDescription || story?.chapters?.[i] || `Part ${i + 1} of ${theme}`,
+            image_url: imageData.imageUrl || imageData, // 提取 imageUrl 字段
             category_id: category.id,
             difficulty,
             series_title: theme,
