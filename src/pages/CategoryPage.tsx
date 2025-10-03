@@ -61,19 +61,30 @@ const CategoryPage = () => {
   // Determine the root category for sidebar (parent or current)
   const rootCategory = parentCategory || category;
 
+  // Special handling for "all" category - show top-level categories
+  const isAllCategory = category?.slug === 'all' || category?.path === 'all';
+
   // Query all siblings (subcategories of the root category)
   const { data: subCategories, isLoading: isSubCategoriesLoading } = useQuery({
-    queryKey: ['subcategories', rootCategory?.id],
+    queryKey: ['subcategories', rootCategory?.id, isAllCategory],
     queryFn: async () => {
       if (!rootCategory?.id) return [];
       
-      const { data, error } = await supabase
+      // For "all" category, get level 1 categories instead of children
+      const query = supabase
         .from('categories')
         .select(`
           *,
           coloring_pages(count)
-        `)
-        .eq('parent_id', rootCategory.id)
+        `);
+      
+      if (isAllCategory) {
+        query.eq('level', 1);
+      } else {
+        query.eq('parent_id', rootCategory.id);
+      }
+      
+      const { data, error } = await query
         .order('order_position', { ascending: true })
         .order('name', { ascending: true });
       
@@ -85,11 +96,28 @@ const CategoryPage = () => {
 
   // Query all coloring pages in this category (and its subcategories if it's a parent)
   const { data: allColoringPages, isLoading: isPagesLoading } = useQuery({
-    queryKey: ['category-all-pages', category?.id, subCategories?.map(s => s.id).sort().join(',')],
+    queryKey: ['category-all-pages', category?.id, subCategories?.map(s => s.id).sort().join(','), isAllCategory],
     queryFn: async () => {
       if (!category?.id) return [];
       
-      // Get all category IDs (current + subcategories)
+      // For "all" category, get all coloring pages
+      if (isAllCategory) {
+        const { data, error } = await supabase
+          .from('coloring_pages')
+          .select(`
+            *,
+            categories (
+              name,
+              slug
+            )
+          `)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return data;
+      }
+      
+      // For regular categories, get pages from current + subcategories
       const categoryIds = [category.id];
       if (subCategories && subCategories.length > 0) {
         categoryIds.push(...subCategories.map(sub => sub.id));

@@ -102,7 +102,7 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
             </div>
           ) : categories && categories.length > 0 ? (
             <>
-                <Link to="/browse">
+                <Link to="/category/all">
                 <Card
                  className={cn(
                    "category-card group cursor-pointer overflow-hidden border-2 transition-all duration-500 hover:shadow-glow active:scale-95 touch-manipulation backdrop-blur-sm",
