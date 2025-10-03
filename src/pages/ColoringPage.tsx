@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecommendedPages } from "@/components/RecommendedPages";
 import { Button } from "@/components/ui/button";
-import { Download, Heart, Share2, ArrowLeft, Loader2 } from "lucide-react";
+import { Printer, Heart, Share2, ArrowLeft, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShareDialog } from "@/components/ShareDialog";
@@ -131,26 +131,59 @@ const ColoringPage = () => {
     }
   };
 
-  const handleDownload = async () => {
+  const handlePrint = async () => {
     if (!page) return;
     
     try {
-      const response = await fetch(page.image_url);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${page.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      // Open print dialog for the image
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast.error("Please allow pop-ups to print");
+        return;
+      }
+      
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Print ${page.title}</title>
+            <style>
+              body {
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+              }
+              img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+              }
+              @media print {
+                body {
+                  margin: 0;
+                }
+                img {
+                  max-width: 100%;
+                  page-break-inside: avoid;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${page.image_url}" alt="${page.title}" onload="window.print(); window.close();" />
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
       
       await supabase.rpc('increment_download_count', { page_id: page.id });
-      toast.success(`Downloading ${page.title}...`);
+      toast.success("Opening print dialog...");
     } catch (error) {
-      console.error('Download error:', error);
-      toast.error("Download failed. Please try again.");
+      console.error('Print error:', error);
+      toast.error("Print failed. Please try again.");
     }
   };
 
@@ -276,9 +309,9 @@ const ColoringPage = () => {
                 </div>
                 
                 <div className="flex gap-3">
-                  <Button onClick={handleDownload} className="flex-1 gap-2" size="lg">
-                    <Download className="h-5 w-5" />
-                    Download & Print
+                  <Button onClick={handlePrint} className="flex-1 gap-2" size="lg">
+                    <Printer className="h-5 w-5" />
+                    Print
                   </Button>
                   <Button 
                     variant={isFavorited ? "default" : "outline"}
@@ -334,11 +367,11 @@ const ColoringPage = () => {
                   <ol className="space-y-2 text-muted-foreground">
                     <li className="flex gap-2">
                       <span className="font-semibold text-foreground">1.</span>
-                      <span>Click the <strong>"Download & Print"</strong> button above to save the image to your device</span>
+                      <span>Click the <strong>"Print"</strong> button above to open the print dialog</span>
                     </li>
                     <li className="flex gap-2">
                       <span className="font-semibold text-foreground">2.</span>
-                      <span>Open the downloaded image and print it on standard letter or A4 paper</span>
+                      <span>Choose your printer or select "Save as PDF" to download the image</span>
                     </li>
                     <li className="flex gap-2">
                       <span className="font-semibold text-foreground">3.</span>
@@ -353,8 +386,8 @@ const ColoringPage = () => {
 
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <Download className="h-4 w-4" />
-                    <span><strong>{page.download_count}</strong> downloads</span>
+                    <Printer className="h-4 w-4" />
+                    <span><strong>{page.download_count}</strong> prints</span>
                   </div>
                   <p className="text-xs">
                     💡 <strong>Tip:</strong> For best results, print on thick paper or cardstock for easier coloring and reduced bleed-through.
