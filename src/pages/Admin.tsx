@@ -57,61 +57,36 @@ export default function Admin() {
         throw new Error('缺少必要数据');
       }
 
-      try {
-        // Check if bucket exists, create if not
-        const { data: buckets } = await supabase.storage.listBuckets();
-        const bucketExists = buckets?.some(b => b.name === 'coloring-pages');
-        
-        if (!bucketExists) {
-          const { error: bucketError } = await supabase.storage.createBucket('coloring-pages', {
-            public: true,
-            fileSizeLimit: 5242880, // 5MB
-            allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp']
-          });
-          
-          if (bucketError && !bucketError.message.includes('already exists')) {
-            throw new Error('创建存储桶失败：' + bucketError.message);
-          }
+      // Upload to R2
+      const fileName = `${Date.now()}-${theme.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}.png`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-to-r2', {
+        body: {
+          imageData: generatedImage,
+          fileName
         }
+      });
 
-        // Convert base64 to blob
-        const response = await fetch(generatedImage);
-        const blob = await response.blob();
-        
-        // Upload to storage
-        const fileName = `${Date.now()}-${theme.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}.png`;
-        const { error: uploadError } = await supabase.storage
-          .from('coloring-pages')
-          .upload(fileName, blob, {
-            contentType: 'image/png',
-            cacheControl: '3600',
-            upsert: false
-          });
+      if (uploadError || !uploadData?.publicUrl) {
+        throw new Error('上传到 R2 失败：' + (uploadError?.message || '未知错误'));
+      }
 
-        if (uploadError) throw new Error('上传失败：' + uploadError.message);
+      // Find category ID
+      const category = categories?.find(c => c.name === selectedCategory);
+      if (!category) throw new Error('未找到分类');
 
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('coloring-pages')
-          .getPublicUrl(fileName);
+      // Save to database
+      const { error: insertError } = await supabase
+        .from('coloring_pages')
+        .insert({
+          title: theme,
+          image_url: uploadData.publicUrl,
+          category_id: category.id,
+          is_featured: false,
+        });
 
-        // Find category ID
-        const category = categories?.find(c => c.name === selectedCategory);
-        if (!category) throw new Error('未找到分类');
-
-        // Save to database
-        const { error: insertError } = await supabase
-          .from('coloring_pages')
-          .insert({
-            title: theme,
-            image_url: publicUrl,
-            category_id: category.id,
-            is_featured: false,
-          });
-
-        if (insertError) throw new Error('保存到数据库失败：' + insertError.message);
-      } catch (error) {
-        throw error;
+      if (insertError) {
+        throw new Error('保存到数据库失败：' + insertError.message);
       }
     },
     onSuccess: () => {

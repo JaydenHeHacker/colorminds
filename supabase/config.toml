@@ -2,3 +2,6 @@ project_id = "gggmfhgavzworznuagzv"
 
 [functions.generate-coloring-page]
 verify_jwt = false
+
+[functions.upload-to-r2]
+verify_jwt = false
