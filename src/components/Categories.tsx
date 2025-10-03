@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface CategoriesProps {
   selectedCategory: string | null;
@@ -102,33 +103,30 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                    )}
                  </div>
                </Card>
-               {categories.map((category) => (
-                 <Card
-                   key={category.id}
-                   onClick={() => {
-                     onCategorySelect(category.name);
-                     scrollToTop();
-                   }}
-                   className={cn(
-                     "group cursor-pointer overflow-hidden border-2 transition-smooth shadow-sm hover:shadow-colorful active:scale-95 touch-manipulation",
-                     selectedCategory === category.name
-                       ? "border-primary bg-primary/5"
-                       : "hover:border-primary/50"
-                   )}
-                 >
-                   <div className="aspect-square flex flex-col items-center justify-center p-4 md:p-6 gradient-card">
-                     <div className="text-4xl md:text-5xl lg:text-6xl mb-2 md:mb-4 transition-smooth group-hover:scale-110">
-                       {category.icon}
-                     </div>
-                     <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center">{category.name}</h3>
-                     {categoryCounts && categoryCounts[category.id] && (
-                       <p className="text-xs text-muted-foreground mt-1">
-                         {categoryCounts[category.id]} pages
-                       </p>
-                     )}
-                   </div>
-                 </Card>
-              ))}
+                {categories.map((category) => (
+                  <Link key={category.id} to={`/category/${category.slug}`}>
+                    <Card
+                      className={cn(
+                        "group cursor-pointer overflow-hidden border-2 transition-smooth shadow-sm hover:shadow-colorful active:scale-95 touch-manipulation",
+                        selectedCategory === category.name
+                          ? "border-primary bg-primary/5"
+                          : "hover:border-primary/50"
+                      )}
+                    >
+                      <div className="aspect-square flex flex-col items-center justify-center p-4 md:p-6 gradient-card">
+                        <div className="text-4xl md:text-5xl lg:text-6xl mb-2 md:mb-4 transition-smooth group-hover:scale-110">
+                          {category.icon}
+                        </div>
+                        <h3 className="font-semibold text-sm md:text-base lg:text-lg text-center">{category.name}</h3>
+                        {categoryCounts && categoryCounts[category.id] && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {categoryCounts[category.id]} pages
+                          </p>
+                        )}
+                      </div>
+                    </Card>
+                  </Link>
+               ))}
             </>
           ) : (
             <div className="col-span-full text-center py-12 text-muted-foreground">

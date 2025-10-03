@@ -198,7 +198,7 @@ const ColoringPage = () => {
             { label: 'Home', href: '/' },
             ...(page.categories ? [{ 
               label: page.categories.name, 
-              href: `/?category=${encodeURIComponent(page.categories.name)}` 
+              href: `/category/${page.categories.slug}` 
             }] : []),
             { label: page.title, isCurrentPage: true },
           ]}
@@ -248,7 +248,7 @@ const ColoringPage = () => {
                   
                   <div className="flex flex-wrap gap-2 mb-4">
                     {page.categories && (
-                      <Link to={`/?category=${encodeURIComponent(page.categories.name)}`}>
+                      <Link to={`/category/${page.categories.slug}`}>
                         <span className="inline-block px-3 py-1.5 text-sm font-medium rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-pointer">
                           {page.categories.name}
                         </span>
