@@ -1,8 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { Download, Palette } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Hero = () => {
+  const { data: stats } = useQuery({
+    queryKey: ['site-stats'],
+    queryFn: async () => {
+      const [pagesCount, categoriesCount] = await Promise.all([
+        supabase.from('coloring_pages').select('*', { count: 'exact', head: true }),
+        supabase.from('categories').select('*', { count: 'exact', head: true }),
+      ]);
+      
+      return {
+        totalPages: pagesCount.count || 0,
+        totalCategories: categoriesCount.count || 0,
+      };
+    },
+  });
+
   const scrollToCategories = () => {
     document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -12,7 +29,7 @@ export const Hero = () => {
   };
 
   return (
-    <section className="relative overflow-hidden py-12 md:py-20 lg:py-28">
+    <section className="relative overflow-hidden py-12 md:py-20 lg:py-24">
       <div className="absolute inset-0 gradient-soft opacity-50" />
       
       <div className="container relative z-10 px-4">
@@ -47,6 +64,22 @@ export const Hero = () => {
                 <Palette className="h-5 w-5" />
                 Popular Pages
               </Button>
+            </div>
+
+            {/* Stats */}
+            <div className="flex flex-wrap gap-3 pt-4">
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm">
+                <span className="text-xl md:text-2xl font-bold text-primary">{stats?.totalPages || '500+'}+</span>
+                <span className="text-xs md:text-sm text-muted-foreground">Pages</span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm">
+                <span className="text-xl md:text-2xl font-bold text-primary">{stats?.totalCategories || '10+'}+</span>
+                <span className="text-xs md:text-sm text-muted-foreground">Categories</span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm">
+                <span className="text-xl md:text-2xl font-bold text-primary">100%</span>
+                <span className="text-xs md:text-sm text-muted-foreground">Free</span>
+              </div>
             </div>
           </div>
           

@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { IntroSection } from "@/components/IntroSection";
 import { Categories } from "@/components/Categories";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ColoringCard } from "@/components/ColoringCard";
 import { SeriesCard } from "@/components/SeriesCard";
 import { RecommendedPages } from "@/components/RecommendedPages";
 import { FAQ } from "@/components/FAQ";
+import { AboutSection } from "@/components/AboutSection";
 import { Footer } from "@/components/Footer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -198,8 +198,6 @@ const Index = () => {
       
       <main className="flex-1">
         <Hero />
-        
-        <IntroSection />
         
         {(selectedCategory || selectedSeriesId || searchQuery) && (
           <Breadcrumbs 
@@ -394,6 +392,7 @@ const Index = () => {
           </div>
         </section>
         
+        <AboutSection />
         <FAQ />
       </main>
       
