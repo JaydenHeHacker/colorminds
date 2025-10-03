@@ -6,10 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Crown, Zap, Lock } from "lucide-react";
+import { Sparkles, Crown, Zap, Lock, Wand2, Eye, EyeOff } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
 
 export default function CreatePage() {
   const navigate = useNavigate();
@@ -20,6 +24,10 @@ export default function CreatePage() {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<'speed' | 'privacy' | 'quantity' | 'ai-polish'>('speed');
+  const [imageQuantity, setImageQuantity] = useState("1");
+  const [isPrivate, setIsPrivate] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -57,6 +65,34 @@ export default function CreatePage() {
     return hasQuota || hasCredits;
   };
 
+  const handleSpeedBoost = () => {
+    setUpgradeFeature('speed');
+    setUpgradeDialogOpen(true);
+  };
+
+  const handlePrivacyToggle = (checked: boolean) => {
+    if (subscription?.tier !== 'premium') {
+      setUpgradeFeature('privacy');
+      setUpgradeDialogOpen(true);
+      return;
+    }
+    setIsPrivate(checked);
+  };
+
+  const handleQuantityChange = (value: string) => {
+    if (value !== "1" && subscription?.tier !== 'premium') {
+      setUpgradeFeature('quantity');
+      setUpgradeDialogOpen(true);
+      return;
+    }
+    setImageQuantity(value);
+  };
+
+  const handleAiPolish = () => {
+    setUpgradeFeature('ai-polish');
+    setUpgradeDialogOpen(true);
+  };
+
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast({
@@ -73,7 +109,7 @@ export default function CreatePage() {
         description: "Please purchase credits or upgrade membership",
         variant: "destructive",
       });
-      navigate("/credits");
+      navigate("/credits-store");
       return;
     }
 
@@ -174,7 +210,7 @@ export default function CreatePage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate("/credits")}
+              onClick={() => navigate("/credits-store")}
             >
               <Zap className="w-4 h-4 mr-2" />
               Buy Credits
@@ -185,85 +221,148 @@ export default function CreatePage() {
         {/* Creation Form */}
         <Card className="p-8 mb-8">
           <div className="space-y-6">
+            {/* Prompt Input with AI Polish */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Describe the coloring page you want *
               </label>
-              <Textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Example: A cute kitten playing in a garden with butterflies and flowers, simple lines suitable for kids"
-                className="min-h-[120px]"
-                disabled={isGenerating}
-              />
+              <div className="relative">
+                <Textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="Example: A cute kitten playing in a garden with butterflies and flowers, simple lines suitable for kids"
+                  className="min-h-[120px] pr-12"
+                  disabled={isGenerating}
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute top-2 right-2"
+                  onClick={handleAiPolish}
+                  disabled={isGenerating}
+                  title="AI Polish Prompt"
+                >
+                  <Wand2 className="h-4 w-4" />
+                </Button>
+              </div>
               <p className="text-sm text-muted-foreground mt-2">
-                {isPremium ? (
-                  <span className="flex items-center gap-2 text-primary">
-                    <Crown className="w-4 h-4" />
-                    Premium members get AI prompt optimization (coming soon)
-                  </span>
-                ) : (
-                  "Tip: Detailed descriptions of theme, style and complexity will get better results"
-                )}
+                Tip: Click the magic wand to let AI enhance your prompt
               </p>
             </div>
 
-            {/* Free User Notice */}
-            {!isPremium && (
-              <Card className="p-4 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
-                <div className="flex items-start gap-3">
-                  <Lock className="w-5 h-5 text-amber-600 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-medium text-amber-900 dark:text-amber-100 mb-1">
-                      Free User Limitations
-                    </p>
-                    <ul className="list-disc list-inside text-amber-800 dark:text-amber-200 space-y-1">
-                      <li>Queue-based generation (30-60 seconds)</li>
-                      <li>Can only generate 1 at a time</li>
-                      <li>Creations will be publicly displayed in community</li>
-                    </ul>
-                    <Button
-                      variant="link"
-                      className="p-0 h-auto text-amber-700 dark:text-amber-300 mt-2"
-                      onClick={() => navigate("/credits")}
-                    >
-                      Upgrade to Premium →
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {/* Progress */}
-            {isGenerating && (
+            {/* Image Quantity & Privacy Settings */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Generating...</span>
-                  <span>{progress}%</span>
+                <label className="text-sm font-medium">Number of Images</label>
+                <Select value={imageQuantity} onValueChange={handleQuantityChange} disabled={isGenerating}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 Image</SelectItem>
+                    <SelectItem value="2">
+                      <span className="flex items-center gap-2">
+                        2 Images
+                        <Crown className="h-3 w-3 text-amber-500" />
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="3">
+                      <span className="flex items-center gap-2">
+                        3 Images
+                        <Crown className="h-3 w-3 text-amber-500" />
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="4">
+                      <span className="flex items-center gap-2">
+                        4 Images
+                        <Crown className="h-3 w-3 text-amber-500" />
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Generate multiple variations to choose the best one
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Visibility</label>
+                <div className="flex items-center justify-between h-10 px-3 border rounded-md bg-background">
+                  <div className="flex items-center gap-2">
+                    {isPrivate ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    <Label htmlFor="privacy-mode" className="cursor-pointer">
+                      {isPrivate ? "Private" : "Public"}
+                    </Label>
+                  </div>
+                  <Switch
+                    id="privacy-mode"
+                    checked={isPrivate}
+                    onCheckedChange={handlePrivacyToggle}
+                    disabled={isGenerating}
+                  />
                 </div>
-                <Progress value={progress} />
+                <p className="text-xs text-muted-foreground">
+                  {isPremium ? "Control who can see your creations" : "Private mode available with Premium"}
+                </p>
+              </div>
+            </div>
+
+            {/* Progress with Speed Boost */}
+            {isGenerating && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Progress value={progress} className="flex-1" />
+                  {!isPremium && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSpeedBoost}
+                      className="shrink-0"
+                    >
+                      <Zap className="mr-2 h-4 w-4" />
+                      Speed Up
+                    </Button>
+                  )}
+                </div>
+                <div className="text-center space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    Generating... {progress}%
+                  </p>
+                  {!isPremium && (
+                    <p className="text-xs text-muted-foreground">
+                      💡 Premium users generate in 5-10 seconds
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 
             {/* Actions */}
-            <div className="flex gap-4">
+            <div className="space-y-4">
               <Button
                 onClick={handleGenerate}
                 disabled={isGenerating || !canGenerate()}
-                className="flex-1"
+                className="w-full"
                 size="lg"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
                 {isGenerating ? "Generating..." : "Start Creating"}
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/")}
-                disabled={isGenerating}
-                size="lg"
-              >
-                Back to Home
-              </Button>
+
+              {!isGenerating && !isPremium && (
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    🕐 Free users: ~45 seconds average generation time
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/credits-store')}
+                  >
+                    View Premium Benefits
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </Card>
@@ -281,6 +380,12 @@ export default function CreatePage() {
       </div>
     </div>
     <Footer />
+
+    <PremiumUpgradeDialog
+      open={upgradeDialogOpen}
+      onOpenChange={setUpgradeDialogOpen}
+      feature={upgradeFeature}
+    />
     </>
   );
 }
