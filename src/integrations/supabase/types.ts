@@ -51,6 +51,10 @@ export type Database = {
           id: string
           image_url: string
           is_featured: boolean
+          series_id: string | null
+          series_order: number | null
+          series_title: string | null
+          series_total: number | null
           title: string
           updated_at: string
         }
@@ -63,6 +67,10 @@ export type Database = {
           id?: string
           image_url: string
           is_featured?: boolean
+          series_id?: string | null
+          series_order?: number | null
+          series_title?: string | null
+          series_total?: number | null
           title: string
           updated_at?: string
         }
@@ -75,6 +83,10 @@ export type Database = {
           id?: string
           image_url?: string
           is_featured?: boolean
+          series_id?: string | null
+          series_order?: number | null
+          series_title?: string | null
+          series_total?: number | null
           title?: string
           updated_at?: string
         }

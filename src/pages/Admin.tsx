@@ -19,6 +19,9 @@ export default function Admin() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateCount, setGenerateCount] = useState("1");
+  const [generationType, setGenerationType] = useState<"single" | "series">("single");
+  const [seriesLength, setSeriesLength] = useState("5");
+  const [seriesData, setSeriesData] = useState<any>(null);
   const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,26 +80,45 @@ export default function Admin() {
 
   const generateMutation = useMutation({
     mutationFn: async () => {
-      const count = parseInt(generateCount);
-      const images: string[] = [];
-      
-      for (let i = 0; i < count; i++) {
-        const { data, error } = await supabase.functions.invoke('generate-coloring-page', {
-          body: { category: selectedCategory, theme, difficulty }
+      if (generationType === "series") {
+        // Generate story series
+        const length = parseInt(seriesLength);
+        const { data, error } = await supabase.functions.invoke('generate-story-series', {
+          body: { category: selectedCategory, theme, difficulty, seriesLength: length }
         });
 
         if (error) throw error;
         if (!data.success) throw new Error(data.error);
         
-        images.push(data.imageUrl);
-        toast.success(`已生成第 ${i + 1}/${count} 张图片`);
+        setSeriesData(data);
+        return data.images.map((img: any) => img.imageUrl);
+      } else {
+        // Generate individual pages
+        const count = parseInt(generateCount);
+        const images: string[] = [];
+        
+        for (let i = 0; i < count; i++) {
+          const { data, error } = await supabase.functions.invoke('generate-coloring-page', {
+            body: { category: selectedCategory, theme, difficulty }
+          });
+
+          if (error) throw error;
+          if (!data.success) throw new Error(data.error);
+          
+          images.push(data.imageUrl);
+          toast.success(`已生成第 ${i + 1}/${count} 张图片`);
+        }
+        
+        return images;
       }
-      
-      return images;
     },
     onSuccess: (images) => {
       setGeneratedImages(images);
-      toast.success(`成功生成 ${images.length} 张涂色页面！`);
+      if (generationType === "series") {
+        toast.success(`成功生成故事系列！共 ${images.length} 张图片`);
+      } else {
+        toast.success(`成功生成 ${images.length} 张涂色页面！`);
+      }
     },
     onError: (error: Error) => {
       console.error('Generation error:', error);
@@ -114,6 +136,7 @@ export default function Admin() {
       if (!category) throw new Error('未找到分类');
 
       let successCount = 0;
+      const seriesId = generationType === "series" ? crypto.randomUUID() : null;
       
       for (let i = 0; i < generatedImages.length; i++) {
         const imageData = generatedImages[i];
@@ -133,16 +156,32 @@ export default function Admin() {
           continue;
         }
 
+        // Prepare insert data
+        const insertData: any = {
+          title: generationType === "series" 
+            ? `${theme} - 第${i + 1}章` 
+            : `${theme} ${i + 1}`,
+          description: generationType === "series" && seriesData?.images?.[i]?.sceneDescription 
+            ? seriesData.images[i].sceneDescription 
+            : null,
+          image_url: uploadData.publicUrl,
+          category_id: category.id,
+          difficulty: difficulty,
+          is_featured: false,
+        };
+
+        // Add series fields if generating a story series
+        if (generationType === "series" && seriesId) {
+          insertData.series_id = seriesId;
+          insertData.series_title = theme;
+          insertData.series_order = i + 1;
+          insertData.series_total = generatedImages.length;
+        }
+
         // Save to database
         const { error: insertError } = await supabase
           .from('coloring_pages')
-          .insert({
-            title: `${theme} ${i + 1}`,
-            image_url: uploadData.publicUrl,
-            category_id: category.id,
-            difficulty: difficulty,
-            is_featured: false,
-          });
+          .insert(insertData);
 
         if (insertError) {
           console.error(`保存第 ${i + 1} 张图片失败:`, insertError);
@@ -160,9 +199,14 @@ export default function Admin() {
       return successCount;
     },
     onSuccess: (count) => {
-      toast.success(`成功保存 ${count} 张涂色页面！`);
+      if (generationType === "series") {
+        toast.success(`成功保存故事系列！共 ${count} 章节`);
+      } else {
+        toast.success(`成功保存 ${count} 张涂色页面！`);
+      }
       queryClient.invalidateQueries({ queryKey: ['coloring-pages'] });
       setGeneratedImages([]);
+      setSeriesData(null);
       setTheme("");
       setSelectedCategory("");
     },
@@ -382,6 +426,39 @@ export default function Admin() {
               </div>
 
               <div>
+                <Label htmlFor="generationType">生成类型</Label>
+                <Select value={generationType} onValueChange={(value: "single" | "series") => setGenerationType(value)}>
+                  <SelectTrigger id="generationType">
+                    <SelectValue placeholder="选择生成类型" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">📄 单张涂色页</SelectItem>
+                    <SelectItem value="series">📚 AI故事系列（连贯故事）</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {generationType === "series" && (
+                <div>
+                  <Label htmlFor="seriesLength">故事长度</Label>
+                  <Select value={seriesLength} onValueChange={setSeriesLength}>
+                    <SelectTrigger id="seriesLength">
+                      <SelectValue placeholder="选择章节数" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 章节（简短）</SelectItem>
+                      <SelectItem value="5">5 章节（标准）</SelectItem>
+                      <SelectItem value="7">7 章节（完整）</SelectItem>
+                      <SelectItem value="8">8 章节（详细）</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    AI将创建一个连贯的故事，每个章节一张涂色页
+                  </p>
+                </div>
+              )}
+
+              <div>
                 <Label htmlFor="difficulty">难度等级</Label>
                 <Select value={difficulty} onValueChange={(value: "easy" | "medium" | "hard") => setDifficulty(value)}>
                   <SelectTrigger id="difficulty">
@@ -403,12 +480,12 @@ export default function Admin() {
                 {(isGenerating || generateMutation.isPending) ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    生成中...
+                    {generationType === "series" ? "生成故事系列中..." : "生成中..."}
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    生成涂色页面
+                    {generationType === "series" ? "生成AI故事系列" : "生成涂色页面"}
                   </>
                 )}
               </Button>
@@ -420,14 +497,31 @@ export default function Admin() {
             
             {generatedImages.length > 0 ? (
               <div className="space-y-4">
+                {generationType === "series" && seriesData && (
+                  <div className="mb-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
+                    <h3 className="font-semibold text-lg mb-2">📚 故事系列: {theme}</h3>
+                    <p className="text-sm text-muted-foreground">共 {generatedImages.length} 个章节</p>
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-2 gap-4 max-h-[600px] overflow-y-auto">
                   {generatedImages.map((image, index) => (
-                    <div key={index} className="aspect-square overflow-hidden rounded-lg border-2 bg-white">
-                      <img
-                        src={image}
-                        alt={`Generated coloring page ${index + 1}`}
-                        className="w-full h-full object-contain"
-                      />
+                    <div key={index} className="space-y-2">
+                      <div className="aspect-square overflow-hidden rounded-lg border-2 bg-white">
+                        <img
+                          src={image}
+                          alt={`Generated coloring page ${index + 1}`}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      {generationType === "series" && seriesData?.images?.[index] && (
+                        <div className="p-2 bg-muted/50 rounded text-xs">
+                          <p className="font-semibold">第 {index + 1} 章</p>
+                          <p className="text-muted-foreground line-clamp-2">
+                            {seriesData.images[index].sceneDescription}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
