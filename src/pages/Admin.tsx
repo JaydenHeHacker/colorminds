@@ -440,13 +440,27 @@ export default function Admin() {
                   <SelectTrigger id="category">
                     <SelectValue placeholder="选择类目" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
+                  <SelectContent className="max-h-[400px] min-w-[300px] bg-background z-50">
                     {categories?.map((cat) => {
-                      const indent = "  ".repeat(cat.level - 1);
-                      const prefix = cat.level === 1 ? "" : "└─ ";
+                      const paddingLeft = cat.level * 12;
                       return (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {indent}{prefix}{cat.icon} {cat.name}
+                        <SelectItem 
+                          key={cat.id} 
+                          value={cat.id}
+                          style={{ paddingLeft: `${paddingLeft}px` }}
+                          className="cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2">
+                            {cat.level > 1 && (
+                              <span className="text-muted-foreground">
+                                {cat.level === 2 ? "├─" : cat.level === 3 ? "│ └─" : "│  └─"}
+                              </span>
+                            )}
+                            <span>{cat.icon}</span>
+                            <span className={cat.level === 1 ? "font-semibold" : ""}>
+                              {cat.name}
+                            </span>
+                          </span>
                         </SelectItem>
                       );
                     })}
