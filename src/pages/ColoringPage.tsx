@@ -184,29 +184,62 @@ const ColoringPage = () => {
             <style>
               body {
                 margin: 0;
-                padding: 0;
+                padding: 20px;
                 display: flex;
-                justify-content: center;
+                flex-direction: column;
                 align-items: center;
+                font-family: Arial, sans-serif;
+              }
+              .content {
+                width: 100%;
+                max-width: 800px;
               }
               img {
-                max-width: 100%;
+                width: 100%;
                 height: auto;
                 display: block;
+                margin-bottom: 15px;
+              }
+              .footer {
+                text-align: center;
+                padding: 10px 0;
+                border-top: 2px solid #333;
+                margin-top: 10px;
+              }
+              .brand {
+                font-size: 18px;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 5px;
+              }
+              .url {
+                font-size: 14px;
+                color: #666;
               }
               @media print {
                 body {
-                  margin: 0;
+                  padding: 0;
+                }
+                .content {
+                  page-break-inside: avoid;
                 }
                 img {
-                  max-width: 100%;
+                  page-break-inside: avoid;
+                }
+                .footer {
                   page-break-inside: avoid;
                 }
               }
             </style>
           </head>
           <body>
-            <img src="${page.image_url}" alt="${page.title}" />
+            <div class="content">
+              <img src="${page.image_url}" alt="${page.title}" />
+              <div class="footer">
+                <div class="brand">Color Minds</div>
+                <div class="url">www.colorminds.com - Free Printable Coloring Pages</div>
+              </div>
+            </div>
           </body>
         </html>
       `);
