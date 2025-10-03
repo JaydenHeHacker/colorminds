@@ -67,7 +67,17 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      
+      // Safely handle date conversion
+      if (subscription.current_period_end) {
+        try {
+          subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+        } catch (error) {
+          console.error("Error converting subscription end date:", error);
+          subscriptionEnd = null;
+        }
+      }
+      
       productId = subscription.items.data[0].price.product as string;
 
       // Update user_subscriptions to premium tier
