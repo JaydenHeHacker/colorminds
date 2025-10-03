@@ -75,7 +75,7 @@ export const Header = () => {
         <nav className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-6">
             <a href="/" className="flex items-center space-x-3">
-              <img src={logo} alt="Color Minds Logo" className="h-10 w-auto md:h-12 object-contain transition-smooth hover:scale-105" />
+              <img src={logo} alt="Color Minds Logo" className="h-12 w-auto md:h-16 object-contain transition-smooth hover:scale-105" />
               <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent gradient-rainbow">
                 Color Minds
               </h1>
