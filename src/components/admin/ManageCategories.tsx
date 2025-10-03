@@ -455,6 +455,9 @@ export default function ManageCategories() {
     setIsSaving(true);
     try {
       let successCount = 0;
+      // Generate unique series ID for story series
+      const seriesId = generationType === "series" ? crypto.randomUUID() : null;
+      const totalPages = generatedImages.length;
 
       for (let i = 0; i < generatedImages.length; i++) {
         const imageUrl = generatedImages[i];
@@ -471,17 +474,28 @@ export default function ManageCategories() {
 
         const slug = slugify(`${title}-${Date.now()}-${i}`);
 
+        // Build insert data with series fields if it's a story series
+        const insertData: any = {
+          title,
+          slug,
+          description,
+          image_url: imageUrl,
+          category_id: generatingForCategory.id,
+          difficulty,
+          is_featured: false,
+        };
+
+        // Add series metadata for story series
+        if (generationType === "series" && seriesId) {
+          insertData.series_id = seriesId;
+          insertData.series_title = theme;
+          insertData.series_order = i + 1;
+          insertData.series_total = totalPages;
+        }
+
         const { error } = await supabase
           .from('coloring_pages')
-          .insert({
-            title,
-            slug,
-            description,
-            image_url: imageUrl,
-            category_id: generatingForCategory.id,
-            difficulty,
-            is_featured: false,
-          });
+          .insert(insertData);
 
         if (error) {
           console.error('保存错误:', error);
