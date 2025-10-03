@@ -40,11 +40,32 @@ const CategoryPage = () => {
     enabled: !!pathSlug,
   });
 
-  // Query subcategories of current category
-  const { data: subCategories, isLoading: isSubCategoriesLoading } = useQuery({
-    queryKey: ['subcategories', category?.id],
+  // Query parent category if current category has a parent_id
+  const { data: parentCategory } = useQuery({
+    queryKey: ['parent-category', category?.parent_id],
     queryFn: async () => {
-      if (!category?.id) return [];
+      if (!category?.parent_id) return null;
+      
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('id', category.parent_id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!category?.parent_id,
+  });
+
+  // Determine the root category for sidebar (parent or current)
+  const rootCategory = parentCategory || category;
+
+  // Query all siblings (subcategories of the root category)
+  const { data: subCategories, isLoading: isSubCategoriesLoading } = useQuery({
+    queryKey: ['subcategories', rootCategory?.id],
+    queryFn: async () => {
+      if (!rootCategory?.id) return [];
       
       const { data, error } = await supabase
         .from('categories')
@@ -52,17 +73,17 @@ const CategoryPage = () => {
           *,
           coloring_pages(count)
         `)
-        .eq('parent_id', category.id)
+        .eq('parent_id', rootCategory.id)
         .order('order_position', { ascending: true })
         .order('name', { ascending: true });
       
       if (error) throw error;
       return data;
     },
-    enabled: !!category?.id,
+    enabled: !!rootCategory?.id,
   });
 
-  // Query all coloring pages in this category and its subcategories
+  // Query all coloring pages in this category (and its subcategories if it's a parent)
   const { data: allColoringPages, isLoading: isPagesLoading } = useQuery({
     queryKey: ['category-all-pages', category?.id, subCategories?.map(s => s.id).sort().join(',')],
     queryFn: async () => {
@@ -91,6 +112,11 @@ const CategoryPage = () => {
     },
     enabled: !!category?.id && !isSubCategoriesLoading,
   });
+
+  // Calculate total count for root category (sum of all subcategories)
+  const rootTotalCount = subCategories?.reduce((sum, sub) => {
+    return sum + (sub.coloring_pages?.[0]?.count || 0);
+  }, 0) || 0;
 
   // Calculate pagination
   const totalPages = Math.ceil((allColoringPages?.length || 0) / ITEMS_PER_PAGE);
@@ -216,9 +242,9 @@ const CategoryPage = () => {
                   </SheetHeader>
                   <div className="mt-6">
                     <CategorySidebar
-                      category={category}
+                      category={rootCategory!}
                       subCategories={subCategories || []}
-                      totalCount={allColoringPages?.length || 0}
+                      totalCount={rootTotalCount}
                     />
                   </div>
                 </SheetContent>
@@ -228,9 +254,9 @@ const CategoryPage = () => {
             {/* Desktop Sidebar */}
             <div className="hidden lg:block">
               <CategorySidebar
-                category={category}
+                category={rootCategory!}
                 subCategories={subCategories || []}
-                totalCount={allColoringPages?.length || 0}
+                totalCount={rootTotalCount}
               />
             </div>
 
