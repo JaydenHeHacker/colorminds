@@ -52,17 +52,10 @@ export default function CreatePage() {
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({
-        title: "Please log in",
-        description: "You need to log in to create coloring pages",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
+    if (user) {
+      setUser(user);
+      await loadUserData(user.id);
     }
-    setUser(user);
-    await loadUserData(user.id);
   };
 
   const loadUserData = async (userId: string) => {
@@ -126,6 +119,17 @@ export default function CreatePage() {
   };
 
   const handleGenerate = async () => {
+    // Check if user is logged in first
+    if (!user) {
+      toast({
+        title: "Please log in first",
+        description: "You need to log in to generate coloring pages",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
     if (!prompt.trim()) {
       toast({
         title: "Please enter a prompt",
@@ -231,37 +235,62 @@ export default function CreatePage() {
           </p>
         </div>
 
-        {/* User Status Card */}
-        <Card className="p-6 mb-8 bg-gradient-to-r from-primary/5 to-secondary/5">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
-              {isPremium ? (
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500">
-                  <Crown className="w-4 h-4 mr-1" />
-                  Premium
-                </Badge>
-              ) : (
-                <Badge variant="outline">Free User</Badge>
-              )}
-              <div className="text-sm">
-                <span className="text-muted-foreground">Monthly Quota:</span>
-                <span className="font-bold ml-2">{remainingQuota} / {subscription?.monthly_quota || 5}</span>
+        {/* User Status Card - Only show if logged in */}
+        {user && (
+          <Card className="p-6 mb-8 bg-gradient-to-r from-primary/5 to-secondary/5">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                {isPremium ? (
+                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500">
+                    <Crown className="w-4 h-4 mr-1" />
+                    Premium
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">Free User</Badge>
+                )}
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Monthly Quota:</span>
+                  <span className="font-bold ml-2">{remainingQuota} / {subscription?.monthly_quota || 5}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Credits:</span>
+                  <span className="font-bold ml-2">{credits?.balance || 0}</span>
+                </div>
               </div>
-              <div className="text-sm">
-                <span className="text-muted-foreground">Credits:</span>
-                <span className="font-bold ml-2">{credits?.balance || 0}</span>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/credits-store")}
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Buy Credits
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/credits-store")}
-            >
-              <Zap className="w-4 h-4 mr-2" />
-              Buy Credits
-            </Button>
-          </div>
-        </Card>
+          </Card>
+        )}
+
+        {/* Login prompt for non-logged in users */}
+        {!user && (
+          <Card className="p-6 mb-8 bg-gradient-to-r from-primary/5 to-secondary/5 border-2 border-primary/20">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-1">
+                  💡 Try it out! Fill in the form below to see how it works
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  You'll be asked to log in when you click "Start Creating"
+                </p>
+              </div>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate("/auth")}
+              >
+                Log In Now
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {/* Creation Form */}
         <Card className="p-8 mb-8">
@@ -408,12 +437,12 @@ export default function CreatePage() {
             <div className="space-y-4">
               <Button
                 onClick={handleGenerate}
-                disabled={isGenerating || !canGenerate()}
+                disabled={isGenerating || (user && !canGenerate())}
                 className="w-full"
                 size="lg"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
-                {isGenerating ? "Generating..." : "Start Creating"}
+                {isGenerating ? "Generating..." : (user ? "Start Creating" : "Start Creating (Login Required)")}
               </Button>
 
               {!isGenerating && !isPremium && (
