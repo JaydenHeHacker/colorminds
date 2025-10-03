@@ -542,9 +542,9 @@ export default function ManageCategories() {
 
     return (
       <div key={category.id}>
-        <Card className="p-4 mb-2" style={{ marginLeft: `${depth * 24}px` }}>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+        <Card className="p-3 sm:p-4 mb-2" style={{ marginLeft: `${Math.min(depth * 16, 48)}px` }}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
               {hasChildren && (
                 <Button
                   variant="ghost"
@@ -559,81 +559,82 @@ export default function ManageCategories() {
                   )}
                 </Button>
               )}
-              {!hasChildren && <div className="w-6" />}
+              {!hasChildren && <div className="w-6 hidden sm:block" />}
               
               {category.icon && (
                 category.icon.startsWith('http') ? (
-                  <img src={category.icon} alt={category.name} className="w-8 h-8 object-cover rounded flex-shrink-0" />
+                  <img src={category.icon} alt={category.name} className="w-6 h-6 sm:w-8 sm:h-8 object-cover rounded flex-shrink-0" />
                 ) : (
-                  <span className="text-2xl flex-shrink-0">{category.icon}</span>
+                  <span className="text-xl sm:text-2xl flex-shrink-0">{category.icon}</span>
                 )
               )}
               
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold truncate">{category.name}</h3>
-                  <Badge variant="secondary" className="gap-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-semibold truncate text-sm sm:text-base">{category.name}</h3>
+                  <Badge variant="secondary" className="gap-1 text-xs">
                     <Image className="h-3 w-3" />
                     {categoryPageCounts?.[category.id] || 0}
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground truncate">
                   Level {category.level} • /{category.path}
                 </p>
               </div>
             </div>
             
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex gap-1 sm:gap-2 flex-shrink-0 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleOpenGenerateIcon(category)}
                 title="生成类目图"
-                className="gap-1"
+                className="gap-1 text-xs sm:text-sm h-8"
               >
-                <Sparkles className="h-4 w-4" />
-                类目图
+                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">类目图</span>
+                <span className="sm:hidden">图</span>
               </Button>
               <Button
                 variant="default"
                 size="sm"
                 onClick={() => handleOpenGenerate(category)}
-                title="生成素材"
-                className="gap-1"
+                title="生成内容"
+                className="gap-1 text-xs sm:text-sm h-8"
               >
-                <Wand2 className="h-4 w-4" />
-                生成素材
+                <Wand2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">生成</span>
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => handleOpenCreate(category.id)}
                 title="添加子分类"
+                className="gap-1 text-xs sm:text-sm h-8"
               >
-                <Plus className="h-4 w-4 mr-1" />
-                子分类
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">子类</span>
               </Button>
               <Button
-                variant="ghost"
-                size="icon"
+                variant="outline"
+                size="sm"
                 onClick={() => handleOpenEdit(category)}
-                title="编辑"
+                className="h-8"
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               <Button
-                variant="ghost"
-                size="icon"
+                variant="outline"
+                size="sm"
                 onClick={() => setDeletingCategoryId(category.id)}
-                title="删除"
+                className="text-destructive h-8"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
           </div>
         </Card>
-
-        {hasChildren && isExpanded && (
+        {isExpanded && hasChildren && (
           <div>
             {children.map(child => renderCategory(child, depth + 1))}
           </div>
@@ -645,18 +646,18 @@ export default function ManageCategories() {
   const topLevelCategories = buildTree(categories || []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <FolderTree className="h-6 w-6" />
+          <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <FolderTree className="h-5 w-5 sm:h-6 sm:w-6" />
             分类管理
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             管理多层级分类结构，支持无限层级嵌套
           </p>
         </div>
-        <Button onClick={() => handleOpenCreate()} className="gap-2">
+        <Button onClick={() => handleOpenCreate()} className="gap-2 w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           创建顶级分类
         </Button>
@@ -689,7 +690,7 @@ export default function ManageCategories() {
           }
         }}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingCategory ? "编辑分类" : "创建分类"}
@@ -703,7 +704,7 @@ export default function ManageCategories() {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="name">分类名称 *</Label>
                 <Input
@@ -725,7 +726,7 @@ export default function ManageCategories() {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="icon">图标 Emoji</Label>
                 <Input

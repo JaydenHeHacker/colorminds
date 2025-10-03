@@ -144,43 +144,50 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-2xl font-bold">管理后台</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{user.email}</span>
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
-              <LogOut className="h-5 w-5" />
-            </Button>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-xl sm:text-2xl font-bold">管理后台</h1>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px] sm:max-w-none">{user.email}</span>
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-      <div className="container py-8">
+      <div className="container py-4 sm:py-8 px-2 sm:px-4">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-5 mb-8">
-            <TabsTrigger value="dashboard" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              数据概览
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-4 sm:mb-8 h-auto">
+            <TabsTrigger value="dashboard" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">数据概览</span>
+              <span className="sm:hidden">概览</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-2">
-              <TrendingUp className="h-4 w-4" />
-              数据分析
+            <TabsTrigger value="analytics" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">数据分析</span>
+              <span className="sm:hidden">分析</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="gap-2">
-              <Users className="h-4 w-4" />
-              用户管理
+            <TabsTrigger value="users" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">用户管理</span>
+              <span className="sm:hidden">用户</span>
             </TabsTrigger>
-            <TabsTrigger value="categories" className="gap-2">
-              <FolderTree className="h-4 w-4" />
-              管理分类
+            <TabsTrigger value="categories" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <FolderTree className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">管理分类</span>
+              <span className="sm:hidden">分类</span>
             </TabsTrigger>
-            <TabsTrigger value="manage" className="gap-2">
-              <Settings className="h-4 w-4" />
-              管理页面
+            <TabsTrigger value="manage" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">管理页面</span>
+              <span className="sm:hidden">页面</span>
             </TabsTrigger>
           </TabsList>
 
