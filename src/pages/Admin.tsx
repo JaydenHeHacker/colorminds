@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Save, X, ArrowLeft, LogOut, Wand2, Settings, BarChart3, FolderTree } from "lucide-react";
+import { Loader2, Sparkles, Save, X, ArrowLeft, LogOut, Wand2, Settings, BarChart3, FolderTree, Brain } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ManageColoringPages from "@/components/admin/ManageColoringPages";
 import ManageCategories from "@/components/admin/ManageCategories";
 import DashboardStats from "@/components/admin/DashboardStats";
+import KeywordAnalyzer from "@/components/admin/KeywordAnalyzer";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -368,10 +369,14 @@ export default function Admin() {
       </div>
       <div className="container py-8">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4 mb-8">
+          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-5 mb-8">
             <TabsTrigger value="dashboard" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               数据统计
+            </TabsTrigger>
+            <TabsTrigger value="analyzer" className="gap-2">
+              <Brain className="h-4 w-4" />
+              SEO分析
             </TabsTrigger>
             <TabsTrigger value="generate" className="gap-2">
               <Sparkles className="h-4 w-4" />
@@ -389,6 +394,10 @@ export default function Admin() {
 
           <TabsContent value="dashboard">
             <DashboardStats />
+          </TabsContent>
+
+          <TabsContent value="analyzer">
+            <KeywordAnalyzer />
           </TabsContent>
 
           <TabsContent value="generate">
