@@ -127,6 +127,10 @@ serve(async (req) => {
 
       console.log(`Processing ${images.length} generated images...`);
 
+      // 为整个系列生成统一的 series_id
+      const seriesId = crypto.randomUUID();
+      console.log(`Generated series_id: ${seriesId}`);
+
       // 保存系列图到数据库（草稿状态）
       for (let i = 0; i < images.length; i++) {
         const pageId = crypto.randomUUID();
@@ -144,6 +148,7 @@ serve(async (req) => {
             image_url: imageData.imageUrl || imageData, // 提取 imageUrl 字段
             category_id: category.id,
             difficulty,
+            series_id: seriesId,  // 设置统一的 series_id
             series_title: theme,
             series_order: i + 1,
             status: 'draft'
