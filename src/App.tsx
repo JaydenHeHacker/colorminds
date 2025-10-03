@@ -8,6 +8,7 @@ import ColoringPage from "./pages/ColoringPage";
 import CategoryPage from "./pages/CategoryPage";
 import SeriesPage from "./pages/SeriesPage";
 import Sitemap from "./pages/Sitemap";
+import ImageSitemap from "./pages/ImageSitemap";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/category/:slug" element={<CategoryPage />} />
           <Route path="/series/:seriesId" element={<SeriesPage />} />
           <Route path="/sitemap.xml" element={<Sitemap />} />
+          <Route path="/image-sitemap.xml" element={<ImageSitemap />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/auth" element={<Auth />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

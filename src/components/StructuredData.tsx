@@ -30,6 +30,11 @@ export const StructuredData = ({ type, data }: StructuredDataProps) => {
         keywords: data.keywords || [data.category, "coloring page", "printable", "free"],
         datePublished: data.datePublished,
         dateModified: data.dateModified,
+        // Additional properties for better image search
+        width: data.width || "1024px",
+        height: data.height || "1024px",
+        encodingFormat: "image/png",
+        representativeOfPage: true,
         interactionStatistic: {
           "@type": "InteractionCounter",
           interactionType: "https://schema.org/DownloadAction",
