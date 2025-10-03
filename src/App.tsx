@@ -37,6 +37,7 @@ const App = () => (
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/create" element={<CreatePage />} />
           <Route path="/credits" element={<CreditsStore />} />
+          <Route path="/credits-store" element={<CreditsStore />} />
           <Route path="/community" element={<Community />} />
           <Route path="/sitemap.xml" element={<Sitemap />} />
           <Route path="/image-sitemap.xml" element={<ImageSitemap />} />
