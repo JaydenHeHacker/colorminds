@@ -98,7 +98,16 @@ serve(async (req) => {
         throw new Error("Failed to generate series");
       }
 
-      const { images, story } = seriesResponse.data;
+      console.log("Series response data:", JSON.stringify(seriesResponse.data));
+      
+      const { images, story } = seriesResponse.data || {};
+
+      if (!images || images.length === 0) {
+        console.error("No images returned from generate-story-series");
+        throw new Error("No images generated");
+      }
+
+      console.log(`Processing ${images.length} generated images...`);
 
       // 保存系列图到数据库（草稿状态）
       for (let i = 0; i < images.length; i++) {
@@ -118,7 +127,10 @@ serve(async (req) => {
           .select()
           .single();
 
-        if (!insertError && page) {
+        if (insertError) {
+          console.error(`Error inserting page ${i + 1}:`, insertError);
+        } else if (page) {
+          console.log(`Successfully saved page ${i + 1}: ${page.title}`);
           generatedPages.push(page);
         }
       }
@@ -140,7 +152,14 @@ serve(async (req) => {
         throw new Error("Failed to generate single page");
       }
 
-      const { imageUrl } = singleResponse.data;
+      console.log("Single page response data:", JSON.stringify(singleResponse.data));
+      
+      const { imageUrl } = singleResponse.data || {};
+
+      if (!imageUrl) {
+        console.error("No image URL returned from generate-coloring-page");
+        throw new Error("No image generated");
+      }
 
       // 保存单图到数据库（草稿状态）
       const { data: page, error: insertError } = await supabase
@@ -157,7 +176,10 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (!insertError && page) {
+      if (insertError) {
+        console.error("Error inserting single page:", insertError);
+      } else if (page) {
+        console.log(`Successfully saved page: ${page.title}`);
         generatedPages.push(page);
       }
 
