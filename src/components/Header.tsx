@@ -71,7 +71,7 @@ export const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-border/20">
+      <header className="sticky top-0 z-50 w-full border-b border-border/20 bg-background backdrop-blur-sm">
         <nav className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-6">
             <a href="/" className="flex items-center space-x-3">
