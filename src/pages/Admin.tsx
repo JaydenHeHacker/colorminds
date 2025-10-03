@@ -19,7 +19,7 @@ import InitializeCategories from "@/components/admin/InitializeCategories";
 export default function Admin() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [theme, setTheme] = useState("");
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("medium");
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -92,8 +92,9 @@ export default function Admin() {
       if (generationType === "series") {
         // Generate story series
         const length = parseInt(seriesLength);
+        const category = categories?.find(c => c.id === selectedCategory);
         const { data, error } = await supabase.functions.invoke('generate-story-series', {
-          body: { category: selectedCategory, theme, difficulty, seriesLength: length }
+          body: { category: category?.name || selectedCategory, theme, difficulty, seriesLength: length }
         });
 
         if (error) throw error;
@@ -107,9 +108,10 @@ export default function Admin() {
         const images: string[] = [];
         const pagesData: any[] = [];
         
+        const category = categories?.find(c => c.id === selectedCategory);
         for (let i = 0; i < count; i++) {
           const { data, error } = await supabase.functions.invoke('generate-coloring-page', {
-            body: { category: selectedCategory, theme, difficulty }
+            body: { category: category?.name || selectedCategory, theme, difficulty }
           });
 
           if (error) throw error;
@@ -148,7 +150,7 @@ export default function Admin() {
         throw new Error('缺少必要数据');
       }
 
-      const category = categories?.find(c => c.name === selectedCategory);
+      const category = categories?.find(c => c.id === selectedCategory);
       if (!category) throw new Error('未找到分类');
 
       let successCount = 0;
@@ -258,10 +260,16 @@ export default function Admin() {
       return;
     }
 
+    const category = categories?.find(c => c.id === selectedCategory);
+    if (!category) {
+      toast.error("未找到分类");
+      return;
+    }
+    
     setIsGeneratingTheme(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-theme', {
-        body: { category: selectedCategory }
+        body: { category: category.name }
       });
 
       if (error) throw error;
@@ -432,12 +440,12 @@ export default function Admin() {
                   <SelectTrigger id="category">
                     <SelectValue placeholder="选择类目" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-[300px]">
                     {categories?.map((cat) => {
                       const indent = "  ".repeat(cat.level - 1);
                       const prefix = cat.level === 1 ? "" : "└─ ";
                       return (
-                        <SelectItem key={cat.id} value={cat.name}>
+                        <SelectItem key={cat.id} value={cat.id}>
                           {indent}{prefix}{cat.icon} {cat.name}
                         </SelectItem>
                       );
