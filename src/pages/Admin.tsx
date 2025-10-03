@@ -54,45 +54,65 @@ export default function Admin() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!generatedImage || !selectedCategory) {
-        throw new Error('Missing required data');
+        throw new Error('缺少必要数据');
       }
 
-      // Convert base64 to blob
-      const response = await fetch(generatedImage);
-      const blob = await response.blob();
-      
-      // Upload to storage
-      const fileName = `${Date.now()}-${theme.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}.png`;
-      const { error: uploadError } = await supabase.storage
-        .from('coloring-pages')
-        .upload(fileName, blob, {
-          contentType: 'image/png',
-          cacheControl: '3600',
-          upsert: false
-        });
+      try {
+        // Check if bucket exists, create if not
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const bucketExists = buckets?.some(b => b.name === 'coloring-pages');
+        
+        if (!bucketExists) {
+          const { error: bucketError } = await supabase.storage.createBucket('coloring-pages', {
+            public: true,
+            fileSizeLimit: 5242880, // 5MB
+            allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp']
+          });
+          
+          if (bucketError && !bucketError.message.includes('already exists')) {
+            throw new Error('创建存储桶失败：' + bucketError.message);
+          }
+        }
 
-      if (uploadError) throw uploadError;
+        // Convert base64 to blob
+        const response = await fetch(generatedImage);
+        const blob = await response.blob();
+        
+        // Upload to storage
+        const fileName = `${Date.now()}-${theme.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}.png`;
+        const { error: uploadError } = await supabase.storage
+          .from('coloring-pages')
+          .upload(fileName, blob, {
+            contentType: 'image/png',
+            cacheControl: '3600',
+            upsert: false
+          });
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('coloring-pages')
-        .getPublicUrl(fileName);
+        if (uploadError) throw new Error('上传失败：' + uploadError.message);
 
-      // Find category ID
-      const category = categories?.find(c => c.name === selectedCategory);
-      if (!category) throw new Error('Category not found');
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('coloring-pages')
+          .getPublicUrl(fileName);
 
-      // Save to database
-      const { error: insertError } = await supabase
-        .from('coloring_pages')
-        .insert({
-          title: theme,
-          image_url: publicUrl,
-          category_id: category.id,
-          is_featured: false,
-        });
+        // Find category ID
+        const category = categories?.find(c => c.name === selectedCategory);
+        if (!category) throw new Error('未找到分类');
 
-      if (insertError) throw insertError;
+        // Save to database
+        const { error: insertError } = await supabase
+          .from('coloring_pages')
+          .insert({
+            title: theme,
+            image_url: publicUrl,
+            category_id: category.id,
+            is_featured: false,
+          });
+
+        if (insertError) throw new Error('保存到数据库失败：' + insertError.message);
+      } catch (error) {
+        throw error;
+      }
     },
     onSuccess: () => {
       toast.success("涂色页面已保存！");
