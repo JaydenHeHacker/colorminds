@@ -19,7 +19,10 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
-        .select('*');
+        .select('*')
+        .eq('level', 1)  // Only show top-level categories
+        .order('order_position', { ascending: true })
+        .order('name', { ascending: true });
       
       if (error) throw error;
       return data;
@@ -103,8 +106,8 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                    )}
                  </div>
                </Card>
-                {categories.map((category) => (
-                  <Link key={category.id} to={`/category/${category.slug}`}>
+                 {categories.map((category) => (
+                   <Link key={category.id} to={`/category/${category.path}`}>
                     <Card
                       className={cn(
                         "group cursor-pointer overflow-hidden border-2 transition-smooth shadow-sm hover:shadow-colorful active:scale-95 touch-manipulation",

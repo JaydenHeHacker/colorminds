@@ -20,7 +20,11 @@ export type Database = {
           description: string | null
           icon: string | null
           id: string
+          level: number
           name: string
+          order_position: number | null
+          parent_id: string | null
+          path: string
           slug: string
         }
         Insert: {
@@ -28,7 +32,11 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          level?: number
           name: string
+          order_position?: number | null
+          parent_id?: string | null
+          path: string
           slug: string
         }
         Update: {
@@ -36,10 +44,22 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          level?: number
           name?: string
+          order_position?: number | null
+          parent_id?: string | null
+          path?: string
           slug?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coloring_pages: {
         Row: {

@@ -24,7 +24,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/coloring-page/:slug" element={<ColoringPage />} />
-          <Route path="/category/:slug" element={<CategoryPage />} />
+          <Route path="/category/*" element={<CategoryPage />} />
           <Route path="/series/:seriesId" element={<SeriesPage />} />
           <Route path="/sitemap.xml" element={<Sitemap />} />
           <Route path="/image-sitemap.xml" element={<ImageSitemap />} />
