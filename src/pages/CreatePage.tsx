@@ -31,14 +31,25 @@ export default function CreatePage() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
 
-  // Load categories
+  // Load categories - get children of "All" root category
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
+      // First get the "All" category
+      const { data: allCategory, error: allError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', 'all')
+        .maybeSingle();
+      
+      if (allError) throw allError;
+      if (!allCategory) return [];
+      
+      // Then get its direct children
       const { data, error } = await supabase
         .from('categories')
-        .select('id, name')
-        .eq('level', 1)
+        .select('id, name, icon')
+        .eq('parent_id', allCategory.id)
         .order('name', { ascending: true });
       
       if (error) throw error;
@@ -327,9 +338,10 @@ export default function CreatePage() {
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a category..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   {categories?.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
+                      {category.icon && <span className="mr-2">{category.icon}</span>}
                       {category.name}
                     </SelectItem>
                   ))}
