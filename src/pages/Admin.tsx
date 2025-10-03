@@ -7,14 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Save, X, ArrowLeft, LogOut, Wand2, Settings, BarChart3, FolderTree, Brain } from "lucide-react";
+import { Loader2, Save, X, ArrowLeft, LogOut, Wand2, Settings, BarChart3, FolderTree } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ManageColoringPages from "@/components/admin/ManageColoringPages";
 import ManageCategories from "@/components/admin/ManageCategories";
 import DashboardStats from "@/components/admin/DashboardStats";
-import KeywordAnalyzer from "@/components/admin/KeywordAnalyzer";
-import InitializeCategories from "@/components/admin/InitializeCategories";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -387,19 +385,11 @@ export default function Admin() {
         </div>
       </div>
       <div className="container py-8">
-        <Tabs defaultValue="init" className="w-full">
-          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-6 mb-8">
-            <TabsTrigger value="init" className="gap-2">
-              <Sparkles className="h-4 w-4" />
-              初始化
-            </TabsTrigger>
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-4 mb-8">
             <TabsTrigger value="dashboard" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               数据统计
-            </TabsTrigger>
-            <TabsTrigger value="analyzer" className="gap-2">
-              <Brain className="h-4 w-4" />
-              SEO分析
             </TabsTrigger>
             <TabsTrigger value="generate" className="gap-2">
               <Wand2 className="h-4 w-4" />
@@ -415,16 +405,8 @@ export default function Admin() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="init">
-            <InitializeCategories />
-          </TabsContent>
-
           <TabsContent value="dashboard">
             <DashboardStats />
-          </TabsContent>
-
-          <TabsContent value="analyzer">
-            <KeywordAnalyzer />
           </TabsContent>
 
           <TabsContent value="generate">
@@ -565,7 +547,7 @@ export default function Admin() {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="mr-2 h-4 w-4" />
+                    <Wand2 className="mr-2 h-4 w-4" />
                     {generationType === "series" ? "生成AI故事系列" : "生成涂色页面"}
                   </>
                 )}
