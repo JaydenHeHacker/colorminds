@@ -225,7 +225,7 @@ export default function CreditsStore() {
               </div>
               
               <Button
-                onClick={() => handlePurchasePackage("price_1SEAdUCTw9zay88KgwgdFNn6")}
+                onClick={() => handlePurchasePackage("price_1SEAptPtWzrgBXKbpdl2S4pC")}
                 className="w-full"
                 variant="outline"
               >
@@ -262,7 +262,7 @@ export default function CreditsStore() {
               </div>
               
               <Button
-                onClick={() => handlePurchasePackage("price_1SEAdVCTw9zay88KrZbzwfu8")}
+                onClick={() => handlePurchasePackage("price_1SEApzPtWzrgBXKbzeqvik80")}
                 className="w-full"
               >
                 Buy Now
@@ -294,7 +294,7 @@ export default function CreditsStore() {
               </div>
               
               <Button
-                onClick={() => handlePurchasePackage("price_1SEAdWCTw9zay88K5uRYNv6p")}
+                onClick={() => handlePurchasePackage("price_1SEAq0PtWzrgBXKbu45Aoc30")}
                 className="w-full"
                 variant="outline"
               >
