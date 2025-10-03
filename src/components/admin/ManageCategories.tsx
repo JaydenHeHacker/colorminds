@@ -31,9 +31,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FolderTree, Plus, Edit, Trash2, Loader2, ChevronRight, ChevronDown } from "lucide-react";
+import { FolderTree, Plus, Edit, Trash2, Loader2, ChevronRight, ChevronDown, Wand2, Image } from "lucide-react";
 import { toast } from "sonner";
 import { slugify } from "@/lib/slugify";
+import { Badge } from "@/components/ui/badge";
 
 interface Category {
   id: string;
@@ -54,6 +55,7 @@ export default function ManageCategories() {
   const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [generatingForCategory, setGeneratingForCategory] = useState<Category | null>(null);
 
   // Form state
   const [formName, setFormName] = useState("");
@@ -62,6 +64,17 @@ export default function ManageCategories() {
   const [formIcon, setFormIcon] = useState("");
   const [formParentId, setFormParentId] = useState<string | null>(null);
   const [formOrderPosition, setFormOrderPosition] = useState("0");
+
+  // Generation form state
+  const [theme, setTheme] = useState("");
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [generationType, setGenerationType] = useState<"single" | "series">("single");
+  const [seriesLength, setSeriesLength] = useState("5");
+  const [generateCount, setGenerateCount] = useState("1");
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [generatedPagesData, setGeneratedPagesData] = useState<any[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ['admin-categories'],
@@ -75,6 +88,27 @@ export default function ManageCategories() {
       
       if (error) throw error;
       return data as Category[];
+    },
+  });
+
+  // Query for coloring pages count per category
+  const { data: categoryPageCounts } = useQuery({
+    queryKey: ['category-page-counts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('coloring_pages')
+        .select('category_id');
+      
+      if (error) throw error;
+      
+      // Count pages per category
+      const counts: Record<string, number> = {};
+      data.forEach(page => {
+        if (page.category_id) {
+          counts[page.category_id] = (counts[page.category_id] || 0) + 1;
+        }
+      });
+      return counts;
     },
   });
 
@@ -212,6 +246,143 @@ export default function ManageCategories() {
     setExpandedCategories(newExpanded);
   };
 
+  const handleOpenGenerate = (category: Category) => {
+    setGeneratingForCategory(category);
+    setTheme("");
+    setDifficulty("medium");
+    setGenerationType("single");
+    setSeriesLength("5");
+    setGenerateCount("1");
+    setGeneratedImages([]);
+    setGeneratedPagesData([]);
+  };
+
+  const handleGenerate = async () => {
+    if (!theme || !generatingForCategory) {
+      toast.error("请输入主题");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      if (generationType === "series") {
+        const length = parseInt(seriesLength);
+        const { data, error } = await supabase.functions.invoke('generate-story-series', {
+          body: { 
+            category: generatingForCategory.name, 
+            theme, 
+            difficulty, 
+            seriesLength: length 
+          }
+        });
+
+        if (error) throw error;
+        
+        const imageUrls = data.images.map((img: any) => img.imageUrl);
+        setGeneratedImages(imageUrls);
+        setGeneratedPagesData(data.images.map((img: any, i: number) => ({
+          imageUrl: img.imageUrl,
+          sceneDescription: img.sceneDescription,
+          order: i
+        })));
+        toast.success(`成功生成 ${imageUrls.length} 张系列图片！`);
+      } else {
+        const count = parseInt(generateCount);
+        const images: string[] = [];
+        const pagesData: any[] = [];
+        
+        for (let i = 0; i < count; i++) {
+          const { data, error } = await supabase.functions.invoke('generate-coloring-page', {
+            body: { 
+              category: generatingForCategory.name, 
+              theme, 
+              difficulty 
+            }
+          });
+
+          if (error) throw error;
+          
+          images.push(data.imageUrl);
+          pagesData.push({
+            imageUrl: data.imageUrl,
+            suggestedTitle: data.suggestedTitle,
+            suggestedDescription: data.suggestedDescription
+          });
+        }
+        
+        setGeneratedImages(images);
+        setGeneratedPagesData(pagesData);
+        toast.success(`成功生成 ${count} 张图片！`);
+      }
+    } catch (error: any) {
+      console.error('生成错误:', error);
+      toast.error("生成失败：" + error.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSaveGenerated = async () => {
+    if (!generatingForCategory || generatedImages.length === 0) {
+      toast.error("没有可保存的图片");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      let successCount = 0;
+
+      for (let i = 0; i < generatedImages.length; i++) {
+        const imageUrl = generatedImages[i];
+        const pageData = generatedPagesData[i];
+        
+        let title, description;
+        if (generationType === "series") {
+          title = `${theme} - Chapter ${i + 1}`;
+          description = pageData?.sceneDescription || null;
+        } else {
+          title = pageData?.suggestedTitle || theme;
+          description = pageData?.suggestedDescription || null;
+        }
+
+        const slug = slugify(`${title}-${Date.now()}-${i}`);
+
+        const { error } = await supabase
+          .from('coloring_pages')
+          .insert({
+            title,
+            slug,
+            description,
+            image_url: imageUrl,
+            category_id: generatingForCategory.id,
+            difficulty,
+            is_featured: false,
+          });
+
+        if (error) {
+          console.error('保存错误:', error);
+          toast.error(`第 ${i + 1} 张图片保存失败`);
+        } else {
+          successCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`成功保存 ${successCount} 张图片！`);
+        queryClient.invalidateQueries({ queryKey: ['category-page-counts'] });
+        queryClient.invalidateQueries({ queryKey: ['coloring-pages'] });
+        setGeneratingForCategory(null);
+        setGeneratedImages([]);
+        setGeneratedPagesData([]);
+      }
+    } catch (error: any) {
+      console.error('保存错误:', error);
+      toast.error("保存失败：" + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const buildTree = (cats: Category[]): Category[] => {
     return cats.filter(cat => cat.level === 1);
   };
@@ -249,7 +420,13 @@ export default function ManageCategories() {
               {category.icon && <span className="text-2xl flex-shrink-0">{category.icon}</span>}
               
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold truncate">{category.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold truncate">{category.name}</h3>
+                  <Badge variant="secondary" className="gap-1">
+                    <Image className="h-3 w-3" />
+                    {categoryPageCounts?.[category.id] || 0}
+                  </Badge>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Level {category.level} • /{category.path}
                 </p>
@@ -258,13 +435,23 @@ export default function ManageCategories() {
             
             <div className="flex gap-2 flex-shrink-0">
               <Button
+                variant="default"
+                size="sm"
+                onClick={() => handleOpenGenerate(category)}
+                title="生成素材"
+                className="gap-1"
+              >
+                <Wand2 className="h-4 w-4" />
+                生成素材
+              </Button>
+              <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => handleOpenCreate(category.id)}
                 title="添加子分类"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                添加子分类
+                子分类
               </Button>
               <Button
                 variant="ghost"
@@ -462,6 +649,196 @@ export default function ManageCategories() {
                 "保存"
               )}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Generate Content Dialog */}
+      <Dialog 
+        open={!!generatingForCategory} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setGeneratingForCategory(null);
+            setGeneratedImages([]);
+            setGeneratedPagesData([]);
+          }
+        }}
+      >
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wand2 className="h-5 w-5" />
+              为 "{generatingForCategory?.icon} {generatingForCategory?.name}" 生成素材
+            </DialogTitle>
+            <DialogDescription>
+              使用 AI 为该分类生成涂色页素材
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="gen-theme">主题 *</Label>
+                <Input
+                  id="gen-theme"
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value)}
+                  placeholder="例如：可爱的猫咪"
+                  disabled={isGenerating || generatedImages.length > 0}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="gen-difficulty">难度</Label>
+                <Select 
+                  value={difficulty} 
+                  onValueChange={(v: any) => setDifficulty(v)}
+                  disabled={isGenerating || generatedImages.length > 0}
+                >
+                  <SelectTrigger id="gen-difficulty">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="easy">简单</SelectItem>
+                    <SelectItem value="medium">中等</SelectItem>
+                    <SelectItem value="hard">困难</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="gen-type">生成类型</Label>
+                <Select 
+                  value={generationType} 
+                  onValueChange={(v: any) => setGenerationType(v)}
+                  disabled={isGenerating || generatedImages.length > 0}
+                >
+                  <SelectTrigger id="gen-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">单张图片</SelectItem>
+                    <SelectItem value="series">故事系列</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="gen-count">
+                  {generationType === "series" ? "系列长度" : "生成数量"}
+                </Label>
+                <Select 
+                  value={generationType === "series" ? seriesLength : generateCount}
+                  onValueChange={(v) => generationType === "series" ? setSeriesLength(v) : setGenerateCount(v)}
+                  disabled={isGenerating || generatedImages.length > 0}
+                >
+                  <SelectTrigger id="gen-count">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {generationType === "series" ? (
+                      <>
+                        <SelectItem value="3">3 张</SelectItem>
+                        <SelectItem value="5">5 张</SelectItem>
+                        <SelectItem value="8">8 张</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="1">1 张</SelectItem>
+                        <SelectItem value="2">2 张</SelectItem>
+                        <SelectItem value="3">3 张</SelectItem>
+                        <SelectItem value="5">5 张</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {generatedImages.length === 0 ? (
+              <Button 
+                onClick={handleGenerate} 
+                disabled={isGenerating}
+                className="w-full gap-2"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    生成中...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="h-4 w-4" />
+                    开始生成
+                  </>
+                )}
+              </Button>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">已生成 {generatedImages.length} 张图片</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setGeneratedImages([]);
+                      setGeneratedPagesData([]);
+                    }}
+                  >
+                    重新生成
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 max-h-[400px] overflow-y-auto p-2">
+                  {generatedImages.map((url, idx) => (
+                    <div key={idx} className="relative aspect-square border rounded-lg overflow-hidden bg-muted">
+                      <img 
+                        src={url} 
+                        alt={`生成的图片 ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2 right-2 bg-background/80 rounded px-2 py-1 text-xs font-medium">
+                        #{idx + 1}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setGeneratingForCategory(null);
+                setGeneratedImages([]);
+                setGeneratedPagesData([]);
+              }}
+            >
+              取消
+            </Button>
+            {generatedImages.length > 0 && (
+              <Button 
+                onClick={handleSaveGenerated} 
+                disabled={isSaving}
+                className="gap-2"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    保存中...
+                  </>
+                ) : (
+                  <>
+                    <Image className="h-4 w-4" />
+                    保存到分类
+                  </>
+                )}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
