@@ -64,7 +64,7 @@ const CategoryPage = () => {
 
   // Query all coloring pages in this category and its subcategories
   const { data: allColoringPages, isLoading: isPagesLoading } = useQuery({
-    queryKey: ['category-all-pages', category?.id],
+    queryKey: ['category-all-pages', category?.id, subCategories?.map(s => s.id).sort().join(',')],
     queryFn: async () => {
       if (!category?.id) return [];
       
