@@ -14,6 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_generations: {
+        Row: {
+          cost_type: string
+          created_at: string
+          error_message: string | null
+          generation_time_seconds: number | null
+          id: string
+          image_url: string | null
+          is_public: boolean
+          optimized_prompt: string | null
+          prompt: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cost_type: string
+          created_at?: string
+          error_message?: string | null
+          generation_time_seconds?: number | null
+          id?: string
+          image_url?: string | null
+          is_public?: boolean
+          optimized_prompt?: string | null
+          prompt: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cost_type?: string
+          created_at?: string
+          error_message?: string | null
+          generation_time_seconds?: number | null
+          id?: string
+          image_url?: string | null
+          is_public?: boolean
+          optimized_prompt?: string | null
+          prompt?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          created_at: string | null
+          event_name: string
+          event_type: string
+          id: string
+          page_title: string | null
+          page_url: string | null
+          properties: Json | null
+          referrer: string | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_name: string
+          event_type: string
+          id?: string
+          page_title?: string | null
+          page_url?: string | null
+          properties?: Json | null
+          referrer?: string | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_name?: string
+          event_type?: string
+          id?: string
+          page_title?: string | null
+          page_url?: string | null
+          properties?: Json | null
+          referrer?: string | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      analytics_sessions: {
+        Row: {
+          browser: string | null
+          country: string | null
+          device_type: string | null
+          entry_page: string | null
+          events_count: number | null
+          exit_page: string | null
+          id: string
+          os: string | null
+          page_views: number | null
+          referrer: string | null
+          session_end: string | null
+          session_start: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          browser?: string | null
+          country?: string | null
+          device_type?: string | null
+          entry_page?: string | null
+          events_count?: number | null
+          exit_page?: string | null
+          id?: string
+          os?: string | null
+          page_views?: number | null
+          referrer?: string | null
+          session_end?: string | null
+          session_start?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          browser?: string | null
+          country?: string | null
+          device_type?: string | null
+          entry_page?: string | null
+          events_count?: number | null
+          exit_page?: string | null
+          id?: string
+          os?: string | null
+          page_views?: number | null
+          referrer?: string | null
+          session_end?: string | null
+          session_start?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -126,6 +267,77 @@ export type Database = {
           },
         ]
       }
+      credit_packages: {
+        Row: {
+          created_at: string
+          credits: number
+          id: string
+          is_active: boolean
+          name: string
+          price_usd: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price_usd: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_usd?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          generation_id: string | null
+          id: string
+          notes: string | null
+          package_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          generation_id?: string | null
+          id?: string
+          notes?: string | null
+          package_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          generation_id?: string | null
+          id?: string
+          notes?: string | null
+          package_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "credit_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           coloring_page_id: string
@@ -176,6 +388,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_credits: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          total_purchased: number
+          total_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_purchased?: number
+          total_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_purchased?: number
+          total_used?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -193,6 +435,45 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          monthly_quota: number
+          quota_reset_at: string
+          subscription_end_at: string | null
+          subscription_start_at: string | null
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          updated_at: string
+          used_quota: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monthly_quota?: number
+          quota_reset_at?: string
+          subscription_end_at?: string | null
+          subscription_start_at?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          used_quota?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monthly_quota?: number
+          quota_reset_at?: string
+          subscription_end_at?: string | null
+          subscription_start_at?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          used_quota?: number
           user_id?: string
         }
         Relationships: []
@@ -217,6 +498,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       difficulty_level: "easy" | "medium" | "hard"
+      subscription_tier: "free" | "premium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -346,6 +628,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       difficulty_level: ["easy", "medium", "hard"],
+      subscription_tier: ["free", "premium"],
     },
   },
 } as const

@@ -13,6 +13,9 @@ import Sitemap from "./pages/Sitemap";
 import ImageSitemap from "./pages/ImageSitemap";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
+import CreatePage from "./pages/CreatePage";
+import CreditsStore from "./pages/CreditsStore";
+import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +33,9 @@ const App = () => (
           <Route path="/series" element={<AllSeries />} />
           <Route path="/series/:slug" element={<SeriesPage />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/create" element={<CreatePage />} />
+          <Route path="/credits" element={<CreditsStore />} />
+          <Route path="/community" element={<Community />} />
           <Route path="/sitemap.xml" element={<Sitemap />} />
           <Route path="/image-sitemap.xml" element={<ImageSitemap />} />
           <Route path="/admin" element={<Admin />} />

@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.generate-category-icon]
 verify_jwt = false
+
+[functions.generate-ai-coloring]
+verify_jwt = false

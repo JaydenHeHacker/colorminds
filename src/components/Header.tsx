@@ -88,6 +88,9 @@ export const Header = () => {
               <button onClick={() => navigate('/series')} className="text-sm font-medium transition-smooth hover:text-primary">
                 Story Series
               </button>
+              <button onClick={() => navigate('/community')} className="text-sm font-medium transition-smooth hover:text-primary">
+                Community
+              </button>
               <button onClick={() => scrollToSection('popular')} className="text-sm font-medium transition-smooth hover:text-primary">
                 Popular
               </button>
@@ -138,6 +141,16 @@ export const Header = () => {
                 <Search className="h-5 w-5" />
               </Button>
             )}
+
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={() => navigate("/create")} 
+              className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden md:inline">✨ Create</span>
+            </Button>
 
             {user ? (
               <DropdownMenu>
@@ -196,6 +209,13 @@ export const Header = () => {
             </div>
           </DrawerHeader>
           <div className="p-4 space-y-4">
+            <Button 
+              onClick={() => { navigate('/create'); setMobileMenuOpen(false); }}
+              className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80"
+            >
+              <Search className="h-5 w-5" />
+              ✨ Create Your Own
+            </Button>
             <button 
               onClick={() => scrollToSection('categories')} 
               className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth"
@@ -207,6 +227,12 @@ export const Header = () => {
               className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth"
             >
               Story Series
+            </button>
+            <button 
+              onClick={() => { navigate('/community'); setMobileMenuOpen(false); }}
+              className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth"
+            >
+              Community
             </button>
             <button 
               onClick={() => scrollToSection('popular')} 
