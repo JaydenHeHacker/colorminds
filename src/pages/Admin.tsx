@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save, X, ArrowLeft, LogOut, Wand2, Settings, BarChart3, FolderTree } from "lucide-react";
+import { Loader2, Save, X, ArrowLeft, LogOut, Wand2, Settings, BarChart3, FolderTree, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ManageColoringPages from "@/components/admin/ManageColoringPages";
 import ManageCategories from "@/components/admin/ManageCategories";
 import DashboardStats from "@/components/admin/DashboardStats";
+import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -386,27 +387,35 @@ export default function Admin() {
       </div>
       <div className="container py-8">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-4 mb-8">
+          <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-5 mb-8">
             <TabsTrigger value="dashboard" className="gap-2">
               <BarChart3 className="h-4 w-4" />
-              数据统计
+              数据概览
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2">
+              <TrendingUp className="h-4 w-4" />
+              数据分析
             </TabsTrigger>
             <TabsTrigger value="generate" className="gap-2">
               <Wand2 className="h-4 w-4" />
-              生成涂色页
+              生成内容
             </TabsTrigger>
             <TabsTrigger value="categories" className="gap-2">
               <FolderTree className="h-4 w-4" />
-              分类管理
+              管理分类
             </TabsTrigger>
             <TabsTrigger value="manage" className="gap-2">
               <Settings className="h-4 w-4" />
-              管理涂色页
+              管理页面
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
             <DashboardStats />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AnalyticsDashboard />
           </TabsContent>
 
           <TabsContent value="generate">
