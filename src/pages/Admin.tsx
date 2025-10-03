@@ -22,6 +22,8 @@ export default function Admin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingRole, setCheckingRole] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -35,6 +37,28 @@ export default function Admin() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        setCheckingRole(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      setIsAdmin(!!data && !error);
+      setCheckingRole(false);
+    };
+
+    checkAdminRole();
+  }, [user]);
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -138,17 +162,11 @@ export default function Admin() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("登录成功！");
-      } else {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        toast.success("注册成功！");
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("登录成功！");
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error("登录失败：" + error.message);
     }
   };
 
@@ -157,7 +175,7 @@ export default function Admin() {
     toast.info("已退出登录");
   };
 
-  if (isLoading) {
+  if (isLoading || checkingRole) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -169,7 +187,7 @@ export default function Admin() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4">
         <Card className="w-full max-w-md p-6">
-          <h1 className="text-2xl font-bold mb-6 text-center">管理员{isLogin ? '登录' : '注册'}</h1>
+          <h1 className="text-2xl font-bold mb-6 text-center">管理员登录</h1>
           <form onSubmit={handleAuth} className="space-y-4">
             <div>
               <Label htmlFor="email">邮箱</Label>
@@ -192,17 +210,33 @@ export default function Admin() {
               />
             </div>
             <Button type="submit" className="w-full">
-              {isLogin ? '登录' : '注册'}
+              登录
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => setIsLogin(!isLogin)}
-            >
-              {isLogin ? '没有账号？去注册' : '已有账号？去登录'}
-            </Button>
+            <p className="text-sm text-muted-foreground text-center mt-4">
+              仅管理员可访问，请联系管理员获取账号
+            </p>
           </form>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+        <Card className="w-full max-w-md p-6 text-center">
+          <h1 className="text-2xl font-bold mb-4">访问受限</h1>
+          <p className="text-muted-foreground mb-6">
+            您没有管理员权限，无法访问此页面。
+          </p>
+          <div className="space-y-2">
+            <Button onClick={handleLogout} className="w-full">
+              退出登录
+            </Button>
+            <Button variant="ghost" onClick={() => navigate("/")} className="w-full">
+              返回首页
+            </Button>
+          </div>
         </Card>
       </div>
     );
