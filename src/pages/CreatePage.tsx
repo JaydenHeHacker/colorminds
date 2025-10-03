@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Crown, Zap, Lock } from "lucide-react";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 export default function CreatePage() {
   const navigate = useNavigate();
@@ -50,7 +52,9 @@ export default function CreatePage() {
 
   const canGenerate = () => {
     if (!subscription || !credits) return false;
-    return subscription.used_quota < subscription.monthly_quota || credits.balance > 0;
+    const hasQuota = subscription.used_quota < subscription.monthly_quota;
+    const hasCredits = credits.balance > 0;
+    return hasQuota || hasCredits;
   };
 
   const handleGenerate = async () => {
@@ -131,7 +135,9 @@ export default function CreatePage() {
   const isPremium = subscription?.tier === 'premium';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 py-20 px-4">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 py-20 px-4">
       <div className="container max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -274,5 +280,7 @@ export default function CreatePage() {
         </Card>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }

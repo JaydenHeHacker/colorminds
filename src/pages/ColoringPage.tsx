@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecommendedPages } from "@/components/RecommendedPages";
+import { CreateCTA } from "@/components/CreateCTA";
 import { Button } from "@/components/ui/button";
 import { Printer, Heart, Share2, ArrowLeft, Loader2, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -550,6 +551,11 @@ const ColoringPage = () => {
             difficulty={page.difficulty || 'medium'}
           />
         )}
+
+        {/* AI Creation CTA */}
+        <div className="container px-4 py-12">
+          <CreateCTA variant="inline" context="details" />
+        </div>
       </main>
 
       <Footer />

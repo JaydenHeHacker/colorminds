@@ -8,6 +8,7 @@ import { SeriesCard } from "@/components/SeriesCard";
 import { RecommendedPages } from "@/components/RecommendedPages";
 import { FAQ } from "@/components/FAQ";
 import { AboutSection } from "@/components/AboutSection";
+import { CreateCTA } from "@/components/CreateCTA";
 import { Footer } from "@/components/Footer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -215,6 +216,11 @@ const Index = () => {
           selectedCategory={selectedCategory}
           onCategorySelect={setSelectedCategory}
         />
+
+        {/* AI Creation CTA after categories */}
+        <section className="container px-4 py-8">
+          <CreateCTA variant="inline" context="category" />
+        </section>
         
         {/* Search Bar */}
         <section className="py-6 md:py-8 bg-background">
@@ -383,8 +389,11 @@ const Index = () => {
                   />
                 ))
               ) : (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
-                {selectedSeriesId ? 'No pages in this series yet' : 'No coloring pages available yet. Check back soon!'}
+              <div className="col-span-full">
+                <CreateCTA 
+                  variant="empty-state" 
+                  context={searchQuery ? "search" : "category"}
+                />
               </div>
               )}
             </div>

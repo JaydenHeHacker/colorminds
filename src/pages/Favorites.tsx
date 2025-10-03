@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ColoringCard } from "@/components/ColoringCard";
+import { CreateCTA } from "@/components/CreateCTA";
 import { Button } from "@/components/ui/button";
 import { Heart, ArrowLeft } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -119,15 +120,20 @@ const Favorites = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16">
-                <Heart className="h-24 w-24 mx-auto mb-6 opacity-20" />
-                <h2 className="text-2xl font-semibold mb-2">No favorites yet</h2>
-                <p className="text-muted-foreground mb-6">
-                  Start browsing coloring pages and click the heart icon to save your favorites
-                </p>
-                <Button onClick={() => navigate('/')} className="gap-2">
-                  Browse Coloring Pages
-                </Button>
+              <div className="space-y-8">
+                <div className="text-center py-16">
+                  <Heart className="h-24 w-24 mx-auto mb-6 opacity-20" />
+                  <h2 className="text-2xl font-semibold mb-2">No favorites yet</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Start browsing coloring pages and click the heart icon to save your favorites
+                  </p>
+                  <Button onClick={() => navigate('/')} className="gap-2">
+                    Browse Coloring Pages
+                  </Button>
+                </div>
+                
+                {/* AI Creation CTA */}
+                <CreateCTA variant="inline" context="favorites" />
               </div>
             )}
           </div>
