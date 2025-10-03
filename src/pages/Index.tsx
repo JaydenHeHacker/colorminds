@@ -17,12 +17,44 @@ import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 
 const Index = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
-  const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [showFavorites, setShowFavorites] = useState(false);
+
+  // Get URL parameters
+  const searchParams = new URLSearchParams(window.location.search);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    searchParams.get('category')
+  );
+  const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(
+    searchParams.get('series')
+  );
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get('search') || ''
+  );
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (selectedSeriesId) params.set('series', selectedSeriesId);
+    if (searchQuery) params.set('search', searchQuery);
+    
+    const newUrl = params.toString() 
+      ? `${window.location.pathname}?${params.toString()}`
+      : window.location.pathname;
+    
+    window.history.replaceState({}, '', newUrl);
+    
+    // Update page title based on filters
+    let title = 'Free Printable Coloring Pages for Kids & Adults | Color Minds';
+    if (selectedCategory) {
+      title = `${selectedCategory} Coloring Pages - Free Printables | Color Minds`;
+    } else if (searchQuery) {
+      title = `Search: "${searchQuery}" - Coloring Pages | Color Minds`;
+    }
+    document.title = title;
+  }, [selectedCategory, selectedSeriesId, searchQuery]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

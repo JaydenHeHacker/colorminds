@@ -8,6 +8,10 @@ interface CategoriesProps {
   onCategorySelect: (category: string | null) => void;
 }
 
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesProps) => {
   const { data: categories, isLoading } = useQuery({
     queryKey: ['categories'],
@@ -75,7 +79,10 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
           ) : categories && categories.length > 0 ? (
             <>
                 <Card
-                onClick={() => onCategorySelect(null)}
+                onClick={() => {
+                  onCategorySelect(null);
+                  scrollToTop();
+                }}
                  className={cn(
                    "group cursor-pointer overflow-hidden border-2 transition-smooth shadow-sm hover:shadow-colorful active:scale-95 touch-manipulation",
                    selectedCategory === null
@@ -98,7 +105,10 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                {categories.map((category) => (
                  <Card
                    key={category.id}
-                   onClick={() => onCategorySelect(category.name)}
+                   onClick={() => {
+                     onCategorySelect(category.name);
+                     scrollToTop();
+                   }}
                    className={cn(
                      "group cursor-pointer overflow-hidden border-2 transition-smooth shadow-sm hover:shadow-colorful active:scale-95 touch-manipulation",
                      selectedCategory === category.name
