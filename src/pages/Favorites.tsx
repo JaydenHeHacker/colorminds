@@ -42,12 +42,13 @@ const Favorites = () => {
         .from('favorites')
         .select(`
           coloring_page_id,
-          coloring_pages (
+          coloring_pages!inner (
             id,
             title,
             image_url,
             slug,
             difficulty,
+            status,
             series_id,
             series_title,
             series_order,
@@ -59,6 +60,7 @@ const Favorites = () => {
           )
         `)
         .eq('user_id', user.id)
+        .eq('coloring_pages.status', 'published')
         .order('created_at', { ascending: false });
       
       if (error) throw error;

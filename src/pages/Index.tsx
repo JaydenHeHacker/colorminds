@@ -110,7 +110,7 @@ const Index = () => {
         .from('favorites')
         .select(`
           coloring_page_id,
-          coloring_pages (
+          coloring_pages!inner (
             *,
             categories (
               name,
@@ -119,6 +119,7 @@ const Index = () => {
           )
         `)
         .eq('user_id', user.id)
+        .eq('coloring_pages.status', 'published')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
