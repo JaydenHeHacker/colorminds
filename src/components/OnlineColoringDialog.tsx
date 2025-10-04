@@ -35,8 +35,19 @@ export const OnlineColoringDialog = ({
 
   // Initialize canvas and load background image
   useEffect(() => {
-    if (!open || !canvasRef.current) return;
+    console.log('useEffect triggered, open:', open, 'canvasRef.current:', !!canvasRef.current);
+    
+    if (!open) {
+      console.log('Dialog not open, skipping initialization');
+      return;
+    }
+    
+    if (!canvasRef.current) {
+      console.log('Canvas ref not available yet, skipping initialization');
+      return;
+    }
 
+    console.log('Starting canvas initialization...');
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     
@@ -44,6 +55,8 @@ export const OnlineColoringDialog = ({
       console.error("Failed to get canvas context");
       return;
     }
+
+    console.log('Canvas context obtained successfully');
 
     // Set canvas size
     canvas.width = 800;
@@ -56,11 +69,12 @@ export const OnlineColoringDialog = ({
     setContext(ctx);
 
     // Load background image
+    console.log('Loading background image from:', imageUrl);
     const img = new Image();
     img.crossOrigin = "anonymous";
     
     img.onload = () => {
-      console.log("Background image loaded successfully");
+      console.log("Background image loaded successfully, size:", img.width, 'x', img.height);
       backgroundImageRef.current = img;
       
       // Calculate scale to fit canvas
