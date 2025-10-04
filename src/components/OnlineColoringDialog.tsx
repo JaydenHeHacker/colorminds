@@ -53,26 +53,42 @@ export const OnlineColoringDialog = ({
 
     console.log('Canvas created successfully');
 
-    // Load the coloring page image as background
-    fabric.FabricImage.fromURL(imageUrl, {
-      crossOrigin: 'anonymous'
-    }).then((img) => {
-      console.log('Image loaded:', img.width, 'x', img.height);
-      const scale = Math.min(800 / img.width!, 600 / img.height!);
-      img.set({
-        scaleX: scale,
-        scaleY: scale,
-        selectable: false,
-        evented: false
-      });
-      canvas.backgroundImage = img;
-      canvas.renderAll();
-      console.log('Background image set and rendered');
-      toast.success('Canvas ready! Start coloring!');
-    }).catch((err) => {
-      console.error('Error loading background image:', err);
-      toast.error('Failed to load coloring page image');
-    });
+    // Load the coloring page image as background using fetch to handle CORS better
+    const loadImage = async () => {
+      try {
+        console.log('Fetching image...');
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        console.log('Image fetched, creating Fabric image from blob URL');
+        
+        const img = await fabric.FabricImage.fromURL(blobUrl);
+        console.log('Image loaded:', img.width, 'x', img.height);
+        
+        const scale = Math.min(800 / img.width!, 600 / img.height!);
+        img.set({
+          scaleX: scale,
+          scaleY: scale,
+          selectable: false,
+          evented: false
+        });
+        canvas.backgroundImage = img;
+        canvas.renderAll();
+        console.log('Background image set and rendered');
+        toast.success('Canvas ready! Start coloring!');
+        
+        // Clean up blob URL
+        URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        console.error('Error loading background image:', err);
+        toast.error('Failed to load coloring page image');
+      }
+    };
+
+    loadImage();
 
     // Initialize brush
     if (canvas.freeDrawingBrush) {
