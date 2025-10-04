@@ -447,7 +447,7 @@ const Index = () => {
                     ? `${selectedCategory} Coloring Pages` 
                     : searchQuery
                     ? 'Search Results'
-                    : "Today's Featured Collection"
+                    : "Explore Our Collection"
                 }
               </h2>
               <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
@@ -457,7 +457,7 @@ const Index = () => {
                     ? `Browse our collection of ${selectedCategory} free printable coloring pages - All designs ready to download and print!`
                     : searchQuery
                     ? `Found ${pagesToDisplay.length} coloring pages matching your search`
-                    : 'Explore story series and individual designs - Fresh content updated daily!'
+                    : 'Discover story series and curated highlights - Content refreshed daily!'
                 }
               </p>
               {selectedSeriesId && (
@@ -518,7 +518,7 @@ const Index = () => {
 
                 {/* Featured Pages Section */}
                 {pagesToDisplay.length > 0 && (
-                  <section className="relative" id="featured-pages">
+                  <section className="relative" id="daily-picks">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 rounded-3xl -z-10" />
                     <div className="py-8 px-6 md:px-8">
                       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
@@ -527,8 +527,8 @@ const Index = () => {
                             <Palette className="h-6 w-6 text-white" />
                           </div>
                           <div>
-                            <h3 className="text-2xl md:text-3xl font-bold">Featured Coloring Pages</h3>
-                            <p className="text-sm text-muted-foreground">Daily rotating selection</p>
+                            <h3 className="text-2xl md:text-3xl font-bold">Today's Picks</h3>
+                            <p className="text-sm text-muted-foreground">Curated selection rotates daily</p>
                           </div>
                         </div>
                         <span className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold border-2 border-primary/20">
@@ -536,7 +536,7 @@ const Index = () => {
                         </span>
                       </div>
                       <p className="text-sm md:text-base text-muted-foreground mb-6 max-w-3xl">
-                        🎨 Explore our daily curated selection of standalone coloring pages. Fresh designs rotated every day for your creative enjoyment!
+                        🎨 Discover our hand-picked daily highlights! This selection automatically refreshes each day, showcasing different coloring pages from our entire collection. Come back tomorrow for a new selection!
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                         {pagesToDisplay.map((page, index) => (
