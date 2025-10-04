@@ -145,7 +145,7 @@ export const ColoringCard = ({
     onSuccess: () => {
       setIsInBasket(!isInBasket);
       queryClient.invalidateQueries({ queryKey: ['print-basket'] });
-      sonnerToast.success(isInBasket ? "已从打印篮移除" : "已添加到打印篮");
+      sonnerToast.success(isInBasket ? "Removed from print basket" : "Added to print basket");
     },
     onError: (error: Error) => {
       if (error.message.startsWith('FREE_LIMIT:')) {
@@ -158,7 +158,7 @@ export const ColoringCard = ({
           }
         });
       } else {
-        sonnerToast.error("操作失败");
+        sonnerToast.error("Operation failed");
       }
     }
   });
