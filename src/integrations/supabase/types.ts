@@ -308,6 +308,7 @@ export type Database = {
           id: string
           image_url: string
           is_featured: boolean
+          last_posted_at: string | null
           published_at: string | null
           scheduled_publish_at: string | null
           series_id: string | null
@@ -329,6 +330,7 @@ export type Database = {
           id?: string
           image_url: string
           is_featured?: boolean
+          last_posted_at?: string | null
           published_at?: string | null
           scheduled_publish_at?: string | null
           series_id?: string | null
@@ -350,6 +352,7 @@ export type Database = {
           id?: string
           image_url?: string
           is_featured?: boolean
+          last_posted_at?: string | null
           published_at?: string | null
           scheduled_publish_at?: string | null
           series_id?: string | null
