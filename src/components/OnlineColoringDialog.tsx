@@ -26,22 +26,19 @@ export const OnlineColoringDialog = ({
   imageUrl,
   pageTitle 
 }: OnlineColoringDialogProps) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [activeColor, setActiveColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
   const [isEraser, setIsEraser] = useState(false);
-  const isInitializedRef = useRef(false);
 
-  // Use callback ref to ensure canvas element is mounted
-  const canvasRef = useCallback((node: HTMLCanvasElement | null) => {
-    if (!node || !open || isInitializedRef.current) return;
+  // Initialize canvas when dialog opens
+  useEffect(() => {
+    if (!open || !canvasRef.current || fabricCanvas) return;
 
-    console.log('Canvas ref callback triggered, initializing canvas');
-    console.log('Image URL:', imageUrl);
+    console.log('Initializing canvas...');
     
-    isInitializedRef.current = true;
-
-    const canvas = new FabricCanvas(node, {
+    const canvas = new FabricCanvas(canvasRef.current, {
       width: 800,
       height: 600,
       backgroundColor: "#ffffff",
@@ -58,22 +55,15 @@ export const OnlineColoringDialog = ({
       canvas.freeDrawingBrush.width = brushSize;
       console.log('Brush initialized with color:', activeColor, 'size:', brushSize);
       console.log('Drawing mode enabled:', canvas.isDrawingMode);
-      console.log('Brush object:', canvas.freeDrawingBrush);
     } else {
       console.error('Brush not available after enabling drawing mode');
     }
-    
-    // Add canvas event listeners for debugging
-    canvas.on('mouse:down', () => console.log('Mouse down on canvas'));
-    canvas.on('mouse:move', () => console.log('Mouse move on canvas'));
-    canvas.on('mouse:up', () => console.log('Mouse up on canvas'));
 
     // Load the coloring page image as background
     const loadImage = async () => {
       try {
         console.log('Loading image with FabricImage.fromURL...');
         
-        // Use Fabric's built-in fromURL method
         const fabricImg = await FabricImage.fromURL(imageUrl);
         
         console.log('Fabric image loaded:', fabricImg.width, 'x', fabricImg.height);
@@ -99,7 +89,7 @@ export const OnlineColoringDialog = ({
 
     loadImage();
     setFabricCanvas(canvas);
-  }, [open, imageUrl, activeColor, brushSize]);
+  }, [open, imageUrl, activeColor, brushSize, fabricCanvas]);
 
   // Cleanup when dialog closes
   useEffect(() => {
@@ -107,7 +97,6 @@ export const OnlineColoringDialog = ({
       console.log('Disposing canvas on dialog close');
       fabricCanvas.dispose();
       setFabricCanvas(null);
-      isInitializedRef.current = false;
     }
   }, [open, fabricCanvas]);
 
