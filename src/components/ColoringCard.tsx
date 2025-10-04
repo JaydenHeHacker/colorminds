@@ -267,7 +267,7 @@ export const ColoringCard = ({
           )}
           <img
             src={imageError ? '/placeholder.svg' : image}
-            alt={`${title} - ${category} coloring page for kids and adults - Free printable`}
+            alt={`${title} - ${category} design`}
             className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:rotate-1 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}

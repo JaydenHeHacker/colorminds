@@ -90,10 +90,10 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
       <div className="container px-4">
         <div className="text-center mb-8 md:mb-12 animate-fade-in">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            Browse Categories
+            Browse Free Printable Coloring Pages by Category
           </h2>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-            Find the perfect coloring page from our rich variety of categories
+            Explore thousands of free coloring pages organized by theme - from animals and holidays to characters and educational designs. All printable coloring sheets are 100% free!
           </p>
         </div>
         

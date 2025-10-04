@@ -281,6 +281,9 @@ const Index = () => {
         <section className="py-6 md:py-8 bg-background">
           <div className="container px-4">
             <div className="max-w-2xl mx-auto">
+              <p className="text-center text-sm md:text-base text-muted-foreground mb-3">
+                🔍 Search from 1000+ free printable coloring pages - Find your perfect design to download and print instantly!
+              </p>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                 <Input
@@ -384,10 +387,10 @@ const Index = () => {
                 {selectedSeriesId 
                   ? 'All chapters from this story series' 
                   : selectedCategory 
-                    ? `Browse our collection of ${selectedCategory} themed coloring pages`
+                    ? `Browse our collection of ${selectedCategory} free printable coloring pages - All designs ready to download and print!`
                     : searchQuery
                     ? `Found ${pagesToDisplay.length} coloring pages matching your search`
-                    : 'Fresh picks curated for you today - Updated daily with new selections!'
+                    : 'Fresh free coloring pages curated daily - Download and print new designs every day!'
                 }
               </p>
               {selectedSeriesId && (

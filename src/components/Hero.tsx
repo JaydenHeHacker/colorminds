@@ -82,6 +82,11 @@ export const Hero = () => {
                 <span className="text-xs md:text-sm text-muted-foreground">Free</span>
               </div>
             </div>
+
+            {/* Feature highlights */}
+            <div className="pt-4 text-sm md:text-base text-muted-foreground">
+              🎨 Print unlimited coloring pages • 100% Free downloads • New designs daily
+            </div>
           </div>
           
           <div className="relative">
