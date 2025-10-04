@@ -17,7 +17,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Heart } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Heart, BookOpen, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 
@@ -439,7 +440,7 @@ const Index = () => {
         
         <article className="py-12 md:py-16 lg:py-20 bg-muted/30" id="popular">
           <div className="container px-4">
-            <div className="text-center mb-6 md:mb-8">
+            <div className="text-center mb-8 md:mb-10">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
                 {selectedSeriesId 
                   ? seriesToDisplay.find(s => s.seriesId === selectedSeriesId)?.seriesTitle 
@@ -447,7 +448,7 @@ const Index = () => {
                     ? `${selectedCategory} Coloring Pages` 
                     : searchQuery
                     ? 'Search Results'
-                    : "Today's Featured Coloring Pages"
+                    : "Today's Featured Collection"
                 }
               </h2>
               <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
@@ -457,7 +458,7 @@ const Index = () => {
                     ? `Browse our collection of ${selectedCategory} free printable coloring pages - All designs ready to download and print!`
                     : searchQuery
                     ? `Found ${pagesToDisplay.length} coloring pages matching your search`
-                    : 'Fresh free coloring pages curated daily - Download and print new designs every day!'
+                    : 'Explore story series and individual designs - Fresh content updated daily!'
                 }
               </p>
               {selectedSeriesId && (
@@ -471,64 +472,134 @@ const Index = () => {
               )}
             </div>
 
-            {/* Show story series first if not viewing a specific series */}
-            {!selectedSeriesId && seriesToDisplay.length > 0 && (
-              <div className="mb-8 md:mb-12">
-                <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">📚 Story Series</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                  {seriesToDisplay.map((series) => (
-                    <SeriesCard
-                      key={series.seriesId}
-                      seriesId={series.seriesId}
-                      seriesSlug={series.seriesSlug}
-                      seriesTitle={series.seriesTitle}
-                      seriesTotal={series.seriesTotal}
-                      difficulty={series.difficulty as "easy" | "medium" | "hard"}
-                      category={series.category}
-                      firstImage={series.firstImage}
-                      onViewSeries={() => setSelectedSeriesId(series.seriesId)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* For homepage without filters - Use Tabs for better UX */}
+            {!selectedSeriesId && !selectedCategory && !searchQuery && seriesToDisplay.length > 0 && pagesToDisplay.length > 0 ? (
+              <Tabs defaultValue="series" className="w-full">
+                <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8 h-12">
+                  <TabsTrigger value="series" className="text-sm md:text-base gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Story Series ({seriesToDisplay.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="pages" className="text-sm md:text-base gap-2">
+                    <Palette className="h-4 w-4" />
+                    Featured Pages ({pagesToDisplay.length})
+                  </TabsTrigger>
+                </TabsList>
 
-            {/* Show regular pages or series pages */}
-            {pagesToDisplay.length > 0 && !selectedSeriesId && (selectedCategory || searchQuery) && (
-              <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">🎨 Coloring Pages</h3>
+                <TabsContent value="series" className="mt-0">
+                  <div className="text-center mb-6">
+                    <p className="text-sm md:text-base text-muted-foreground">
+                      📚 Explore complete story collections with multiple themed pages
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    {seriesToDisplay.map((series, index) => (
+                      <div key={series.seriesId} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                        <SeriesCard
+                          seriesId={series.seriesId}
+                          seriesSlug={series.seriesSlug}
+                          seriesTitle={series.seriesTitle}
+                          seriesTotal={series.seriesTotal}
+                          difficulty={series.difficulty as "easy" | "medium" | "hard"}
+                          category={series.category}
+                          firstImage={series.firstImage}
+                          onViewSeries={() => setSelectedSeriesId(series.seriesId)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="pages" className="mt-0">
+                  <div className="text-center mb-6">
+                    <p className="text-sm md:text-base text-muted-foreground">
+                      🎨 Daily rotating selection of standalone coloring pages
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    {pagesToDisplay.map((page, index) => (
+                      <div key={page.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                        <ColoringCard
+                          id={page.id}
+                          slug={page.slug}
+                          title={page.title}
+                          image={page.image_url}
+                          category={page.categories?.name || 'Uncategorized'}
+                          difficulty={page.difficulty as "easy" | "medium" | "hard"}
+                          seriesId={page.series_id}
+                          seriesTitle={page.series_title}
+                          seriesOrder={page.series_order}
+                          seriesTotal={page.series_total}
+                          publishedAt={page.published_at}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            ) : (
+              /* For filtered views or when viewing specific series - Show without tabs */
+              <>
+                {/* Show story series first if not viewing a specific series */}
+                {!selectedSeriesId && seriesToDisplay.length > 0 && (
+                  <div className="mb-8 md:mb-12">
+                    <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">📚 Story Series</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                      {seriesToDisplay.map((series) => (
+                        <SeriesCard
+                          key={series.seriesId}
+                          seriesId={series.seriesId}
+                          seriesSlug={series.seriesSlug}
+                          seriesTitle={series.seriesTitle}
+                          seriesTotal={series.seriesTotal}
+                          difficulty={series.difficulty as "easy" | "medium" | "hard"}
+                          category={series.category}
+                          firstImage={series.firstImage}
+                          onViewSeries={() => setSelectedSeriesId(series.seriesId)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Show regular pages or series pages */}
+                {pagesToDisplay.length > 0 && !selectedSeriesId && (selectedCategory || searchQuery) && (
+                  <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 px-4 md:px-0">🎨 Coloring Pages</h3>
+                )}
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                  {isLoading ? (
+                  <div className="col-span-full text-center py-12 text-muted-foreground">
+                    Loading coloring pages...
+                  </div>
+                  ) : pagesToDisplay.length > 0 ? (
+                    pagesToDisplay.map((page) => (
+                      <ColoringCard
+                        key={page.id}
+                        id={page.id}
+                        slug={page.slug}
+                        title={page.title}
+                        image={page.image_url}
+                        category={page.categories?.name || 'Uncategorized'}
+                        difficulty={page.difficulty as "easy" | "medium" | "hard"}
+                        seriesId={page.series_id}
+                        seriesTitle={page.series_title}
+                        seriesOrder={page.series_order}
+                        seriesTotal={page.series_total}
+                        publishedAt={page.published_at}
+                      />
+                    ))
+                  ) : (
+                  <div className="col-span-full">
+                    <CreateCTA 
+                      variant="empty-state" 
+                      context={searchQuery ? "search" : "category"}
+                    />
+                  </div>
+                  )}
+                </div>
+              </>
             )}
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              {isLoading ? (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
-                Loading coloring pages...
-              </div>
-              ) : pagesToDisplay.length > 0 ? (
-                pagesToDisplay.map((page) => (
-                  <ColoringCard
-                    key={page.id}
-                    id={page.id}
-                    slug={page.slug}
-                    title={page.title}
-                    image={page.image_url}
-                    category={page.categories?.name || 'Uncategorized'}
-                    difficulty={page.difficulty as "easy" | "medium" | "hard"}
-                    seriesId={page.series_id}
-                    seriesTitle={page.series_title}
-                    seriesOrder={page.series_order}
-                    seriesTotal={page.series_total}
-                    publishedAt={page.published_at}
-                  />
-                ))
-              ) : (
-              <div className="col-span-full">
-                <CreateCTA 
-                  variant="empty-state" 
-                  context={searchQuery ? "search" : "category"}
-                />
-              </div>
-              )}
-            </div>
 
             {/* Recommended Pages - Show when viewing specific series or filtered content */}
             {(selectedSeriesId || selectedCategory) && pagesToDisplay.length > 0 && (
