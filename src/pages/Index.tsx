@@ -271,8 +271,7 @@ const Index = () => {
             <div className="container px-4">
               <div className="max-w-3xl mx-auto text-center">
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Browse our curated collection of <strong>free printable coloring pages</strong> by category, search for specific themes, or discover daily featured designs. 
-                  All coloring pages are <strong>100% free to download and print</strong> at home or in the classroom - perfect for kids and adults!
+                  <strong>1000+ free printable coloring pages</strong> for kids and adults. Browse by category, search themes, or discover daily picks - All designs are <strong>100% free to download and print</strong>!
                 </p>
               </div>
             </div>
