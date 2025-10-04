@@ -96,17 +96,24 @@ export default function CreatePage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        await supabase.functions.invoke('check-subscription', {
+        const { data: syncData } = await supabase.functions.invoke('check-subscription', {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
         });
+        
+        console.log('Subscription sync response:', syncData);
       }
+
+      // Wait a bit for the database to update
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const [subResult, creditsResult] = await Promise.all([
         supabase.from("user_subscriptions").select("*").eq("user_id", userId).single(),
         supabase.from("user_credits").select("*").eq("user_id", userId).single(),
       ]);
+
+      console.log('Loaded subscription from DB:', subResult.data);
 
       if (subResult.data) setSubscription(subResult.data);
       if (creditsResult.data) setCredits(creditsResult.data);
