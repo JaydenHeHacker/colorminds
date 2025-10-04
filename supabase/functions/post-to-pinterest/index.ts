@@ -110,6 +110,31 @@ Deno.serve(async (req) => {
   }
 });
 
+async function getUserBoards(accessToken: string) {
+  console.log('Fetching user boards from Pinterest');
+  
+  try {
+    const response = await fetch('https://api.pinterest.com/v5/boards', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Pinterest API error: ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    return data.items || [];
+  } catch (error) {
+    console.error('Pinterest API error:', error);
+    throw error;
+  }
+}
+
 async function createPin(
   accessToken: string,
   boardId: string,

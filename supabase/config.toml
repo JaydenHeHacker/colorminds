@@ -6,6 +6,9 @@ verify_jwt = true
 [functions.post-to-pinterest]
 verify_jwt = true
 
+[functions.auto-post-to-social]
+verify_jwt = true
+
 [functions.generate-coloring-page]
 verify_jwt = false
 

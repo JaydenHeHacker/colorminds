@@ -55,6 +55,7 @@ export function SocialMediaManager() {
   const [connections, setConnections] = useState<SocialConnection[]>([]);
   const [posts, setPosts] = useState<SocialPost[]>([]);
   const [loading, setLoading] = useState(false);
+  const [autoPosting, setAutoPosting] = useState(false);
   const [postDialogOpen, setPostDialogOpen] = useState(false);
   
   // Form states
@@ -224,6 +225,40 @@ export function SocialMediaManager() {
     setBoardId('');
   };
 
+  const handleAutoPost = async (count: number = 1) => {
+    try {
+      setAutoPosting(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.functions.invoke('auto-post-to-social', {
+        body: { platform: 'pinterest', count },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "自动发布成功",
+        description: `成功发布 ${data.totalPosted} 个帖子${data.totalFailed > 0 ? `，${data.totalFailed} 个失败` : ''}`,
+      });
+
+      loadPosts();
+    } catch (error) {
+      console.error('Error auto-posting:', error);
+      toast({
+        title: "自动发布失败",
+        description: error instanceof Error ? error.message : "请重试",
+        variant: "destructive",
+      });
+    } finally {
+      setAutoPosting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid md:grid-cols-2 gap-4">
@@ -302,13 +337,55 @@ export function SocialMediaManager() {
 
       <Card>
         <CardHeader>
-          <CardTitle>发布内容</CardTitle>
-          <CardDescription>发布涂色页到社交媒体</CardDescription>
+          <CardTitle>智能自动发布</CardTitle>
+          <CardDescription>AI 自动生成文案并发布涂色页到 Pinterest</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => handleAutoPost(1)} 
+              disabled={autoPosting || !connections.find(c => c.platform === 'pinterest' && c.is_active)}
+              className="flex-1"
+            >
+              {autoPosting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              发布 1 个帖子
+            </Button>
+            <Button 
+              onClick={() => handleAutoPost(3)} 
+              disabled={autoPosting || !connections.find(c => c.platform === 'pinterest' && c.is_active)}
+              variant="secondary"
+              className="flex-1"
+            >
+              {autoPosting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              发布 3 个帖子
+            </Button>
+          </div>
+          {!connections.find(c => c.platform === 'pinterest' && c.is_active) && (
+            <p className="text-sm text-muted-foreground">
+              请先连接 Pinterest 账号
+            </p>
+          )}
+          <div className="text-sm text-muted-foreground">
+            <p>✨ AI 将自动：</p>
+            <ul className="list-disc list-inside mt-1 space-y-1">
+              <li>从未发布的涂色页中选择</li>
+              <li>生成吸引人的标题和描述</li>
+              <li>添加相关 hashtags</li>
+              <li>发布到您的 Pinterest Board</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>手动发布</CardTitle>
+          <CardDescription>手动创建和发布内容</CardDescription>
         </CardHeader>
         <CardContent>
           <Dialog open={postDialogOpen} onOpenChange={setPostDialogOpen}>
             <DialogTrigger asChild>
-              <Button>创建新帖子</Button>
+              <Button variant="outline">创建新帖子</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
