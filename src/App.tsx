@@ -21,6 +21,10 @@ import CreditsStore from "./pages/CreditsStore";
 import Community from "./pages/Community";
 import AIColoringPage from "./pages/AIColoringPage";
 import UserGallery from "./pages/UserGallery";
+import AboutUs from "./pages/AboutUs";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import ContactUs from "./pages/ContactUs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +56,10 @@ const App = () => (
           <Route path="/image-sitemap.xml" element={<ImageSitemap />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/about-us" element={<AboutUs />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/contact-us" element={<ContactUs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

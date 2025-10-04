@@ -63,7 +63,7 @@ export const Footer = () => {
                 </button>
               </li>
               <li>
-                <Link to="/" className="hover:text-primary transition-smooth">
+                <Link to="/about-us" className="hover:text-primary transition-smooth">
                   About Us
                 </Link>
               </li>
@@ -74,17 +74,17 @@ export const Footer = () => {
             <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link to="/" className="hover:text-primary transition-smooth">
+                <Link to="/privacy-policy" className="hover:text-primary transition-smooth">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/" className="hover:text-primary transition-smooth">
+                <Link to="/terms-of-service" className="hover:text-primary transition-smooth">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/" className="hover:text-primary transition-smooth">
+                <Link to="/contact-us" className="hover:text-primary transition-smooth">
                   Contact Us
                 </Link>
               </li>
