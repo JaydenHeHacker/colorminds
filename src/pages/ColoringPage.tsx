@@ -7,7 +7,8 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecommendedPages } from "@/components/RecommendedPages";
 import { CreateCTA } from "@/components/CreateCTA";
 import { Button } from "@/components/ui/button";
-import { Printer, Heart, Share2, ArrowLeft, Loader2, Eye } from "lucide-react";
+import { Printer, Heart, Share2, ArrowLeft, Loader2, Eye, Sparkles } from "lucide-react";
+import { ColorInspirationDialog } from "@/components/ColorInspirationDialog";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShareDialog } from "@/components/ShareDialog";
@@ -21,6 +22,7 @@ const ColoringPage = () => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
+  const [isInspirationOpen, setIsInspirationOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -447,6 +449,17 @@ const ColoringPage = () => {
                   </div>
                   <div className="flex gap-3">
                     <Button 
+                      variant="secondary"
+                      onClick={() => setIsInspirationOpen(true)}
+                      size="lg"
+                      className="flex-1 gap-2"
+                    >
+                      <Sparkles className="h-5 w-5" />
+                      AI Inspiration
+                    </Button>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button 
                       variant={isFavorited ? "default" : "outline"}
                       onClick={handleToggleFavorite}
                       size="lg"
@@ -611,6 +624,13 @@ const ColoringPage = () => {
         description={page.description}
         difficulty={page.difficulty}
         categoryName={page.categories?.name}
+      />
+
+      <ColorInspirationDialog
+        open={isInspirationOpen}
+        onOpenChange={setIsInspirationOpen}
+        imageUrl={page.image_url}
+        pageTitle={page.title}
       />
 
       {/* Print Preview Dialog */}
