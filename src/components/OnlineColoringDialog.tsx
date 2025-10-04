@@ -55,7 +55,7 @@ export const OnlineColoringDialog = ({
       try {
         console.log('Loading image with fromURL...');
         
-        const img = await fabric.FabricImage.fromURL(imageUrl, {
+        const img = await FabricImage.fromURL(imageUrl, {
           crossOrigin: 'anonymous'
         });
         
