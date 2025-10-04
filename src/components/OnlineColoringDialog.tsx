@@ -26,13 +26,13 @@ export const OnlineColoringDialog = ({
 }: OnlineColoringDialogProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const [activeColor, setActiveColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
   const [isEraser, setIsEraser] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
-  const [drawingHistory, setDrawingHistory] = useState<ImageData[]>([]);
   const backgroundImageRef = useRef<HTMLImageElement | null>(null);
   const [zoom, setZoom] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
@@ -76,11 +76,11 @@ export const OnlineColoringDialog = ({
       
       setContext(ctx);
 
-      // Load background image
+      // Load background image with CORS
       console.log('Loading background image from:', imageUrl);
       const img = new Image();
+      img.crossOrigin = "anonymous"; // Set CORS before src
       
-      // Try loading without CORS first
       img.onload = () => {
         console.log("Background image loaded successfully, size:", img.width, 'x', img.height);
         backgroundImageRef.current = img;
@@ -95,47 +95,13 @@ export const OnlineColoringDialog = ({
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
         
-        // Save initial state
-        saveToHistory(ctx, canvas);
-        
         toast.success("Canvas ready! Start coloring!");
       };
       
       img.onerror = (error) => {
         console.error("Failed to load background image:", error);
         console.error("Image URL:", imageUrl);
-        
-        // Try again with CORS if first attempt failed
-        if (!img.crossOrigin) {
-          console.log("Retrying with CORS enabled...");
-          const img2 = new Image();
-          img2.crossOrigin = "anonymous";
-          
-          img2.onload = () => {
-            console.log("Background image loaded with CORS");
-            backgroundImageRef.current = img2;
-            
-            const scale = Math.min(canvas.width / img2.width, canvas.height / img2.height);
-            const x = (canvas.width - img2.width * scale) / 2;
-            const y = (canvas.height - img2.height * scale) / 2;
-            
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img2, x, y, img2.width * scale, img2.height * scale);
-            
-            saveToHistory(ctx, canvas);
-            toast.success("Canvas ready! Start coloring!");
-          };
-          
-          img2.onerror = () => {
-            console.error("Failed to load image even with CORS");
-            toast.error("Failed to load image. Please try again later.");
-          };
-          
-          img2.src = imageUrl;
-        } else {
-          toast.error("Failed to load image. Please try again later.");
-        }
+        toast.error("Failed to load image. Please try again later.");
       };
       
       img.src = imageUrl;
@@ -145,15 +111,9 @@ export const OnlineColoringDialog = ({
     return () => {
       clearTimeout(timeoutId);
       setContext(null);
-      setDrawingHistory([]);
       backgroundImageRef.current = null;
     };
   }, [open, imageUrl]);
-
-  const saveToHistory = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    setDrawingHistory(prev => [...prev, imageData]);
-  };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!context || !canvasRef.current) return;
@@ -161,20 +121,17 @@ export const OnlineColoringDialog = ({
     const rect = canvasRef.current.getBoundingClientRect();
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const x = (clientX - rect.left) / zoom;
+    const y = (clientY - rect.top) / zoom;
     
     if (isPanning) {
-      setLastPanPoint({ x, y });
+      setLastPanPoint({ x: clientX, y: clientY });
       return;
     }
     
     setIsDrawing(true);
-    const canvasX = (x - panOffset.x) / zoom;
-    const canvasY = (y - panOffset.y) / zoom;
-    
     context.beginPath();
-    context.moveTo(canvasX, canvasY);
+    context.moveTo(x, y);
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -183,33 +140,31 @@ export const OnlineColoringDialog = ({
     const rect = canvasRef.current.getBoundingClientRect();
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
     
     if (isPanning) {
-      const dx = x - lastPanPoint.x;
-      const dy = y - lastPanPoint.y;
+      const dx = clientX - lastPanPoint.x;
+      const dy = clientY - lastPanPoint.y;
       setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
-      setLastPanPoint({ x, y });
+      setLastPanPoint({ x: clientX, y: clientY });
       return;
     }
     
     if (!isDrawing) return;
     
-    const canvasX = (x - panOffset.x) / zoom;
-    const canvasY = (y - panOffset.y) / zoom;
+    const x = (clientX - rect.left) / zoom;
+    const y = (clientY - rect.top) / zoom;
     
     context.strokeStyle = isEraser ? "#ffffff" : activeColor;
-    context.lineWidth = brushSize;
-    context.lineTo(canvasX, canvasY);
+    context.lineWidth = brushSize / zoom; // Adjust brush size for zoom
+    context.lineTo(x, y);
     context.stroke();
   };
 
   const stopDrawing = () => {
+    if (!isDrawing && !isPanning) return;
     setIsDrawing(false);
-    if (context && canvasRef.current && isDrawing) {
+    if (context) {
       context.closePath();
-      saveToHistory(context, canvasRef.current);
     }
   };
 
@@ -240,33 +195,21 @@ export const OnlineColoringDialog = ({
       context.drawImage(img, x, y, img.width * scale, img.height * scale);
     }
     
-    setDrawingHistory([]);
-    saveToHistory(context, canvas);
     toast.success("Canvas cleared!");
   };
 
-  const handleUndo = () => {
-    if (!context || !canvasRef.current || drawingHistory.length <= 1) return;
-    
-    const newHistory = [...drawingHistory];
-    newHistory.pop(); // Remove current state
-    const previousState = newHistory[newHistory.length - 1];
-    
-    if (previousState) {
-      context.putImageData(previousState, 0, 0);
-      setDrawingHistory(newHistory);
-    }
-  };
-
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const newZoom = Math.min(Math.max(0.1, zoom * delta), 5);
+    if (!canvasWrapperRef.current) return;
     
-    const rect = canvasRef.current!.getBoundingClientRect();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = Math.min(Math.max(0.5, zoom * delta), 5);
+    
+    const rect = canvasWrapperRef.current.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     
+    // Calculate new pan offset to zoom towards mouse position
     const newPanX = mouseX - (mouseX - panOffset.x) * (newZoom / zoom);
     const newPanY = mouseY - (mouseY - panOffset.y) * (newZoom / zoom);
     
@@ -280,13 +223,14 @@ export const OnlineColoringDialog = ({
   };
 
   const handleZoomOut = () => {
-    const newZoom = Math.max(zoom * 0.8, 0.1);
+    const newZoom = Math.max(zoom * 0.8, 0.5);
     setZoom(newZoom);
   };
 
   const handleResetView = () => {
     setZoom(1);
     setPanOffset({ x: 0, y: 0 });
+    toast.success("View reset");
   };
 
   const toggleFullscreen = () => {
@@ -333,46 +277,6 @@ export const OnlineColoringDialog = ({
     }
     onOpenChange(false);
   };
-
-  // Render canvas with zoom and pan
-  useEffect(() => {
-    if (!canvasRef.current || !context) return;
-    
-    const canvas = canvasRef.current;
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    if (!tempCtx) return;
-    
-    // Save current drawing
-    tempCtx.drawImage(canvas, 0, 0);
-    
-    // Clear and redraw with transform
-    context.save();
-    context.setTransform(1, 0, 0, 1, 0, 0);
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Apply zoom and pan
-    context.translate(panOffset.x, panOffset.y);
-    context.scale(zoom, zoom);
-    
-    // Draw background image
-    if (backgroundImageRef.current) {
-      const img = backgroundImageRef.current;
-      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-      const x = (canvas.width / zoom - img.width * scale) / 2;
-      const y = (canvas.height / zoom - img.height * scale) / 2;
-      context.drawImage(img, x, y, img.width * scale, img.height * scale);
-    }
-    
-    // Draw previous strokes
-    context.drawImage(tempCanvas, 0, 0);
-    
-    context.restore();
-  }, [zoom, panOffset, context]);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -480,17 +384,7 @@ export const OnlineColoringDialog = ({
 
                 <div className="h-6 sm:h-8 w-px bg-border hidden sm:block" />
 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleUndo}
-                  disabled={drawingHistory.length <= 1}
-                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
-                >
-                  <Undo className="h-4 w-4" />
-                </Button>
-
-                <Button 
+                <Button
                   variant="outline" 
                   size="sm" 
                   onClick={handleClear}
@@ -523,25 +417,39 @@ export const OnlineColoringDialog = ({
             </div>
 
             {/* Canvas */}
-            <div className="border rounded-lg overflow-hidden bg-white touch-manipulation">
-              <canvas 
-                ref={canvasRef}
-                className="max-w-full"
-                style={{ cursor: isPanning ? 'grab' : 'crosshair' }}
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-                onWheel={handleWheel}
-              />
+            <div 
+              ref={canvasWrapperRef}
+              className="border rounded-lg overflow-hidden bg-white relative"
+              style={{ 
+                cursor: isPanning ? 'grab' : 'crosshair',
+                touchAction: 'none'
+              }}
+              onWheel={handleWheel}
+            >
+              <div
+                style={{
+                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
+                  transformOrigin: '0 0',
+                  transition: isPanning || isDrawing ? 'none' : 'transform 0.1s ease-out'
+                }}
+              >
+                <canvas 
+                  ref={canvasRef}
+                  className="max-w-full block"
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
+                />
+              </div>
             </div>
             
             {/* Zoom indicator */}
             <div className="text-xs text-muted-foreground text-center">
-              Zoom: {Math.round(zoom * 100)}% | Use mouse wheel to zoom, drag to pan
+              Zoom: {Math.round(zoom * 100)}% | Scroll to zoom · {isPanning ? 'Drag to pan' : 'Click pan button to enable panning'}
             </div>
           </div>
         </ScrollArea>
