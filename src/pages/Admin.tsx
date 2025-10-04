@@ -15,6 +15,7 @@ import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import UserManagement from "@/components/admin/UserManagement";
 import PublishingSchedule from "@/components/admin/PublishingSchedule";
 import { AutoGenerateControl } from "@/components/admin/AutoGenerateControl";
+import ManageArtwork from "@/components/admin/ManageArtwork";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -165,7 +166,7 @@ export default function Admin() {
       </div>
       <div className="container py-4 sm:py-8 px-2 sm:px-4">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 mb-4 sm:mb-8 h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 mb-4 sm:mb-8 h-auto">
             <TabsTrigger value="dashboard" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">数据概览</span>
@@ -180,6 +181,11 @@ export default function Admin() {
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">用户管理</span>
               <span className="sm:hidden">用户</span>
+            </TabsTrigger>
+            <TabsTrigger value="artwork" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">作品审核</span>
+              <span className="sm:hidden">审核</span>
             </TabsTrigger>
             <TabsTrigger value="categories" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
               <FolderTree className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -229,6 +235,10 @@ export default function Admin() {
 
           <TabsContent value="manage">
             <ManageColoringPages />
+          </TabsContent>
+
+          <TabsContent value="artwork">
+            <ManageArtwork />
           </TabsContent>
         </Tabs>
       </div>

@@ -108,27 +108,32 @@ const UploadArtworkDialog = ({ open, onOpenChange, onSuccess }: UploadArtworkDia
             
             const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-to-r2', {
               body: {
-                file: base64Data,
+                imageData: base64Data,
                 fileName,
-                contentType: file.type,
               },
             });
 
             if (uploadError) throw uploadError;
 
-            // Save artwork metadata to database
+            // Save artwork metadata to database with pending status
             const { error: dbError } = await supabase
               .from('user_artwork')
               .insert({
                 user_id: user.id,
                 title: title.trim(),
                 description: description.trim() || null,
-                image_url: uploadData.url,
+                image_url: uploadData.publicUrl,
+                status: 'pending', // Needs admin approval
               });
 
             if (dbError) throw dbError;
 
             // Reset form
+            toast({
+              title: "Upload successful",
+              description: "Your artwork is pending review and will be visible once approved.",
+            });
+            
             setTitle("");
             setDescription("");
             setFile(null);

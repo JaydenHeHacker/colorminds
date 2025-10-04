@@ -595,6 +595,7 @@ export type Database = {
       }
       user_artwork: {
         Row: {
+          admin_notes: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -602,11 +603,15 @@ export type Database = {
           is_public: boolean | null
           likes_count: number | null
           original_coloring_page_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
           title: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -614,11 +619,15 @@ export type Database = {
           is_public?: boolean | null
           likes_count?: number | null
           original_coloring_page_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
           title: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -626,6 +635,9 @@ export type Database = {
           is_public?: boolean | null
           likes_count?: number | null
           original_coloring_page_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
           title?: string
           updated_at?: string | null
           user_id?: string

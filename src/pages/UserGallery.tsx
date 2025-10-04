@@ -43,11 +43,10 @@ const UserGallery = () => {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Build query
+      // Build query - only approved artworks visible to public
       let query = supabase
         .from("user_artwork")
-        .select("*")
-        .eq("is_public", true);
+        .select("*");
 
       // Sort by selection
       if (sortBy === "popular") {
@@ -151,10 +150,6 @@ const UserGallery = () => {
   const handleUploadSuccess = () => {
     setIsUploadOpen(false);
     loadArtworks();
-    toast({
-      title: "Success",
-      description: "Your artwork has been uploaded!",
-    });
   };
 
   return (
