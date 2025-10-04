@@ -16,6 +16,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SeriesExamplesShowcase } from "@/components/SeriesExamplesShowcase";
 
 export default function CreatePage() {
   const navigate = useNavigate();
@@ -482,24 +483,8 @@ export default function CreatePage() {
                   </p>
                 </div>
 
-                {/* Series Examples */}
-                <Card className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
-                  <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    Series Generation Examples
-                  </h4>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>✨ <strong>Baby Dinosaur Adventure:</strong> 8 pages from hatching to making friends</p>
-                    <p>🌊 <strong>Ocean Explorer:</strong> 6 pages discovering underwater creatures</p>
-                    <p>🚀 <strong>Space Journey:</strong> 7 pages traveling through planets</p>
-                    <p>🦄 <strong>Unicorn Kingdom:</strong> 5 pages exploring magical forests</p>
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-primary/10">
-                    <p className="text-xs text-muted-foreground">
-                      💡 Each page connects naturally to tell a complete story
-                    </p>
-                  </div>
-                </Card>
+                {/* Real Series Examples Showcase */}
+                <SeriesExamplesShowcase />
               </div>
             )}
 
