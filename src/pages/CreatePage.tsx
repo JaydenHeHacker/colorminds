@@ -278,12 +278,34 @@ export default function CreatePage() {
         await loadUserData(user.id);
         navigate('/community');
       } else {
+        let requestBody: any = {
+          category_id: selectedCategoryId,
+          is_private: isPrivate,
+        };
+
+        if (inputMode === 'image' && selectedImage) {
+          // Convert image to base64
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(selectedImage);
+          });
+
+          requestBody = {
+            ...requestBody,
+            image_data: base64,
+            line_complexity: lineComplexity,
+            image_style: imageStyle,
+            line_weight: lineWeight,
+            background_mode: backgroundMode,
+          };
+        } else {
+          requestBody.prompt = prompt;
+        }
+
         const { data, error } = await supabase.functions.invoke('generate-ai-coloring', {
-          body: { 
-            prompt,
-            category_id: selectedCategoryId,
-            is_private: isPrivate,
-          }
+          body: requestBody
         });
 
         if (error) throw error;

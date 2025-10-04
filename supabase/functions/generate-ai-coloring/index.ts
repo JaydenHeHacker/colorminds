@@ -31,9 +31,20 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { prompt, category_id, is_private } = await req.json();
+    const { 
+      prompt, 
+      category_id, 
+      is_private,
+      image_data,
+      line_complexity,
+      image_style,
+      line_weight,
+      background_mode
+    } = await req.json();
     
-    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+    const isImageToImage = !!image_data;
+    
+    if (!isImageToImage && (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0)) {
       throw new Error('Invalid prompt');
     }
 
@@ -41,7 +52,7 @@ serve(async (req) => {
       throw new Error('Category is required');
     }
 
-    console.log(`Generation request from user ${user.id}: ${prompt}`);
+    console.log(`Generation request from user ${user.id}:`, isImageToImage ? 'Image-to-Image' : `Text: ${prompt}`);
 
     // Get user subscription and credits
     const [subResult, creditsResult] = await Promise.all([
@@ -80,7 +91,7 @@ serve(async (req) => {
       .from('ai_generations')
       .insert({
         user_id: user.id,
-        prompt: prompt.trim(),
+        prompt: isImageToImage ? 'Image-to-Image Conversion' : prompt.trim(),
         category_id: category_id,
         cost_type: costType,
         is_public: finalIsPublic,
@@ -102,17 +113,68 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const optimizedPrompt = `Create a simple, child-friendly coloring page with clear black outlines on white background. Theme: ${prompt}. Style: Simple line art suitable for coloring, no shading, no colors, just clean black lines.`;
+    let optimizedPrompt = '';
+    let aiRequestBody: any = {};
 
-    console.log('Calling Lovable AI with optimized prompt...');
-    
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    if (isImageToImage) {
+      // Build prompt from user options
+      const complexityMap: Record<string, string> = {
+        'simple': 'very simple with large areas and minimal details, perfect for ages 3-5',
+        'medium': 'moderate complexity with clear sections, suitable for ages 6-8',
+        'detailed': 'detailed and intricate with fine elements, ideal for ages 9 and above'
+      };
+
+      const styleMap: Record<string, string> = {
+        'original': 'Keep the original style and proportions as close as possible',
+        'cartoon': 'Transform into a fun cartoon style with exaggerated, playful proportions',
+        'cute': 'Make it super cute and kawaii with big eyes, soft features, and adorable characteristics'
+      };
+
+      const weightMap: Record<string, string> = {
+        'thick': 'Use thick, bold lines that are easy for young children to color within',
+        'medium': 'Use medium-weight lines that provide a balanced coloring experience',
+        'fine': 'Use fine, thin lines for a detailed and precise coloring experience'
+      };
+
+      const bgMap: Record<string, string> = {
+        'keep': 'Include the background and all environmental elements from the photo',
+        'simplify': 'Keep the background but simplify it with fewer details',
+        'remove': 'Remove the background completely, focus only on the main subject with a plain white background'
+      };
+
+      optimizedPrompt = `Convert this photo into a clean, black-and-white coloring page. Requirements:
+- Line complexity: ${complexityMap[line_complexity || 'medium']}
+- Style: ${styleMap[image_style || 'original']}
+- Line thickness: ${weightMap[line_weight || 'medium']}
+- Background: ${bgMap[background_mode || 'keep']}
+- Output: Pure black lines on white background, no shading, no gray tones, suitable for printing and coloring`;
+
+      aiRequestBody = {
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: optimizedPrompt
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: image_data
+                }
+              }
+            ]
+          }
+        ],
+        modalities: ['image', 'text']
+      };
+    } else {
+      // Text to image
+      optimizedPrompt = `Create a simple, child-friendly coloring page with clear black outlines on white background. Theme: ${prompt}. Style: Simple line art suitable for coloring, no shading, no colors, just clean black lines.`;
+      
+      aiRequestBody = {
         model: 'google/gemini-2.5-flash-image-preview',
         messages: [
           {
@@ -121,7 +183,18 @@ serve(async (req) => {
           }
         ],
         modalities: ['image', 'text']
-      }),
+      };
+    }
+
+    console.log('Calling Lovable AI...', isImageToImage ? 'Image-to-Image' : 'Text-to-Image');
+    
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(aiRequestBody),
     });
 
     if (!aiResponse.ok) {
