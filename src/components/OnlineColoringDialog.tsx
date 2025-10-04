@@ -31,6 +31,7 @@ export const OnlineColoringDialog = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [drawingHistory, setDrawingHistory] = useState<ImageData[]>([]);
+  const [canvasTainted, setCanvasTainted] = useState(false);
   const backgroundImageRef = useRef<HTMLImageElement | null>(null);
 
   // Initialize canvas and load background image
@@ -70,64 +71,66 @@ export const OnlineColoringDialog = ({
       
       setContext(ctx);
 
-      // Load background image via fetch to handle CORS properly
+      // Load background image
       console.log('Loading background image from:', imageUrl);
+      const img = new Image();
       
-      // Use fetch to load image with proper CORS handling
-      fetch(imageUrl)
-        .then(response => {
-          console.log('Fetch response status:', response.status);
-          console.log('Fetch response headers:', {
-            'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
-            'content-type': response.headers.get('content-type')
-          });
+      // Try with CORS first for download functionality
+      img.crossOrigin = "anonymous";
+      
+      img.onload = () => {
+        console.log("Background image loaded with CORS");
+        backgroundImageRef.current = img;
+        setCanvasTainted(false);
+        
+        // Calculate scale to fit canvas
+        const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+        const x = (canvas.width - img.width * scale) / 2;
+        const y = (canvas.height - img.height * scale) / 2;
+        
+        // Draw background image
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+        
+        // Save initial state
+        saveToHistory(ctx, canvas);
+        
+        toast.success("Canvas ready! Start coloring!");
+      };
+      
+      img.onerror = () => {
+        console.log("CORS load failed, retrying without CORS...");
+        
+        // Retry without CORS - canvas will be tainted but image will display
+        const img2 = new Image();
+        
+        img2.onload = () => {
+          console.log("Background image loaded without CORS (download disabled)");
+          backgroundImageRef.current = img2;
+          setCanvasTainted(true);
           
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.blob();
-        })
-        .then(blob => {
-          console.log('Image blob loaded, size:', blob.size);
-          const img = new Image();
-          const objectUrl = URL.createObjectURL(blob);
+          const scale = Math.min(canvas.width / img2.width, canvas.height / img2.height);
+          const x = (canvas.width - img2.width * scale) / 2;
+          const y = (canvas.height - img2.height * scale) / 2;
           
-          img.onload = () => {
-            console.log("Background image loaded successfully, size:", img.width, 'x', img.height);
-            backgroundImageRef.current = img;
-            
-            // Calculate scale to fit canvas
-            const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-            const x = (canvas.width - img.width * scale) / 2;
-            const y = (canvas.height - img.height * scale) / 2;
-            
-            // Draw background image
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-            
-            // Clean up object URL
-            URL.revokeObjectURL(objectUrl);
-            
-            // Save initial state
-            saveToHistory(ctx, canvas);
-            
-            toast.success("Canvas ready! Start coloring!");
-          };
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img2, x, y, img2.width * scale, img2.height * scale);
           
-          img.onerror = () => {
-            console.error("Failed to load image from blob");
-            URL.revokeObjectURL(objectUrl);
-            toast.error("Failed to load image from blob");
-          };
-          
-          img.src = objectUrl;
-        })
-        .catch(error => {
-          console.error("Failed to fetch background image:", error);
-          console.error("Image URL:", imageUrl);
-          toast.error("Failed to load image. CORS or network error.");
-        });
+          saveToHistory(ctx, canvas);
+          toast.success("Canvas ready! (Download unavailable due to image source)");
+        };
+        
+        img2.onerror = () => {
+          console.error("Failed to load image even without CORS");
+          toast.error("Failed to load image. Please try again later.");
+        };
+        
+        img2.src = imageUrl;
+      };
+      
+      img.src = imageUrl;
     }, 100); // 100ms delay to wait for DOM
 
     // Cleanup
@@ -227,6 +230,11 @@ export const OnlineColoringDialog = ({
   const handleDownload = () => {
     if (!canvasRef.current) {
       toast.error('Canvas not ready');
+      return;
+    }
+    
+    if (canvasTainted) {
+      toast.error('Download unavailable: Image loaded without CORS support');
       return;
     }
     
@@ -332,7 +340,9 @@ export const OnlineColoringDialog = ({
                   variant="outline" 
                   size="sm" 
                   onClick={handleDownload}
+                  disabled={canvasTainted}
                   className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
+                  title={canvasTainted ? "Download unavailable - image loaded without CORS" : "Download"}
                 >
                   <Download className="h-4 w-4" />
                 </Button>
