@@ -52,8 +52,10 @@ Deno.serve(async (req) => {
 
     // Get user's Pinterest boards
     const boards = await getUserBoards(accessToken);
+    console.log('Pinterest boards:', boards);
+    
     if (!boards || boards.length === 0) {
-      throw new Error('No Pinterest boards found');
+      throw new Error('No Pinterest boards found. Please create at least one board on Pinterest first.');
     }
 
     // Use the first board (or you can add logic to select a specific board)
@@ -164,12 +166,17 @@ async function getUserBoards(accessToken: string) {
       },
     });
 
+    console.log('Pinterest boards API response status:', response.status);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Pinterest API error: ${JSON.stringify(errorData)}`);
+      const errorText = await response.text();
+      console.error('Pinterest boards API error:', response.status, errorText);
+      throw new Error(`Pinterest API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Pinterest boards API response:', JSON.stringify(data));
+    
     return data.items || [];
   } catch (error) {
     console.error('Pinterest boards API error:', error);
