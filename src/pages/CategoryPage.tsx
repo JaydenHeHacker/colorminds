@@ -64,7 +64,7 @@ const CategoryPage = () => {
   // Special handling for "all" category - show top-level categories
   const isAllCategory = category?.slug === 'all' || category?.path === 'all';
 
-  // Query all siblings (subcategories of the root category)
+  // Query all siblings (subcategories of the root category) with their counts
   const { data: subCategories, isLoading: isSubCategoriesLoading } = useQuery({
     queryKey: ['subcategories', rootCategory?.id, isAllCategory],
     queryFn: async () => {
@@ -88,21 +88,26 @@ const CategoryPage = () => {
       if (error) throw error;
       if (!subCats) return [];
       
-      // For each subcategory, get count of published pages (including its children)
+      // Get all possible child category IDs for counting
+      const { data: allCategories } = await supabase
+        .from('categories')
+        .select('id, parent_id');
+      
+      // Build a map of category to all its descendants
+      const buildDescendants = (catId: string): string[] => {
+        const children = allCategories?.filter(c => c.parent_id === catId) || [];
+        const descendants = [catId];
+        children.forEach(child => {
+          descendants.push(...buildDescendants(child.id));
+        });
+        return descendants;
+      };
+      
+      // For each subcategory, count pages in it and all descendants
       const subCatsWithCounts = await Promise.all(
         subCats.map(async (subCat) => {
-          // Get all child categories of this subcategory
-          const { data: children } = await supabase
-            .from('categories')
-            .select('id')
-            .eq('parent_id', subCat.id);
+          const categoryIds = buildDescendants(subCat.id);
           
-          const categoryIds = [subCat.id];
-          if (children && children.length > 0) {
-            categoryIds.push(...children.map(c => c.id));
-          }
-          
-          // Count published pages in this category and its children
           const { count } = await supabase
             .from('coloring_pages')
             .select('*', { count: 'exact', head: true })
@@ -121,9 +126,9 @@ const CategoryPage = () => {
     enabled: !!rootCategory?.id,
   });
 
-  // Query all coloring pages in this category (and its subcategories if it's a parent)
+  // Query all coloring pages in this category (and its subcategories recursively)
   const { data: allColoringPages, isLoading: isPagesLoading } = useQuery({
-    queryKey: ['category-all-pages', category?.id, subCategories?.map(s => s.id).sort().join(','), isAllCategory],
+    queryKey: ['category-all-pages', category?.id, isAllCategory],
     queryFn: async () => {
       if (!category?.id) return [];
       
@@ -145,11 +150,21 @@ const CategoryPage = () => {
         return data;
       }
       
-      // For regular categories, get pages from current + subcategories
-      const categoryIds = [category.id];
-      if (subCategories && subCategories.length > 0) {
-        categoryIds.push(...subCategories.map(sub => sub.id));
-      }
+      // For regular categories, get all descendant category IDs
+      const { data: allCategories } = await supabase
+        .from('categories')
+        .select('id, parent_id');
+      
+      const buildDescendants = (catId: string): string[] => {
+        const children = allCategories?.filter(c => c.parent_id === catId) || [];
+        const descendants = [catId];
+        children.forEach(child => {
+          descendants.push(...buildDescendants(child.id));
+        });
+        return descendants;
+      };
+      
+      const categoryIds = buildDescendants(category.id);
       
       const { data, error } = await supabase
         .from('coloring_pages')
@@ -167,7 +182,7 @@ const CategoryPage = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!category?.id && !isSubCategoriesLoading,
+    enabled: !!category?.id,
   });
 
   // Calculate total count for root category (sum of all subcategories)
