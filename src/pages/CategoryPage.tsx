@@ -219,17 +219,17 @@ const CategoryPage = () => {
 
   useEffect(() => {
     if (category) {
-      document.title = `${category.name} Coloring Pages - Free Printables | Color Minds`;
+      document.title = `Free Printable ${category.name} Coloring Pages - Download & Print | Color Minds`;
       
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription) {
         metaDescription.setAttribute(
           'content',
-          `Discover free printable ${category.name.toLowerCase()} coloring pages for kids and adults. ${category.description || ''} Download and print high-quality designs.`
+          `Browse ${allColoringPages?.length || 0}+ free printable ${category.name.toLowerCase()} coloring pages for kids and adults. ${category.description || ''} Download, print, and color high-quality designs instantly. Perfect for home or classroom.`
         );
       }
     }
-  }, [category]);
+  }, [category, allColoringPages?.length]);
 
   if (isCategoryLoading) {
     return (
@@ -266,18 +266,18 @@ const CategoryPage = () => {
       <Header />
       
       <SocialMeta
-        title={`${category.name} Coloring Pages - Free Printables`}
-        description={`Discover ${allColoringPages?.length || 0} free printable ${category.name.toLowerCase()} coloring pages. ${category.description || ''} Download and print high-quality designs for kids and adults.`}
+        title={`Free Printable ${category.name} Coloring Pages - Download & Print`}
+        description={`Browse ${allColoringPages?.length || 0}+ free printable ${category.name.toLowerCase()} coloring pages for kids and adults. ${category.description || ''} Download, print, and color high-quality designs instantly.`}
         image={allColoringPages?.[0]?.image_url}
         type="website"
         keywords={[
-          category.name,
-          'coloring pages',
-          'printable',
-          'free',
-          'kids',
-          'adults',
-          'download'
+          `${category.name} coloring pages`,
+          `free ${category.name.toLowerCase()} coloring pages`,
+          `printable ${category.name.toLowerCase()} coloring pages`,
+          'free printable coloring pages',
+          'coloring pages for kids',
+          'adult coloring pages',
+          `${category.name.toLowerCase()} printables`
         ]}
       />
       
@@ -346,7 +346,7 @@ const CategoryPage = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                       <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">
-                        {category.name} Coloring Pages
+                        Free Printable {category.name} Coloring Pages
                       </h1>
                       {category.description && (
                         <p className="text-sm md:text-base opacity-90">
@@ -354,7 +354,7 @@ const CategoryPage = () => {
                         </p>
                       )}
                       <div className="mt-2 text-xs md:text-sm opacity-80">
-                        {allColoringPages?.length || 0} coloring pages available
+                        {allColoringPages?.length || 0} free printable coloring pages · Download and print instantly
                       </div>
                     </div>
                   </div>
@@ -365,7 +365,7 @@ const CategoryPage = () => {
                         <span className="text-4xl md:text-5xl">{category.icon}</span>
                       )}
                       <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">
-                        {category.name} Coloring Pages
+                        Free Printable {category.name} Coloring Pages
                       </h1>
                     </div>
                     {category.description && (
@@ -374,7 +374,7 @@ const CategoryPage = () => {
                       </p>
                     )}
                     <div className="text-sm text-muted-foreground">
-                      {allColoringPages?.length || 0} coloring pages available
+                      {allColoringPages?.length || 0} free printable coloring pages · Download and print for kids and adults
                     </div>
                   </div>
                 )}
