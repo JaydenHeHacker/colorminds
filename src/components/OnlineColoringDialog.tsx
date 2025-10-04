@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Paintbrush, Eraser, Download, Undo, Trash2 } from "lucide-react";
+import { Paintbrush, Eraser, Download, Undo, Trash2, ZoomIn, ZoomOut, Maximize, Move } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -25,13 +25,19 @@ export const OnlineColoringDialog = ({
   pageTitle 
 }: OnlineColoringDialogProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [activeColor, setActiveColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
   const [isEraser, setIsEraser] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [drawingHistory, setDrawingHistory] = useState<ImageData[]>([]);
   const backgroundImageRef = useRef<HTMLImageElement | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Initialize canvas and load background image
   useEffect(() => {
@@ -152,33 +158,56 @@ export const OnlineColoringDialog = ({
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!context || !canvasRef.current) return;
     
-    setIsDrawing(true);
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    
+    if (isPanning) {
+      setLastPanPoint({ x, y });
+      return;
+    }
+    
+    setIsDrawing(true);
+    const canvasX = (x - panOffset.x) / zoom;
+    const canvasY = (y - panOffset.y) / zoom;
     
     context.beginPath();
-    context.moveTo(x, y);
+    context.moveTo(canvasX, canvasY);
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !context || !canvasRef.current) return;
+    if (!context || !canvasRef.current) return;
     
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    
+    if (isPanning) {
+      const dx = x - lastPanPoint.x;
+      const dy = y - lastPanPoint.y;
+      setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      setLastPanPoint({ x, y });
+      return;
+    }
+    
+    if (!isDrawing) return;
+    
+    const canvasX = (x - panOffset.x) / zoom;
+    const canvasY = (y - panOffset.y) / zoom;
     
     context.strokeStyle = isEraser ? "#ffffff" : activeColor;
     context.lineWidth = brushSize;
-    context.lineTo(x, y);
+    context.lineTo(canvasX, canvasY);
     context.stroke();
   };
 
   const stopDrawing = () => {
-    if (!isDrawing) return;
-    
     setIsDrawing(false);
-    if (context && canvasRef.current) {
+    if (context && canvasRef.current && isDrawing) {
       context.closePath();
       saveToHistory(context, canvasRef.current);
     }
@@ -229,6 +258,56 @@ export const OnlineColoringDialog = ({
     }
   };
 
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = Math.min(Math.max(0.1, zoom * delta), 5);
+    
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    const newPanX = mouseX - (mouseX - panOffset.x) * (newZoom / zoom);
+    const newPanY = mouseY - (mouseY - panOffset.y) * (newZoom / zoom);
+    
+    setZoom(newZoom);
+    setPanOffset({ x: newPanX, y: newPanY });
+  };
+
+  const handleZoomIn = () => {
+    const newZoom = Math.min(zoom * 1.2, 5);
+    setZoom(newZoom);
+  };
+
+  const handleZoomOut = () => {
+    const newZoom = Math.max(zoom * 0.8, 0.1);
+    setZoom(newZoom);
+  };
+
+  const handleResetView = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+    
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+        toast.success("Entered fullscreen mode");
+      }).catch((err) => {
+        console.error('Error entering fullscreen:', err);
+        toast.error("Failed to enter fullscreen");
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+        toast.success("Exited fullscreen mode");
+      });
+    }
+  };
+
   const handleDownload = () => {
     if (!canvasRef.current) {
       toast.error('Canvas not ready');
@@ -249,8 +328,51 @@ export const OnlineColoringDialog = ({
   };
 
   const handleClose = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
     onOpenChange(false);
   };
+
+  // Render canvas with zoom and pan
+  useEffect(() => {
+    if (!canvasRef.current || !context) return;
+    
+    const canvas = canvasRef.current;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    if (!tempCtx) return;
+    
+    // Save current drawing
+    tempCtx.drawImage(canvas, 0, 0);
+    
+    // Clear and redraw with transform
+    context.save();
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Apply zoom and pan
+    context.translate(panOffset.x, panOffset.y);
+    context.scale(zoom, zoom);
+    
+    // Draw background image
+    if (backgroundImageRef.current) {
+      const img = backgroundImageRef.current;
+      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+      const x = (canvas.width / zoom - img.width * scale) / 2;
+      const y = (canvas.height / zoom - img.height * scale) / 2;
+      context.drawImage(img, x, y, img.width * scale, img.height * scale);
+    }
+    
+    // Draw previous strokes
+    context.drawImage(tempCanvas, 0, 0);
+    
+    context.restore();
+  }, [zoom, panOffset, context]);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -266,7 +388,7 @@ export const OnlineColoringDialog = ({
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(90vh-120px)]">
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-3 sm:space-y-4" ref={containerRef}>
             {/* Toolbar */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-muted rounded-lg">
               {/* Color Palette */}
@@ -306,6 +428,16 @@ export const OnlineColoringDialog = ({
               {/* Tools */}
               <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto">
                 <Button
+                  variant={isPanning ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setIsPanning(!isPanning)}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
+                  title="Pan mode"
+                >
+                  <Move className="h-4 w-4" />
+                </Button>
+
+                <Button
                   variant={isEraser ? "default" : "outline"}
                   size="sm"
                   onClick={handleEraserToggle}
@@ -313,6 +445,40 @@ export const OnlineColoringDialog = ({
                 >
                   <Eraser className="h-4 w-4" />
                 </Button>
+
+                <div className="h-6 sm:h-8 w-px bg-border hidden sm:block" />
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleZoomIn}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
+                  title="Zoom in"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleZoomOut}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
+                  title="Zoom out"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleResetView}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation text-xs"
+                  title="Reset view"
+                >
+                  1:1
+                </Button>
+
+                <div className="h-6 sm:h-8 w-px bg-border hidden sm:block" />
 
                 <Button 
                   variant="outline" 
@@ -333,6 +499,18 @@ export const OnlineColoringDialog = ({
                   <Trash2 className="h-4 w-4" />
                 </Button>
 
+                <div className="h-6 sm:h-8 w-px bg-border hidden sm:block" />
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={toggleFullscreen}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
+                  title="Fullscreen"
+                >
+                  <Maximize className="h-4 w-4" />
+                </Button>
+
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -348,7 +526,8 @@ export const OnlineColoringDialog = ({
             <div className="border rounded-lg overflow-hidden bg-white touch-manipulation">
               <canvas 
                 ref={canvasRef}
-                className="max-w-full cursor-crosshair"
+                className="max-w-full"
+                style={{ cursor: isPanning ? 'grab' : 'crosshair' }}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
@@ -356,7 +535,13 @@ export const OnlineColoringDialog = ({
                 onTouchStart={startDrawing}
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
+                onWheel={handleWheel}
               />
+            </div>
+            
+            {/* Zoom indicator */}
+            <div className="text-xs text-muted-foreground text-center">
+              Zoom: {Math.round(zoom * 100)}% | Use mouse wheel to zoom, drag to pan
             </div>
           </div>
         </ScrollArea>
