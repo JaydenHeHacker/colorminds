@@ -46,13 +46,13 @@ const SeriesPage = () => {
 
   useEffect(() => {
     if (seriesTitle) {
-      document.title = `${seriesTitle} Series - Complete Story Collection | Color Minds`;
+      document.title = `${seriesTitle} - Free Printable Story Series Coloring Pages | Color Minds`;
       
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription) {
         metaDescription.setAttribute(
           'content',
-          `Explore the complete ${seriesTitle} coloring page series. ${totalPages} pages telling a beautiful story. Free printable coloring pages for kids and adults.`
+          `Explore the complete ${seriesTitle} coloring page series with ${totalPages} sequential chapters. Download and print free high-quality story-based coloring pages for kids and adults. Perfect for creative storytelling and coloring fun!`
         );
       }
     }
@@ -91,31 +91,36 @@ const SeriesPage = () => {
       <Header />
       
       <SocialMeta
-        title={`${seriesTitle} Series - Complete Story Collection`}
-        description={`Explore the complete ${seriesTitle} coloring page series with ${totalPages} chapters. Download and print free high-quality coloring pages for kids and adults.`}
+        title={`${seriesTitle} - Free Printable Story Series Coloring Pages`}
+        description={`Explore the complete ${seriesTitle} coloring page series with ${totalPages} chapters. Download and print free high-quality story coloring pages for kids and adults. Perfect for sequential coloring fun!`}
         image={seriesPages[0]?.image_url}
         type="website"
         keywords={[
           seriesTitle || 'series',
+          `${seriesTitle} coloring pages`,
+          'story series coloring pages',
+          'free printable story coloring',
+          'coloring page series',
+          'sequential coloring pages',
           category?.name || 'coloring',
-          'story series',
-          'coloring pages',
-          'printable',
-          'free',
-          'kids',
-          'adults'
+          'free coloring pages',
+          'printable coloring pages',
+          'kids story coloring',
+          'adult coloring series'
         ]}
       />
       
       <StructuredData
-        type="CollectionPage"
+        type="ItemList"
         data={{
-          category: seriesTitle,
-          description: `Complete ${seriesTitle} coloring page series with ${totalPages} pages`,
+          name: `${seriesTitle} - Free Printable Coloring Page Series`,
+          description: `Complete ${seriesTitle} story series with ${totalPages} sequential coloring pages. Download and print free high-quality designs for kids and adults.`,
           numberOfItems: seriesPages.length,
-          items: seriesPages.map(page => ({
+          items: seriesPages.map((page, index) => ({
             title: page.title,
-            image: page.image_url
+            image: page.image_url,
+            slug: page.slug,
+            position: page.series_order || index + 1
           }))
         }}
       />
@@ -143,7 +148,8 @@ const SeriesPage = () => {
                 {seriesTitle}
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
-                A complete coloring page series with {totalPages} chapters telling a beautiful story
+                A complete free printable coloring page series with {totalPages} sequential chapters telling a beautiful story. 
+                Perfect for kids and adults who love story-based coloring adventures!
               </p>
               {category && (
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary">
@@ -196,14 +202,17 @@ const SeriesPage = () => {
 
             {/* About This Series */}
             <div className="mt-12 p-6 rounded-lg bg-gradient-to-br from-primary/5 to-secondary/5 border">
-              <h2 className="text-2xl font-semibold mb-4">📚 About This Series</h2>
+              <h2 className="text-2xl font-semibold mb-4">📚 About This Free Printable Series</h2>
               <div className="space-y-3 text-muted-foreground">
                 <p>
-                  This series consists of {totalPages} beautifully illustrated coloring pages that tell a complete story. 
+                  This series consists of {totalPages} beautifully illustrated <strong>free printable coloring pages</strong> that tell a complete story. 
                   Each page builds upon the previous one, creating an engaging narrative journey for children and adults alike.
                 </p>
+                <p>
+                  <strong>Perfect for:</strong> Kids aged 5-12, homeschooling activities, classroom projects, bedtime stories, and creative family time.
+                </p>
                 <p className="font-medium text-foreground">
-                  💡 <strong>Tip:</strong> Print all pages in order to create your own coloring storybook!
+                  💡 <strong>Tip:</strong> Print all pages in order to create your own coloring storybook! 100% free to download and print.
                 </p>
               </div>
             </div>

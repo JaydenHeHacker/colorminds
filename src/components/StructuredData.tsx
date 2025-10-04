@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 interface StructuredDataProps {
-  type: 'WebPage' | 'ImageObject' | 'BreadcrumbList' | 'CollectionPage' | 'FAQPage';
+  type: 'WebPage' | 'ImageObject' | 'BreadcrumbList' | 'CollectionPage' | 'FAQPage' | 'ItemList';
   data: any;
 }
 
@@ -86,6 +86,24 @@ export const StructuredData = ({ type, data }: StructuredDataProps) => {
           acceptedAnswer: {
             "@type": "Answer",
             text: q.answer
+          }
+        }))
+      };
+    } else if (type === 'ItemList' && data.items) {
+      structuredData = {
+        ...structuredData,
+        name: data.name || 'Series Collection',
+        description: data.description,
+        numberOfItems: data.numberOfItems || data.items.length,
+        itemListElement: data.items.map((item: any, index: number) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          item: {
+            "@type": "CreativeWork",
+            name: item.title,
+            image: item.image,
+            url: item.url || `${window.location.origin}/coloring-page/${item.slug}`,
+            position: item.position || index + 1
           }
         }))
       };
