@@ -57,7 +57,16 @@ export const OnlineColoringDialog = ({
       canvas.freeDrawingBrush.color = activeColor;
       canvas.freeDrawingBrush.width = brushSize;
       console.log('Brush initialized with color:', activeColor, 'size:', brushSize);
+      console.log('Drawing mode enabled:', canvas.isDrawingMode);
+      console.log('Brush object:', canvas.freeDrawingBrush);
+    } else {
+      console.error('Brush not available after enabling drawing mode');
     }
+    
+    // Add canvas event listeners for debugging
+    canvas.on('mouse:down', () => console.log('Mouse down on canvas'));
+    canvas.on('mouse:move', () => console.log('Mouse move on canvas'));
+    canvas.on('mouse:up', () => console.log('Mouse up on canvas'));
 
     // Load the coloring page image as background
     const loadImage = async () => {
