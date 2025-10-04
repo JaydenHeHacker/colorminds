@@ -45,14 +45,19 @@ export const OnlineColoringDialog = ({
       width: 800,
       height: 600,
       backgroundColor: "#ffffff",
-      isDrawingMode: true, // Enable drawing mode immediately
     });
 
-    // Initialize brush immediately after canvas creation
-    canvas.freeDrawingBrush.color = activeColor;
-    canvas.freeDrawingBrush.width = brushSize;
+    console.log('Canvas created successfully');
     
-    console.log('Canvas created successfully with drawing mode enabled');
+    // Enable drawing mode first to initialize the brush
+    canvas.isDrawingMode = true;
+    
+    // Now initialize brush properties
+    if (canvas.freeDrawingBrush) {
+      canvas.freeDrawingBrush.color = activeColor;
+      canvas.freeDrawingBrush.width = brushSize;
+      console.log('Brush initialized with color:', activeColor, 'size:', brushSize);
+    }
 
     // Load the coloring page image as background
     const loadImage = async () => {
