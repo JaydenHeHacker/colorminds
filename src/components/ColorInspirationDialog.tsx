@@ -14,12 +14,12 @@ interface ColorInspirationDialogProps {
 }
 
 const COLOR_STYLES = [
-  { id: "watercolor", label: "Watercolor", description: "Soft blends and transitions" },
-  { id: "pencil", label: "Colored Pencil", description: "Textured and shaded" },
-  { id: "marker", label: "Marker", description: "Bold and vibrant" },
-  { id: "pastel", label: "Pastel", description: "Gentle and dreamy" },
-  { id: "realistic", label: "Realistic", description: "Natural colors" },
-  { id: "cartoon", label: "Cartoon", description: "Bright and fun" }
+  { id: "rainbow", label: "🌈 Rainbow", description: "Vibrant multi-colored" },
+  { id: "pastel", label: "🌸 Pastel Dreams", description: "Soft pastel tones" },
+  { id: "warm", label: "🔥 Warm Sunset", description: "Orange, red, yellow" },
+  { id: "cool", label: "❄️ Cool Ocean", description: "Blue, green, purple" },
+  { id: "earth", label: "🍂 Earth Tones", description: "Brown, tan, natural" },
+  { id: "neon", label: "✨ Neon Bright", description: "Bold fluorescent colors" }
 ];
 
 export const ColorInspirationDialog = ({ 

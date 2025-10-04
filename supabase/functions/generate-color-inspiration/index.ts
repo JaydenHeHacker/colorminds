@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, style = "watercolor" } = await req.json();
+    const { imageUrl, style = "rainbow" } = await req.json();
 
     if (!imageUrl) {
       return new Response(
@@ -57,17 +57,17 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Define style prompts for different coloring styles
+    // Define style prompts for different color themes
     const stylePrompts: Record<string, string> = {
-      watercolor: "Color this coloring page with vibrant watercolor painting style, soft blends and beautiful color transitions",
-      pencil: "Color this coloring page with colored pencil style, showing texture and shading with rich colors",
-      marker: "Color this coloring page with bright marker colors, bold and vibrant with clear color boundaries",
-      pastel: "Color this coloring page with soft pastel colors, gentle and dreamy tones",
-      realistic: "Color this coloring page with realistic colors and natural shading",
-      cartoon: "Color this coloring page with bold cartoon-style colors, bright and fun"
+      rainbow: "Color this coloring page with vibrant rainbow colors - use red, orange, yellow, green, blue, indigo, and violet in a bright, cheerful way",
+      pastel: "Color this coloring page with soft pastel colors - pale pink, baby blue, mint green, lavender, peach, and cream tones",
+      warm: "Color this coloring page with warm sunset colors - vibrant oranges, reds, yellows, and golden tones",
+      cool: "Color this coloring page with cool ocean colors - various shades of blue, green, teal, and purple",
+      earth: "Color this coloring page with natural earth tones - browns, tans, olive greens, terracotta, and warm neutrals",
+      neon: "Color this coloring page with bold neon colors - bright fluorescent pink, electric blue, lime green, and hot orange"
     };
 
-    const prompt = stylePrompts[style] || stylePrompts.watercolor;
+    const prompt = stylePrompts[style] || stylePrompts.rainbow;
 
     console.log(`Generating ${style} coloring inspiration for image:`, imageUrl);
 
