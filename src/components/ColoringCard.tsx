@@ -258,7 +258,7 @@ export const ColoringCard = ({
           className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all hover:scale-110"
           onClick={handleToggleBasket}
           disabled={basketMutation.isPending}
-          aria-label={isInBasket ? "从打印篮移除" : "添加到打印篮"}
+          aria-label={isInBasket ? "Remove from print basket" : "Add to print basket"}
         >
           {basketMutation.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
