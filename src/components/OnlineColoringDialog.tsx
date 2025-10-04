@@ -73,8 +73,8 @@ export const OnlineColoringDialog = ({
       // Load background image
       console.log('Loading background image from:', imageUrl);
       const img = new Image();
-      img.crossOrigin = "anonymous";
       
+      // Try loading without CORS first
       img.onload = () => {
         console.log("Background image loaded successfully, size:", img.width, 'x', img.height);
         backgroundImageRef.current = img;
@@ -95,9 +95,41 @@ export const OnlineColoringDialog = ({
         toast.success("Canvas ready! Start coloring!");
       };
       
-      img.onerror = () => {
-        console.error("Failed to load background image");
-        toast.error("Failed to load coloring page image");
+      img.onerror = (error) => {
+        console.error("Failed to load background image:", error);
+        console.error("Image URL:", imageUrl);
+        
+        // Try again with CORS if first attempt failed
+        if (!img.crossOrigin) {
+          console.log("Retrying with CORS enabled...");
+          const img2 = new Image();
+          img2.crossOrigin = "anonymous";
+          
+          img2.onload = () => {
+            console.log("Background image loaded with CORS");
+            backgroundImageRef.current = img2;
+            
+            const scale = Math.min(canvas.width / img2.width, canvas.height / img2.height);
+            const x = (canvas.width - img2.width * scale) / 2;
+            const y = (canvas.height - img2.height * scale) / 2;
+            
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img2, x, y, img2.width * scale, img2.height * scale);
+            
+            saveToHistory(ctx, canvas);
+            toast.success("Canvas ready! Start coloring!");
+          };
+          
+          img2.onerror = () => {
+            console.error("Failed to load image even with CORS");
+            toast.error("Failed to load image. Please try again later.");
+          };
+          
+          img2.src = imageUrl;
+        } else {
+          toast.error("Failed to load image. Please try again later.");
+        }
       };
       
       img.src = imageUrl;
