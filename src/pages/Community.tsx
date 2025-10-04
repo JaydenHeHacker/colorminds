@@ -104,22 +104,28 @@ export default function Community() {
       <div className="container max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 flex items-center justify-center gap-3">
+          <div className="inline-flex items-center justify-center gap-3 mb-4">
             <Sparkles className="w-10 h-10 text-primary" />
-            Community Creations
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Explore amazing coloring pages created by our community
+            <h1 className="text-4xl md:text-5xl font-bold">AI Gallery</h1>
+          </div>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Browse AI-generated coloring page templates created by our community. 
+            Download and print any design you like!
           </p>
         </div>
 
         {/* Notice */}
-        <Card className="p-6 mb-8 bg-primary/5">
-          <p className="text-sm text-center">
-            💡 These are creations from free users. All free tier creations are publicly displayed in the community.
-            <br />
-            Upgrade to Premium to make your creations private.
-          </p>
+        <Card className="p-6 mb-8 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+          <div className="flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold mb-1">About AI Gallery</p>
+              <p className="text-muted-foreground">
+                These are AI-generated coloring page templates. Free users' creations are automatically shared with the community. 
+                <span className="text-primary font-medium"> Upgrade to Premium</span> to keep your creations private.
+              </p>
+            </div>
+          </div>
         </Card>
 
         {/* Generations Grid */}

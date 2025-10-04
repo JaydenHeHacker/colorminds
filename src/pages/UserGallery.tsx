@@ -163,10 +163,10 @@ const UserGallery = () => {
             <div className="flex items-center justify-between mb-6 sm:mb-8">
               <div className="flex-1">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                  Community Gallery
+                  Color Showcase
                 </h1>
                 <p className="text-muted-foreground text-base sm:text-lg">
-                  Discover amazing colored artworks from our creative community
+                  See how others brought coloring pages to life with their creativity and colors
                 </p>
               </div>
               

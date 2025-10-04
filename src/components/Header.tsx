@@ -1,4 +1,4 @@
-import { Menu, Heart, LogIn, LogOut, User, X, Calendar } from "lucide-react";
+import { Menu, Heart, LogIn, LogOut, User, X, Calendar, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
@@ -70,11 +70,13 @@ export const Header = () => {
               <button onClick={() => navigate('/series')} className="text-sm font-medium transition-smooth hover:text-primary">
                 Story Series
               </button>
-              <button onClick={() => navigate('/community')} className="text-sm font-medium transition-smooth hover:text-primary">
-                Community
+              <button onClick={() => navigate('/community')} className="text-sm font-medium transition-smooth hover:text-primary flex items-center gap-1">
+                <Sparkles className="h-3.5 w-3.5" />
+                AI Gallery
               </button>
-              <button onClick={() => navigate('/gallery')} className="text-sm font-medium transition-smooth hover:text-primary">
-                Gallery
+              <button onClick={() => navigate('/gallery')} className="text-sm font-medium transition-smooth hover:text-primary flex items-center gap-1">
+                <Heart className="h-3.5 w-3.5" />
+                Color Showcase
               </button>
               <button onClick={() => scrollToSection('popular')} className="text-sm font-medium transition-smooth hover:text-primary">
                 Popular
@@ -174,14 +176,16 @@ export const Header = () => {
             <button onClick={() => {
             navigate('/community');
             setMobileMenuOpen(false);
-          }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
-              Community
+          }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              AI Gallery
             </button>
             <button onClick={() => {
             navigate('/gallery');
             setMobileMenuOpen(false);
-          }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
-              Gallery
+          }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth flex items-center gap-2">
+              <Heart className="h-5 w-5" />
+              Color Showcase
             </button>
             <button onClick={() => scrollToSection('popular')} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
               Popular
