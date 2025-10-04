@@ -207,8 +207,8 @@ const Index = () => {
     : 'Free Printable Coloring Pages for Kids & Adults | Color Minds';
     
   const pageDescription = selectedCategory
-    ? `Download free ${selectedCategory} coloring pages. High-quality printable designs for kids and adults. Print instantly at home!`
-    : 'Discover thousands of free printable coloring pages for kids and adults. Animals, holidays, fantasy characters, and exclusive AI-generated story series. Download and print instantly!';
+    ? `Browse ${selectedCategory.toLowerCase()} coloring pages - 100% free and printable! Download high-quality designs for kids and adults. Print instantly at home or in the classroom.`
+    : 'Discover 1000+ free printable coloring pages for kids and adults. Browse animals, holidays, fantasy characters, and exclusive AI-generated story series. Download and print high-quality designs instantly - perfect for home or classroom!';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -217,7 +217,16 @@ const Index = () => {
         description={pageDescription}
         image={coloringPages?.[0]?.image_url}
         type="website"
-        keywords={['coloring pages', 'free printables', 'kids coloring', 'adult coloring', selectedCategory || '']}
+        keywords={[
+          'free coloring pages',
+          'printable coloring pages',
+          'free printable coloring pages',
+          'coloring pages for kids',
+          'adult coloring pages',
+          'download coloring pages',
+          'coloring pages printable',
+          ...(selectedCategory ? [`${selectedCategory} coloring pages`] : [])
+        ]}
       />
       
       <StructuredData
@@ -244,8 +253,8 @@ const Index = () => {
             <div className="container px-4">
               <div className="max-w-3xl mx-auto text-center">
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Browse our curated collection by category, search for specific themes, or discover daily featured pages. 
-                  All coloring pages are <strong>100% free</strong> to download and print at home!
+                  Browse our curated collection of <strong>free printable coloring pages</strong> by category, search for specific themes, or discover daily featured designs. 
+                  All coloring pages are <strong>100% free to download and print</strong> at home or in the classroom - perfect for kids and adults!
                 </p>
               </div>
             </div>
@@ -276,11 +285,11 @@ const Index = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search coloring pages by title, description, category, or series..."
+                  placeholder="Search free printable coloring pages - animals, holidays, characters..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 md:pl-10 h-11 md:h-12 text-sm md:text-base"
-                  aria-label="Search coloring pages"
+                  aria-label="Search free printable coloring pages"
                 />
               </div>
               {searchQuery && (
