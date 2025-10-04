@@ -45,25 +45,35 @@ export const OnlineColoringDialog = ({
       width: 800,
       height: 600,
       backgroundColor: "#ffffff",
-      isDrawingMode: true,
+      isDrawingMode: false, // Start with false, enable after image loads
     });
 
     console.log('Canvas created successfully');
 
-    // Load the coloring page image as background using fetch to handle CORS better
+    // Load the coloring page image as background using img tag to handle CORS
     const loadImage = async () => {
       try {
-        console.log('Fetching image...');
-        const response = await fetch(imageUrl);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        console.log('Image fetched, creating Fabric image from blob URL');
+        console.log('Loading image...');
         
-        const img = await fabric.FabricImage.fromURL(blobUrl);
-        console.log('Image loaded:', img.width, 'x', img.height);
+        // Create an HTMLImageElement with crossOrigin
+        const imgElement = new Image();
+        imgElement.crossOrigin = 'anonymous';
+        
+        // Wait for image to load
+        await new Promise((resolve, reject) => {
+          imgElement.onload = resolve;
+          imgElement.onerror = reject;
+          imgElement.src = imageUrl;
+        });
+        
+        console.log('Image loaded, creating Fabric image');
+        
+        const img = await fabric.FabricImage.fromObject({
+          src: imgElement.src,
+          crossOrigin: 'anonymous'
+        });
+        
+        console.log('Fabric image created:', img.width, 'x', img.height);
         
         const scale = Math.min(800 / img.width!, 600 / img.height!);
         img.set({
@@ -72,13 +82,20 @@ export const OnlineColoringDialog = ({
           selectable: false,
           evented: false
         });
+        
         canvas.backgroundImage = img;
         canvas.renderAll();
+        
+        // Enable drawing mode and initialize brush after image loads
+        canvas.isDrawingMode = true;
+        if (canvas.freeDrawingBrush) {
+          canvas.freeDrawingBrush.color = activeColor;
+          canvas.freeDrawingBrush.width = brushSize;
+          console.log('Brush initialized with color:', activeColor, 'size:', brushSize);
+        }
+        
         console.log('Background image set and rendered');
         toast.success('Canvas ready! Start coloring!');
-        
-        // Clean up blob URL
-        URL.revokeObjectURL(blobUrl);
       } catch (err) {
         console.error('Error loading background image:', err);
         toast.error('Failed to load coloring page image');
@@ -86,16 +103,6 @@ export const OnlineColoringDialog = ({
     };
 
     loadImage();
-
-    // Initialize brush
-    if (canvas.freeDrawingBrush) {
-      canvas.freeDrawingBrush.color = activeColor;
-      canvas.freeDrawingBrush.width = brushSize;
-      console.log('Brush initialized with color:', activeColor, 'size:', brushSize);
-    } else {
-      console.error('Failed to initialize brush');
-    }
-
     setFabricCanvas(canvas);
   }, [open, imageUrl, activeColor, brushSize]);
 
