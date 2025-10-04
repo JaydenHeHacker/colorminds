@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 interface StructuredDataProps {
-  type: 'WebPage' | 'ImageObject' | 'BreadcrumbList' | 'CollectionPage';
+  type: 'WebPage' | 'ImageObject' | 'BreadcrumbList' | 'CollectionPage' | 'FAQPage';
   data: any;
 }
 
@@ -76,6 +76,18 @@ export const StructuredData = ({ type, data }: StructuredDataProps) => {
         description: data.description,
         url: window.location.href,
         mainEntity: data.mainEntity
+      };
+    } else if (type === 'FAQPage' && data.questions) {
+      structuredData = {
+        ...structuredData,
+        mainEntity: data.questions.map((q: any) => ({
+          "@type": "Question",
+          name: q.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: q.answer
+          }
+        }))
       };
     }
 

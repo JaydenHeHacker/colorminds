@@ -112,7 +112,7 @@ const ColoringPage = () => {
       if (metaDescription) {
         metaDescription.setAttribute(
           'content',
-          `Download and print this free ${page.title} coloring page. ${page.description || `Perfect for kids and adults who love ${categoryName.toLowerCase()}.`} High-quality printable design.`
+          `Download and print this free ${page.title} coloring page. ${page.description || `Perfect ${page.difficulty || 'medium'} difficulty coloring page for kids and adults who love ${categoryName.toLowerCase()}.`} High-quality printable design - 100% free!`
         );
       }
     }
@@ -364,6 +364,34 @@ const ColoringPage = () => {
           ]
         }}
       />
+
+      <StructuredData
+        type="FAQPage"
+        data={{
+          questions: [
+            {
+              question: "How do I print this coloring page?",
+              answer: `To print this ${page.title} coloring page, click the "Print" button above. This will open your browser's print dialog. Make sure to select your printer and adjust settings like page size (letter or A4) and orientation. For best results, use high-quality paper and print in color or black and white depending on your preference.`
+            },
+            {
+              question: "Is this coloring page free to download and print?",
+              answer: `Yes! This ${page.title} coloring page is 100% free to download and print. All coloring pages on Color Minds are completely free for personal use, homeschooling, and classroom activities. You can print as many copies as you need without any cost.`
+            },
+            {
+              question: `What difficulty level is this ${page.categories?.name || 'coloring'} page?`,
+              answer: `This coloring page is rated as ${config.label} difficulty (${config.age}). ${page.difficulty === 'easy' ? 'It features simple, large shapes perfect for young children and beginners.' : page.difficulty === 'medium' ? 'It has moderate detail suitable for elementary-aged children and casual colorists.' : 'It contains intricate details and patterns ideal for older children, teens, and adults who enjoy detailed coloring.'}`
+            },
+            {
+              question: "Can I use this coloring page for commercial purposes?",
+              answer: "These coloring pages are free for personal use, educational purposes, and non-commercial activities. If you wish to use them for commercial purposes, please contact us for licensing information. You may not sell or redistribute the coloring pages themselves."
+            },
+            {
+              question: "What paper should I use for printing?",
+              answer: "For best results, we recommend using standard letter (8.5x11) or A4 size paper. Regular printer paper (20-24 lb) works well for most coloring pages. If using markers, consider using cardstock (60-80 lb) to prevent bleed-through. For colored pencils or crayons, standard copy paper is perfect."
+            }
+          ]
+        }}
+      />
       
       <main className="flex-1">
         <Breadcrumbs
@@ -385,7 +413,7 @@ const ColoringPage = () => {
                 <div className="aspect-square overflow-hidden rounded-lg border-2 border-border shadow-lg">
                   <img
                     src={page.image_url}
-                    alt={`${page.title} - Free printable ${page.categories?.name || 'coloring'} page for kids and adults`}
+                    alt={`Free printable ${page.title} coloring page - ${page.categories?.name || 'Coloring'} - ${config.label} difficulty level - Perfect for ${config.age.toLowerCase()} - Download and print instantly for kids and adults`}
                     className="w-full h-full object-cover"
                   />
                 </div>
