@@ -73,6 +73,9 @@ export const Header = () => {
               <button onClick={() => navigate('/community')} className="text-sm font-medium transition-smooth hover:text-primary">
                 Community
               </button>
+              <button onClick={() => navigate('/gallery')} className="text-sm font-medium transition-smooth hover:text-primary">
+                Gallery
+              </button>
               <button onClick={() => scrollToSection('popular')} className="text-sm font-medium transition-smooth hover:text-primary">
                 Popular
               </button>
@@ -173,6 +176,12 @@ export const Header = () => {
             setMobileMenuOpen(false);
           }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
               Community
+            </button>
+            <button onClick={() => {
+            navigate('/gallery');
+            setMobileMenuOpen(false);
+          }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
+              Gallery
             </button>
             <button onClick={() => scrollToSection('popular')} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
               Popular

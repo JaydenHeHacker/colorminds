@@ -166,6 +166,35 @@ export type Database = {
         }
         Relationships: []
       }
+      artwork_likes: {
+        Row: {
+          artwork_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          artwork_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          artwork_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artwork_likes_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "user_artwork"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -563,6 +592,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_artwork: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string
+          is_public: boolean | null
+          likes_count: number | null
+          original_coloring_page_id: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url: string
+          is_public?: boolean | null
+          likes_count?: number | null
+          original_coloring_page_id?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string
+          is_public?: boolean | null
+          likes_count?: number | null
+          original_coloring_page_id?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_artwork_original_coloring_page_id_fkey"
+            columns: ["original_coloring_page_id"]
+            isOneToOne: false
+            referencedRelation: "coloring_pages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_credits: {
         Row: {

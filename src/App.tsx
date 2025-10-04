@@ -20,6 +20,7 @@ import CreatePage from "./pages/CreatePage";
 import CreditsStore from "./pages/CreditsStore";
 import Community from "./pages/Community";
 import AIColoringPage from "./pages/AIColoringPage";
+import UserGallery from "./pages/UserGallery";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/credits" element={<CreditsStore />} />
           <Route path="/credits-store" element={<CreditsStore />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/gallery" element={<UserGallery />} />
           <Route path="/sitemap.xml" element={<Sitemap />} />
           <Route path="/image-sitemap.xml" element={<ImageSitemap />} />
           <Route path="/admin" element={<Admin />} />
