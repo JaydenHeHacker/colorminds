@@ -159,27 +159,32 @@ const UserGallery = () => {
       <main className="flex-1 container mx-auto px-4 py-8 sm:py-12">
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
-          <div className="text-center mb-8 sm:mb-12">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              Community Gallery
-            </h1>
-            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto mb-6 sm:mb-8 px-4">
-              Discover amazing colored artworks from our creative community
-            </p>
-
-            {/* Action Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+          <div className="mb-8 sm:mb-12">
+            <div className="flex items-center justify-between mb-6 sm:mb-8">
+              <div className="flex-1">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                  Community Gallery
+                </h1>
+                <p className="text-muted-foreground text-base sm:text-lg">
+                  Discover amazing colored artworks from our creative community
+                </p>
+              </div>
+              
               <Button
                 onClick={() => setIsUploadOpen(true)}
-                size="lg"
-                className="w-full sm:w-auto h-11 sm:h-10 touch-manipulation"
+                variant="outline"
+                size="sm"
+                className="hidden sm:flex items-center gap-2"
               >
-                <Upload className="mr-2 h-4 w-4" />
-                Upload Your Artwork
+                <Upload className="h-4 w-4" />
+                Upload
               </Button>
+            </div>
 
+            {/* Filter Bar */}
+            <div className="flex items-center justify-between gap-4">
               <Select value={sortBy} onValueChange={(value: "recent" | "popular") => setSortBy(value)}>
-                <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10">
+                <SelectTrigger className="w-[180px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -187,6 +192,17 @@ const UserGallery = () => {
                   <SelectItem value="recent">Most Recent</SelectItem>
                 </SelectContent>
               </Select>
+
+              {/* Mobile Upload Button */}
+              <Button
+                onClick={() => setIsUploadOpen(true)}
+                variant="outline"
+                size="sm"
+                className="sm:hidden"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
             </div>
           </div>
 
