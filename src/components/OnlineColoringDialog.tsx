@@ -98,9 +98,34 @@ export const OnlineColoringDialog = ({
       };
       
       img.onerror = (error) => {
-        console.error("Failed to load background image:", error);
-        console.error("Image URL:", imageUrl);
-        toast.error("Failed to load image. Please try again later.");
+        console.error("Failed to load background image (first attempt):", error);
+        console.log("Retrying without CORS...");
+        
+        // Retry without CORS as fallback
+        const img2 = new Image();
+        
+        img2.onload = () => {
+          console.log("Background image loaded successfully (second attempt)");
+          backgroundImageRef.current = img2;
+          
+          const scale = Math.min(canvas.width / img2.width, canvas.height / img2.height);
+          const x = (canvas.width - img2.width * scale) / 2;
+          const y = (canvas.height - img2.height * scale) / 2;
+          
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img2, x, y, img2.width * scale, img2.height * scale);
+          
+          saveToHistory(ctx, canvas);
+          toast.success("Canvas ready! Start coloring!");
+        };
+        
+        img2.onerror = () => {
+          console.error("Failed to load image on second attempt");
+          toast.error("Failed to load image. Please try again later.");
+        };
+        
+        img2.src = imageUrl;
       };
       
       img.src = imageUrl;
