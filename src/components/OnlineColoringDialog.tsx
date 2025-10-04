@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Paintbrush, Eraser, Download, Undo, Trash2, ZoomIn, ZoomOut, Move } from "lucide-react";
+import { Paintbrush, Eraser, Download, Undo, Trash2, ZoomIn, ZoomOut, Move, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Canvas as FabricCanvas, PencilBrush, util, FabricImage, Point } from "fabric";
 
 interface OnlineColoringDialogProps {
   open: boolean;
@@ -26,117 +25,111 @@ export const OnlineColoringDialog = ({
   pageTitle 
 }: OnlineColoringDialogProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [activeColor, setActiveColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
   const [isEraser, setIsEraser] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
+  const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
+  const backgroundImageRef = useRef<HTMLImageElement | null>(null);
+  const drawingLayerRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Initialize Fabric.js canvas
+  // Initialize canvas and load background image
   useEffect(() => {
     if (!open || !canvasRef.current) return;
 
-    const canvas = new FabricCanvas(canvasRef.current, {
-      width: 800,
-      height: 600,
-      backgroundColor: "#ffffff",
-      isDrawingMode: true,
-    });
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    
+    if (!ctx) {
+      console.error("Failed to get canvas context");
+      return;
+    }
 
-    // Setup brush
-    const brush = new PencilBrush(canvas);
-    brush.color = activeColor;
-    brush.width = brushSize;
-    canvas.freeDrawingBrush = brush;
+    // Set canvas size
+    canvas.width = 800;
+    canvas.height = 600;
+    
+    // Create a separate drawing layer canvas
+    const drawingCanvas = document.createElement('canvas');
+    drawingCanvas.width = canvas.width;
+    drawingCanvas.height = canvas.height;
+    drawingLayerRef.current = drawingCanvas;
+    
+    // Set drawing settings
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    
+    setContext(ctx);
 
     // Load background image
-    util.loadImage(imageUrl, { crossOrigin: "anonymous" })
-      .then((img) => {
-        const scale = Math.min(canvas.width! / img.width, canvas.height! / img.height);
-        const fabricImg = new FabricImage(img, {
-          scaleX: scale,
-          scaleY: scale,
-          left: (canvas.width! - img.width * scale) / 2,
-          top: (canvas.height! - img.height * scale) / 2,
-          selectable: false,
-          evented: false,
-        });
-        canvas.backgroundImage = fabricImg;
-        canvas.renderAll();
-        toast.success("Canvas ready! Use mouse wheel to zoom, drag to pan");
-      })
-      .catch(() => {
-        toast.error("Failed to load image");
-      });
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    
+    img.onload = () => {
+      backgroundImageRef.current = img;
+      renderCanvas(ctx, canvas, img, drawingCanvas, zoom, panOffset);
+      toast.success("Canvas ready! Scroll to zoom, drag to pan");
+    };
+    
+    img.onerror = () => {
+      toast.error("Failed to load image. Please try again.");
+    };
+    
+    img.src = imageUrl;
 
-    // Mouse wheel zoom
-    canvas.on("mouse:wheel", (opt) => {
-      const evt = opt.e as WheelEvent;
-      const delta = evt.deltaY;
-      let newZoom = canvas.getZoom();
-      newZoom *= 0.999 ** delta;
-      
-      if (newZoom > 5) newZoom = 5;
-      if (newZoom < 0.5) newZoom = 0.5;
-      
-      canvas.zoomToPoint(new Point(evt.offsetX, evt.offsetY), newZoom);
-      setZoom(newZoom);
-      evt.preventDefault();
-      evt.stopPropagation();
-    });
-
-    // Pan with space key or middle mouse
-    let isDragging = false;
-    let lastPosX = 0;
-    let lastPosY = 0;
-
-    canvas.on("mouse:down", (opt) => {
-      const evt = opt.e as MouseEvent;
-      if (isPanning || evt.button === 1) { // Middle mouse or pan mode
-        isDragging = true;
-        canvas.selection = false;
-        canvas.isDrawingMode = false;
-        lastPosX = evt.clientX;
-        lastPosY = evt.clientY;
-      }
-    });
-
-    canvas.on("mouse:move", (opt) => {
-      if (isDragging) {
-        const evt = opt.e as MouseEvent;
-        const vpt = canvas.viewportTransform!;
-        vpt[4] += evt.clientX - lastPosX;
-        vpt[5] += evt.clientY - lastPosY;
-        canvas.requestRenderAll();
-        lastPosX = evt.clientX;
-        lastPosY = evt.clientY;
-      }
-    });
-
-    canvas.on("mouse:up", () => {
-      isDragging = false;
-      canvas.selection = true;
-      if (!isPanning) {
-        canvas.isDrawingMode = true;
-      }
-    });
-
-    setFabricCanvas(canvas);
-
+    // Cleanup
     return () => {
-      canvas.dispose();
+      setContext(null);
+      backgroundImageRef.current = null;
+      drawingLayerRef.current = null;
     };
   }, [open, imageUrl]);
 
-  // Update brush settings
-  useEffect(() => {
-    if (!fabricCanvas || !fabricCanvas.freeDrawingBrush) return;
+  // Render canvas with zoom and pan
+  const renderCanvas = (
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    img: HTMLImageElement,
+    drawingCanvas: HTMLCanvasElement,
+    currentZoom: number,
+    offset: { x: number; y: number }
+  ) => {
+    // Clear canvas
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Save context state
+    ctx.save();
+    
+    // Apply zoom and pan transformations
+    ctx.translate(offset.x, offset.y);
+    ctx.scale(currentZoom, currentZoom);
+    
+    // Calculate image position to center it
+    const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+    const x = (canvas.width - img.width * scale) / 2 / currentZoom;
+    const y = (canvas.height - img.height * scale) / 2 / currentZoom;
+    
+    // Draw background image
+    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+    
+    // Draw the drawing layer on top
+    ctx.drawImage(drawingCanvas, 0, 0);
+    
+    // Restore context state
+    ctx.restore();
+  };
 
-    fabricCanvas.isDrawingMode = !isPanning;
-    fabricCanvas.freeDrawingBrush.color = isEraser ? "#ffffff" : activeColor;
-    fabricCanvas.freeDrawingBrush.width = brushSize;
-  }, [fabricCanvas, activeColor, brushSize, isEraser, isPanning]);
+  // Re-render when zoom or pan changes
+  useEffect(() => {
+    if (!context || !canvasRef.current || !backgroundImageRef.current || !drawingLayerRef.current) return;
+    renderCanvas(context, canvasRef.current, backgroundImageRef.current, drawingLayerRef.current, zoom, panOffset);
+  }, [zoom, panOffset]);
 
   const handleColorChange = (color: string) => {
     setActiveColor(color);
@@ -152,82 +145,158 @@ export const OnlineColoringDialog = ({
   };
 
   const handleZoomIn = () => {
-    if (!fabricCanvas) return;
     const newZoom = Math.min(zoom * 1.2, 5);
-    fabricCanvas.setZoom(newZoom);
     setZoom(newZoom);
   };
 
   const handleZoomOut = () => {
-    if (!fabricCanvas) return;
     const newZoom = Math.max(zoom / 1.2, 0.5);
-    fabricCanvas.setZoom(newZoom);
     setZoom(newZoom);
   };
 
   const handleResetView = () => {
-    if (!fabricCanvas) return;
-    fabricCanvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
     setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
     toast.success("View reset!");
   };
 
   const handleClear = () => {
-    if (!fabricCanvas) return;
+    if (!drawingLayerRef.current || !context || !canvasRef.current || !backgroundImageRef.current) return;
     
-    const objects = fabricCanvas.getObjects();
-    objects.forEach((obj) => {
-      if (obj !== fabricCanvas.backgroundImage) {
-        fabricCanvas.remove(obj);
-      }
-    });
-    toast.success("Canvas cleared!");
-  };
-
-  const handleUndo = () => {
-    if (!fabricCanvas) return;
-    
-    const objects = fabricCanvas.getObjects();
-    if (objects.length > 0) {
-      fabricCanvas.remove(objects[objects.length - 1]);
-      fabricCanvas.renderAll();
+    const drawCtx = drawingLayerRef.current.getContext("2d");
+    if (drawCtx) {
+      drawCtx.clearRect(0, 0, drawingLayerRef.current.width, drawingLayerRef.current.height);
+      renderCanvas(context, canvasRef.current, backgroundImageRef.current, drawingLayerRef.current, zoom, panOffset);
+      toast.success("Canvas cleared!");
     }
   };
 
+  const handleUndo = () => {
+    // Note: Simple undo not implemented, would need history tracking
+    toast.info("Undo not available. Use Clear to start over.");
+  };
+
   const handleDownload = () => {
-    if (!fabricCanvas) {
+    if (!canvasRef.current) {
       toast.error('Canvas not ready');
       return;
     }
     
     try {
-      // Reset zoom and pan for clean export
-      const currentZoom = fabricCanvas.getZoom();
-      const currentVpt = fabricCanvas.viewportTransform?.slice();
+      // Create a temporary canvas for export at original zoom
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = canvasRef.current.width;
+      exportCanvas.height = canvasRef.current.height;
+      const exportCtx = exportCanvas.getContext('2d');
       
-      fabricCanvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-      fabricCanvas.setZoom(1);
-      
-      const dataURL = fabricCanvas.toDataURL({
-        format: 'png',
-        quality: 1,
-        multiplier: 1,
-      });
-      
-      // Restore view
-      fabricCanvas.setZoom(currentZoom);
-      if (currentVpt) {
-        fabricCanvas.setViewportTransform(currentVpt as [number, number, number, number, number, number]);
+      if (exportCtx && backgroundImageRef.current && drawingLayerRef.current) {
+        renderCanvas(exportCtx, exportCanvas, backgroundImageRef.current, drawingLayerRef.current, 1, { x: 0, y: 0 });
+        
+        const dataURL = exportCanvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `${pageTitle}-colored.png`;
+        link.href = dataURL;
+        link.click();
+        toast.success("Image downloaded!");
       }
-      
-      const link = document.createElement('a');
-      link.download = `${pageTitle}-colored.png`;
-      link.href = dataURL;
-      link.click();
-      toast.success("Image downloaded!");
     } catch (error) {
       console.error('Error downloading image:', error);
       toast.error('Failed to download image');
+    }
+  };
+
+  // Mouse wheel zoom
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY;
+    const zoomFactor = delta > 0 ? 0.9 : 1.1;
+    const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.5), 5);
+    setZoom(newZoom);
+  };
+
+  // Drawing functions
+  const getTransformedCoords = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return { x: 0, y: 0 };
+    
+    const rect = canvasRef.current.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    // Transform screen coordinates to canvas coordinates considering zoom and pan
+    const x = (clientX - rect.left - panOffset.x) / zoom;
+    const y = (clientY - rect.top - panOffset.y) / zoom;
+    
+    return { x, y };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!drawingLayerRef.current) return;
+    
+    if (isPanning) {
+      // Start panning
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      setLastPanPoint({ x: clientX, y: clientY });
+      return;
+    }
+    
+    // Start drawing
+    setIsDrawing(true);
+    const drawCtx = drawingLayerRef.current.getContext("2d");
+    if (!drawCtx) return;
+    
+    const { x, y } = getTransformedCoords(e);
+    drawCtx.beginPath();
+    drawCtx.moveTo(x, y);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!drawingLayerRef.current) return;
+    
+    if (isPanning) {
+      // Pan
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const dx = clientX - lastPanPoint.x;
+      const dy = clientY - lastPanPoint.y;
+      setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      setLastPanPoint({ x: clientX, y: clientY });
+      return;
+    }
+    
+    if (!isDrawing) return;
+    
+    // Draw
+    const drawCtx = drawingLayerRef.current.getContext("2d");
+    if (!drawCtx) return;
+    
+    const { x, y } = getTransformedCoords(e);
+    drawCtx.strokeStyle = isEraser ? "#ffffff" : activeColor;
+    drawCtx.lineWidth = brushSize / zoom; // Adjust brush size for zoom
+    drawCtx.lineCap = "round";
+    drawCtx.lineJoin = "round";
+    drawCtx.lineTo(x, y);
+    drawCtx.stroke();
+    
+    // Render to main canvas
+    if (context && canvasRef.current && backgroundImageRef.current) {
+      renderCanvas(context, canvasRef.current, backgroundImageRef.current, drawingLayerRef.current, zoom, panOffset);
+    }
+  };
+
+  const stopDrawing = () => {
+    if (isPanning) {
+      return;
+    }
+    
+    if (!isDrawing) return;
+    
+    setIsDrawing(false);
+    if (drawingLayerRef.current) {
+      const drawCtx = drawingLayerRef.current.getContext("2d");
+      if (drawCtx) {
+        drawCtx.closePath();
+      }
     }
   };
 
@@ -331,9 +400,20 @@ export const OnlineColoringDialog = ({
                 <Button 
                   variant="outline" 
                   size="sm" 
+                  onClick={handleResetView}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
+                  title="Reset View"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
                   onClick={handleUndo}
                   className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
                   title="Undo"
+                  disabled
                 >
                   <Undo className="h-4 w-4" />
                 </Button>
@@ -371,6 +451,14 @@ export const OnlineColoringDialog = ({
                 ref={canvasRef}
                 className="max-w-full"
                 style={{ cursor: isPanning ? 'move' : 'crosshair' }}
+                onWheel={handleWheel}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
               />
             </div>
           </div>
