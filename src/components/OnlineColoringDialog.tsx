@@ -70,41 +70,64 @@ export const OnlineColoringDialog = ({
       
       setContext(ctx);
 
-      // Load background image
+      // Load background image via fetch to handle CORS properly
       console.log('Loading background image from:', imageUrl);
-      const img = new Image();
       
-      // IMPORTANT: Set crossOrigin BEFORE setting src to avoid canvas tainting
-      // This is required for toDataURL() to work (downloading functionality)
-      img.crossOrigin = "anonymous";
-      
-      img.onload = () => {
-        console.log("Background image loaded successfully, size:", img.width, 'x', img.height);
-        backgroundImageRef.current = img;
-        
-        // Calculate scale to fit canvas
-        const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-        const x = (canvas.width - img.width * scale) / 2;
-        const y = (canvas.height - img.height * scale) / 2;
-        
-        // Draw background image
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-        
-        // Save initial state
-        saveToHistory(ctx, canvas);
-        
-        toast.success("Canvas ready! Start coloring!");
-      };
-      
-      img.onerror = (error) => {
-        console.error("Failed to load background image with CORS:", error);
-        console.error("Image URL:", imageUrl);
-        toast.error("Failed to load image. Please check the image source.");
-      };
-      
-      img.src = imageUrl;
+      // Use fetch to load image with proper CORS handling
+      fetch(imageUrl)
+        .then(response => {
+          console.log('Fetch response status:', response.status);
+          console.log('Fetch response headers:', {
+            'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
+            'content-type': response.headers.get('content-type')
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          console.log('Image blob loaded, size:', blob.size);
+          const img = new Image();
+          const objectUrl = URL.createObjectURL(blob);
+          
+          img.onload = () => {
+            console.log("Background image loaded successfully, size:", img.width, 'x', img.height);
+            backgroundImageRef.current = img;
+            
+            // Calculate scale to fit canvas
+            const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+            const x = (canvas.width - img.width * scale) / 2;
+            const y = (canvas.height - img.height * scale) / 2;
+            
+            // Draw background image
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+            
+            // Clean up object URL
+            URL.revokeObjectURL(objectUrl);
+            
+            // Save initial state
+            saveToHistory(ctx, canvas);
+            
+            toast.success("Canvas ready! Start coloring!");
+          };
+          
+          img.onerror = () => {
+            console.error("Failed to load image from blob");
+            URL.revokeObjectURL(objectUrl);
+            toast.error("Failed to load image from blob");
+          };
+          
+          img.src = objectUrl;
+        })
+        .catch(error => {
+          console.error("Failed to fetch background image:", error);
+          console.error("Image URL:", imageUrl);
+          toast.error("Failed to load image. CORS or network error.");
+        });
     }, 100); // 100ms delay to wait for DOM
 
     // Cleanup
