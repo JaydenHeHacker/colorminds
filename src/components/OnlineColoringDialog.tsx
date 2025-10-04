@@ -129,27 +129,27 @@ export const OnlineColoringDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[90vw] max-h-[90vh] p-6">
+      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] md:max-w-4xl max-h-[90vh] p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Paintbrush className="h-5 w-5 text-primary" />
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Paintbrush className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             Online Coloring - {pageTitle}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             Use the tools below to color the page online
           </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(90vh-120px)]">
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Toolbar */}
-            <div className="flex flex-wrap items-center gap-3 p-3 bg-muted rounded-lg">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-muted rounded-lg">
               {/* Color Palette */}
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                 {COLORS.map((color) => (
                   <button
                     key={color}
-                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all touch-manipulation ${
                       activeColor === color && !isEraser
                         ? "border-primary scale-110"
                         : "border-border"
@@ -160,49 +160,67 @@ export const OnlineColoringDialog = ({
                 ))}
               </div>
 
-              <div className="h-8 w-px bg-border" />
+              <div className="h-6 sm:h-8 w-px bg-border" />
 
               {/* Brush Size */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm">Size:</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 sm:flex-initial">
+                <span className="text-xs sm:text-sm whitespace-nowrap">Size:</span>
                 <input
                   type="range"
                   min="1"
                   max="50"
                   value={brushSize}
                   onChange={(e) => setBrushSize(Number(e.target.value))}
-                  className="w-24"
+                  className="w-16 sm:w-24 touch-manipulation"
                 />
-                <span className="text-sm w-8">{brushSize}</span>
+                <span className="text-xs sm:text-sm w-6 sm:w-8">{brushSize}</span>
               </div>
 
-              <div className="h-8 w-px bg-border" />
+              <div className="h-6 sm:h-8 w-px bg-border hidden sm:block" />
 
               {/* Tools */}
-              <Button
-                variant={isEraser ? "default" : "outline"}
-                size="sm"
-                onClick={handleEraserToggle}
-              >
-                <Eraser className="h-4 w-4" />
-              </Button>
+              <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto">
+                <Button
+                  variant={isEraser ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleEraserToggle}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
+                >
+                  <Eraser className="h-4 w-4" />
+                </Button>
 
-              <Button variant="outline" size="sm" onClick={handleUndo}>
-                <Undo className="h-4 w-4" />
-              </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleUndo}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
+                >
+                  <Undo className="h-4 w-4" />
+                </Button>
 
-              <Button variant="outline" size="sm" onClick={handleClear}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleClear}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
 
-              <Button variant="outline" size="sm" onClick={handleDownload}>
-                <Download className="h-4 w-4" />
-              </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleDownload}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Canvas */}
-            <div className="border rounded-lg overflow-hidden bg-white">
-              <canvas ref={canvasRef} />
+            <div className="border rounded-lg overflow-hidden bg-white touch-manipulation">
+              <canvas ref={canvasRef} className="max-w-full" />
             </div>
           </div>
         </ScrollArea>

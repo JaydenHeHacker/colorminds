@@ -73,32 +73,32 @@ export const ColorInspirationDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] md:max-w-4xl max-h-[90vh] p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             AI Coloring Inspiration
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             Get creative coloring ideas for "{pageTitle}" with different styles
           </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(90vh-120px)]">
-          <div className="space-y-6 p-1">
+          <div className="space-y-4 sm:space-y-6 p-1">
             {/* Style Selection */}
             {!generatedImage && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                 {COLOR_STYLES.map((style) => (
                   <Button
                     key={style.id}
                     variant={selectedStyle === style.id ? "default" : "outline"}
-                    className="h-auto flex-col items-start p-4 gap-1"
+                    className="h-auto flex-col items-start p-3 sm:p-4 gap-0.5 sm:gap-1 text-left touch-manipulation"
                     onClick={() => handleGenerateInspiration(style.id)}
                     disabled={isGenerating}
                   >
-                    <span className="font-semibold">{style.label}</span>
-                    <span className="text-xs opacity-80 font-normal">
+                    <span className="font-semibold text-xs sm:text-sm">{style.label}</span>
+                    <span className="text-[10px] sm:text-xs opacity-80 font-normal">
                       {style.description}
                     </span>
                   </Button>
@@ -108,9 +108,9 @@ export const ColorInspirationDialog = ({
 
             {/* Loading State */}
             {isGenerating && (
-              <div className="flex flex-col items-center justify-center py-12 gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">
+              <div className="flex flex-col items-center justify-center py-8 sm:py-12 gap-3 sm:gap-4">
+                <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
+                <p className="text-xs sm:text-sm text-muted-foreground text-center px-4">
                   Generating {selectedStyle} style inspiration...
                 </p>
               </div>
@@ -118,7 +118,7 @@ export const ColorInspirationDialog = ({
 
             {/* Generated Result */}
             {generatedImage && !isGenerating && (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div className="relative rounded-lg overflow-hidden border">
                   <img 
                     src={generatedImage} 
@@ -127,20 +127,20 @@ export const ColorInspirationDialog = ({
                   />
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button 
                     onClick={() => {
                       setGeneratedImage(null);
                       setSelectedStyle(null);
                     }}
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 h-11 sm:h-10 touch-manipulation"
                   >
                     Try Another Style
                   </Button>
                   <Button 
                     onClick={handleClose}
-                    className="flex-1"
+                    className="flex-1 h-11 sm:h-10 touch-manipulation"
                   >
                     Close
                   </Button>

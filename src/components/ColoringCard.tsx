@@ -240,44 +240,44 @@ export const ColoringCard = ({
   };
 
   return (
-    <Card className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-colorful hover:-translate-y-1 relative animate-fade-in">
+    <Card className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-colorful hover:-translate-y-1 relative animate-fade-in touch-manipulation">
       {/* NEW Badge */}
       {showNewBadge && (
-        <div className="absolute top-3 left-3 z-10">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-accent to-primary text-white shadow-lg animate-pulse">
+        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-10">
+          <span className="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-gradient-to-r from-accent to-primary text-white shadow-lg animate-pulse">
             ✨ NEW
           </span>
         </div>
       )}
       
       {/* Action buttons in top-right corner */}
-      <div className="absolute top-3 right-3 z-10 flex gap-2">
+      <div className="absolute top-2 sm:top-3 right-2 sm:right-3 z-10 flex gap-1.5 sm:gap-2">
         <Button
           size="icon"
           variant={isInBasket ? "default" : "secondary"}
-          className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all hover:scale-110"
+          className="h-10 w-10 sm:h-9 sm:w-9 rounded-full shadow-md hover:shadow-lg transition-all hover:scale-110 touch-manipulation"
           onClick={handleToggleBasket}
           disabled={basketMutation.isPending}
           aria-label={isInBasket ? "Remove from print basket" : "Add to print basket"}
         >
           {basketMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 sm:h-4 sm:w-4 animate-spin" />
           ) : (
-            <ShoppingBasket className={`h-4 w-4 transition-all ${isInBasket ? 'fill-current scale-110' : ''}`} />
+            <ShoppingBasket className={`h-4 w-4 sm:h-4 sm:w-4 transition-all ${isInBasket ? 'fill-current scale-110' : ''}`} />
           )}
         </Button>
         <Button
           size="icon"
           variant={isFavorited ? "default" : "secondary"}
-          className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all hover:scale-110"
+          className="h-10 w-10 sm:h-9 sm:w-9 rounded-full shadow-md hover:shadow-lg transition-all hover:scale-110 touch-manipulation"
           onClick={handleToggleFavorite}
           disabled={isCheckingFavorite || isTogglingFavorite}
           aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
         >
           {isTogglingFavorite ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 sm:h-4 sm:w-4 animate-spin" />
           ) : (
-            <Heart className={`h-4 w-4 transition-all ${isFavorited ? 'fill-current scale-110' : ''}`} />
+            <Heart className={`h-4 w-4 sm:h-4 sm:w-4 transition-all ${isFavorited ? 'fill-current scale-110' : ''}`} />
           )}
         </Button>
       </div>
@@ -306,28 +306,28 @@ export const ColoringCard = ({
         </div>
       </Link>
       
-      <div className="p-4 bg-gradient-to-b from-background to-muted/20">
-        <div className="flex flex-wrap gap-2 mb-3">
-          <span className="inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20 transition-colors group-hover:bg-primary/20">
+      <div className="p-3 sm:p-4 bg-gradient-to-b from-background to-muted/20">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+          <span className="inline-block px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20 transition-colors group-hover:bg-primary/20">
             {category}
           </span>
-          <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-full border transition-all ${config.color}`}>
+          <span className={`inline-block px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full border transition-all ${config.color}`}>
             {config.icon} {config.label}
           </span>
           {seriesId && seriesTitle && (
-            <span className="inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-secondary/20 to-accent/20 text-secondary-foreground border border-secondary/30 transition-all group-hover:from-secondary/30 group-hover:to-accent/30">
+            <span className="inline-block px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full bg-gradient-to-r from-secondary/20 to-accent/20 text-secondary-foreground border border-secondary/30 transition-all group-hover:from-secondary/30 group-hover:to-accent/30">
               📚 {seriesOrder}/{seriesTotal}
             </span>
           )}
         </div>
-        <h3 className="font-semibold text-lg line-clamp-2 mb-2 group-hover:text-primary transition-colors">{title}</h3>
+        <h3 className="font-semibold text-sm sm:text-base md:text-lg line-clamp-2 mb-1.5 sm:mb-2 group-hover:text-primary transition-colors">{title}</h3>
         {seriesId && seriesTitle && (
-          <p className="text-xs text-muted-foreground line-clamp-1 group-hover:text-foreground transition-colors">
+          <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 group-hover:text-foreground transition-colors">
             Part of: {seriesTitle}
           </p>
         )}
         {publishedAt && (
-          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2 flex items-center gap-1">
             <span>📅</span>
             <time dateTime={publishedAt}>{formatPublishedDate(publishedAt)}</time>
           </p>
