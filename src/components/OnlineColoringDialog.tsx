@@ -51,20 +51,14 @@ export const OnlineColoringDialog = ({
     console.log('Canvas created successfully');
 
     // Load the coloring page image as background
-    const loadImage = () => {
-      console.log('Loading image...');
-      
-      // Create HTML image element
-      const imgElement = document.createElement('img');
-      imgElement.crossOrigin = 'anonymous';
-      
-      imgElement.onload = () => {
-        console.log('Image loaded successfully, creating Fabric image');
+    const loadImage = async () => {
+      try {
+        console.log('Loading image with FabricImage.fromURL...');
         
-        // Create Fabric image from the loaded element
-        const fabricImg = new FabricImage(imgElement);
+        // Use Fabric's built-in fromURL method
+        const fabricImg = await FabricImage.fromURL(imageUrl);
         
-        console.log('Fabric image created:', fabricImg.width, 'x', fabricImg.height);
+        console.log('Fabric image loaded:', fabricImg.width, 'x', fabricImg.height);
         
         const scale = Math.min(800 / (fabricImg.width || 800), 600 / (fabricImg.height || 600));
         fabricImg.set({
@@ -82,20 +76,15 @@ export const OnlineColoringDialog = ({
         if (canvas.freeDrawingBrush) {
           canvas.freeDrawingBrush.color = activeColor;
           canvas.freeDrawingBrush.width = brushSize;
-          console.log('Brush initialized with color:', activeColor, 'size:', brushSize);
+          console.log('Brush initialized');
         }
         
-        console.log('Background image set and rendered');
+        console.log('Canvas ready!');
         toast.success('Canvas ready! Start coloring!');
-      };
-      
-      imgElement.onerror = (err) => {
-        console.error('Error loading background image:', err);
+      } catch (err) {
+        console.error('Error loading image:', err);
         toast.error('Failed to load coloring page image');
-      };
-      
-      // Start loading the image
-      imgElement.src = imageUrl;
+      }
     };
 
     loadImage();
