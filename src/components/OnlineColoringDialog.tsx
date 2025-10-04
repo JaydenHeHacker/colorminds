@@ -50,26 +50,31 @@ export const OnlineColoringDialog = ({
 
     console.log('Canvas created successfully');
 
-    // Load the coloring page image as background using fromURL
-    const loadImage = async () => {
-      try {
-        console.log('Loading image with fromURL...');
+    // Load the coloring page image as background
+    const loadImage = () => {
+      console.log('Loading image...');
+      
+      // Create HTML image element
+      const imgElement = document.createElement('img');
+      imgElement.crossOrigin = 'anonymous';
+      
+      imgElement.onload = () => {
+        console.log('Image loaded successfully, creating Fabric image');
         
-        const img = await FabricImage.fromURL(imageUrl, {
-          crossOrigin: 'anonymous'
-        });
+        // Create Fabric image from the loaded element
+        const fabricImg = new FabricImage(imgElement);
         
-        console.log('Fabric image created:', img.width, 'x', img.height);
+        console.log('Fabric image created:', fabricImg.width, 'x', fabricImg.height);
         
-        const scale = Math.min(800 / img.width!, 600 / img.height!);
-        img.set({
+        const scale = Math.min(800 / (fabricImg.width || 800), 600 / (fabricImg.height || 600));
+        fabricImg.set({
           scaleX: scale,
           scaleY: scale,
           selectable: false,
           evented: false
         });
         
-        canvas.backgroundImage = img;
+        canvas.backgroundImage = fabricImg;
         canvas.renderAll();
         
         // Enable drawing mode and initialize brush after image loads
@@ -82,10 +87,15 @@ export const OnlineColoringDialog = ({
         
         console.log('Background image set and rendered');
         toast.success('Canvas ready! Start coloring!');
-      } catch (err) {
+      };
+      
+      imgElement.onerror = (err) => {
         console.error('Error loading background image:', err);
         toast.error('Failed to load coloring page image');
-      }
+      };
+      
+      // Start loading the image
+      imgElement.src = imageUrl;
     };
 
     loadImage();
