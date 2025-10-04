@@ -621,7 +621,10 @@ export type Database = {
           id: string
           monthly_quota: number
           quota_reset_at: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           subscription_end_at: string | null
+          subscription_end_date: string | null
           subscription_start_at: string | null
           tier: Database["public"]["Enums"]["subscription_tier"]
           updated_at: string
@@ -633,7 +636,10 @@ export type Database = {
           id?: string
           monthly_quota?: number
           quota_reset_at?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscription_end_at?: string | null
+          subscription_end_date?: string | null
           subscription_start_at?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
@@ -645,7 +651,10 @@ export type Database = {
           id?: string
           monthly_quota?: number
           quota_reset_at?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscription_end_at?: string | null
+          subscription_end_date?: string | null
           subscription_start_at?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
