@@ -339,7 +339,22 @@ export default function PublishingSchedule() {
   return (
     <div className="space-y-6">
       {/* 统计卡片 */}
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-6">
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <FileText className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">内容总数</p>
+              <p className="text-2xl font-bold">{(stats?.draft || 0) + (stats?.scheduled || 0) + (stats?.published || 0)}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                草稿 {stats?.draft || 0} / 已发布 {stats?.published || 0}
+              </p>
+            </div>
+          </div>
+        </Card>
+
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gray-100 rounded-lg">
