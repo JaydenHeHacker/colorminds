@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Canvas as FabricCanvas, PencilBrush, Image as FabricImage } from "fabric";
+import { Canvas as FabricCanvas, FabricImage } from "fabric";
 import * as fabric from "fabric";
 import { Paintbrush, Eraser, Download, Undo, Redo, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -43,17 +43,22 @@ export const OnlineColoringDialog = ({
     });
 
     // Load the coloring page image as background
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = imageUrl;
-    img.onload = () => {
-      const scale = Math.min(800 / img.width, 600 / img.height);
-      canvas.backgroundImage = new fabric.Image(img, {
+    fabric.FabricImage.fromURL(imageUrl, {
+      crossOrigin: 'anonymous'
+    }).then((img) => {
+      const scale = Math.min(800 / img.width!, 600 / img.height!);
+      img.set({
         scaleX: scale,
         scaleY: scale,
+        selectable: false,
+        evented: false
       });
+      canvas.backgroundImage = img;
       canvas.renderAll();
-    };
+    }).catch((err) => {
+      console.error('Error loading background image:', err);
+      toast.error('Failed to load coloring page image');
+    });
 
     // Initialize brush
     if (canvas.freeDrawingBrush) {
