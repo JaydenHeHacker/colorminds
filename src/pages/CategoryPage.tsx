@@ -75,8 +75,9 @@ const CategoryPage = () => {
         .from('categories')
         .select(`
           *,
-          coloring_pages(count)
-        `);
+          coloring_pages!inner(count)
+        `)
+        .eq('coloring_pages.status', 'published');
       
       if (isAllCategory) {
         // Get direct children of "all" category
