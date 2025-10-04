@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Canvas as FabricCanvas, FabricImage } from "fabric";
@@ -26,38 +26,22 @@ export const OnlineColoringDialog = ({
   imageUrl,
   pageTitle 
 }: OnlineColoringDialogProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [activeColor, setActiveColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
   const [isEraser, setIsEraser] = useState(false);
   const isInitializedRef = useRef(false);
 
-  // Initialize canvas when dialog opens
-  useEffect(() => {
-    console.log('useEffect triggered, open:', open, 'canvasRef:', !!canvasRef.current, 'isInitialized:', isInitializedRef.current);
-    
-    if (!open) {
-      console.log('Dialog not open, skipping');
-      return;
-    }
-    
-    if (!canvasRef.current) {
-      console.log('Canvas ref not ready, skipping');
-      return;
-    }
-    
-    if (isInitializedRef.current) {
-      console.log('Already initialized, skipping');
-      return;
-    }
+  // Use callback ref to ensure canvas element is mounted
+  const canvasRef = useCallback((node: HTMLCanvasElement | null) => {
+    if (!node || !open || isInitializedRef.current) return;
 
-    console.log('Initializing canvas for online coloring');
+    console.log('Canvas ref callback triggered, initializing canvas');
     console.log('Image URL:', imageUrl);
     
     isInitializedRef.current = true;
 
-    const canvas = new FabricCanvas(canvasRef.current, {
+    const canvas = new FabricCanvas(node, {
       width: 800,
       height: 600,
       backgroundColor: "#ffffff",
