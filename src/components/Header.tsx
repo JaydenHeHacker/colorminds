@@ -108,6 +108,10 @@ export const Header = () => {
                     <Calendar className="h-4 w-4 mr-2" />
                     My Profile
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/my-creations')}>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    My Creations
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/favorites')}>
                     <Heart className="h-4 w-4 mr-2" />
                     My Favorites
@@ -163,6 +167,13 @@ export const Header = () => {
           }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
                 My Profile
+              </button>}
+            {user && <button onClick={() => {
+            navigate('/my-creations');
+            setMobileMenuOpen(false);
+          }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                My Creations
               </button>}
             <button onClick={() => scrollToSection('categories')} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
               Categories

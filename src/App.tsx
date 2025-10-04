@@ -20,6 +20,7 @@ import CreatePage from "./pages/CreatePage";
 import CreditsStore from "./pages/CreditsStore";
 import Community from "./pages/Community";
 import AIColoringPage from "./pages/AIColoringPage";
+import MyCreations from "./pages/MyCreations";
 import UserGallery from "./pages/UserGallery";
 import AboutUs from "./pages/AboutUs";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/browse" element={<Browse />} />
           <Route path="/coloring-page/:slug" element={<ColoringPage />} />
           <Route path="/ai-coloring-page/:id" element={<AIColoringPage />} />
+          <Route path="/my-creations" element={<MyCreations />} />
           <Route path="/my-creations/:id" element={<AIColoringPage />} />
           <Route path="/category/*" element={<CategoryPage />} />
           <Route path="/series" element={<AllSeries />} />
