@@ -1,9 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Canvas as FabricCanvas, FabricImage } from "fabric";
-import * as fabric from "fabric";
-import { Paintbrush, Eraser, Download, Undo, Redo, Trash2 } from "lucide-react";
+import { Paintbrush, Eraser, Download, Undo, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -27,92 +25,114 @@ export const OnlineColoringDialog = ({
   pageTitle 
 }: OnlineColoringDialogProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [activeColor, setActiveColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
   const [isEraser, setIsEraser] = useState(false);
-  const isInitializedRef = useRef(false);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
+  const [drawingHistory, setDrawingHistory] = useState<ImageData[]>([]);
+  const backgroundImageRef = useRef<HTMLImageElement | null>(null);
 
-  // Initialize canvas when dialog opens
+  // Initialize canvas and load background image
   useEffect(() => {
-    if (!open || !canvasRef.current || isInitializedRef.current) return;
+    if (!open || !canvasRef.current) return;
 
-    console.log('Initializing canvas...');
-    isInitializedRef.current = true;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     
-    const canvas = new FabricCanvas(canvasRef.current, {
-      width: 800,
-      height: 600,
-      backgroundColor: "#ffffff",
-    });
-
-    console.log('Canvas created successfully');
-    
-    // Enable drawing mode first to initialize the brush
-    canvas.isDrawingMode = true;
-    
-    // Now initialize brush properties
-    if (canvas.freeDrawingBrush) {
-      canvas.freeDrawingBrush.color = activeColor;
-      canvas.freeDrawingBrush.width = brushSize;
-      console.log('Brush initialized with color:', activeColor, 'size:', brushSize);
-      console.log('Drawing mode enabled:', canvas.isDrawingMode);
-    } else {
-      console.error('Brush not available after enabling drawing mode');
+    if (!ctx) {
+      console.error("Failed to get canvas context");
+      return;
     }
 
-    // Load the coloring page image as background
-    const loadImage = async () => {
-      try {
-        console.log('Loading image with FabricImage.fromURL...');
-        
-        const fabricImg = await FabricImage.fromURL(imageUrl);
-        
-        console.log('Fabric image loaded:', fabricImg.width, 'x', fabricImg.height);
-        
-        const scale = Math.min(800 / (fabricImg.width || 800), 600 / (fabricImg.height || 600));
-        fabricImg.set({
-          scaleX: scale,
-          scaleY: scale,
-          selectable: false,
-          evented: false
-        });
-        
-        canvas.backgroundImage = fabricImg;
-        canvas.renderAll();
-        
-        console.log('Canvas ready!');
-        toast.success('Canvas ready! Start coloring!');
-      } catch (err) {
-        console.error('Error loading image:', err);
-        toast.error('Failed to load coloring page image');
-      }
+    // Set canvas size
+    canvas.width = 800;
+    canvas.height = 600;
+    
+    // Set initial drawing settings
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    
+    setContext(ctx);
+
+    // Load background image
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    
+    img.onload = () => {
+      console.log("Background image loaded successfully");
+      backgroundImageRef.current = img;
+      
+      // Calculate scale to fit canvas
+      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+      const x = (canvas.width - img.width * scale) / 2;
+      const y = (canvas.height - img.height * scale) / 2;
+      
+      // Draw background image
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+      
+      // Save initial state
+      saveToHistory(ctx, canvas);
+      
+      toast.success("Canvas ready! Start coloring!");
     };
+    
+    img.onerror = () => {
+      console.error("Failed to load background image");
+      toast.error("Failed to load coloring page image");
+    };
+    
+    img.src = imageUrl;
 
-    loadImage();
-    setFabricCanvas(canvas);
-  }, [open, imageUrl, activeColor, brushSize]);
+    // Cleanup
+    return () => {
+      setContext(null);
+      setDrawingHistory([]);
+      backgroundImageRef.current = null;
+    };
+  }, [open, imageUrl]);
 
-  // Cleanup when dialog closes
-  useEffect(() => {
-    if (!open && fabricCanvas) {
-      console.log('Disposing canvas on dialog close');
-      fabricCanvas.dispose();
-      setFabricCanvas(null);
-      isInitializedRef.current = false;
+  const saveToHistory = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    setDrawingHistory(prev => [...prev, imageData]);
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!context || !canvasRef.current) return;
+    
+    setIsDrawing(true);
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    
+    context.beginPath();
+    context.moveTo(x, y);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !context || !canvasRef.current) return;
+    
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    
+    context.strokeStyle = isEraser ? "#ffffff" : activeColor;
+    context.lineWidth = brushSize;
+    context.lineTo(x, y);
+    context.stroke();
+  };
+
+  const stopDrawing = () => {
+    if (!isDrawing) return;
+    
+    setIsDrawing(false);
+    if (context && canvasRef.current) {
+      context.closePath();
+      saveToHistory(context, canvasRef.current);
     }
-  }, [open, fabricCanvas]);
-
-  useEffect(() => {
-    if (!fabricCanvas || !fabricCanvas.freeDrawingBrush) return;
-
-    if (isEraser) {
-      fabricCanvas.freeDrawingBrush.color = "#ffffff";
-    } else {
-      fabricCanvas.freeDrawingBrush.color = activeColor;
-    }
-    fabricCanvas.freeDrawingBrush.width = brushSize;
-  }, [activeColor, brushSize, isEraser, fabricCanvas]);
+  };
 
   const handleColorChange = (color: string) => {
     setActiveColor(color);
@@ -124,42 +144,49 @@ export const OnlineColoringDialog = ({
   };
 
   const handleClear = () => {
-    if (!fabricCanvas) {
-      console.error('Canvas not initialized');
-      return;
+    if (!context || !canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const img = backgroundImageRef.current;
+    
+    // Clear canvas
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Redraw background image if available
+    if (img) {
+      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+      const x = (canvas.width - img.width * scale) / 2;
+      const y = (canvas.height - img.height * scale) / 2;
+      context.drawImage(img, x, y, img.width * scale, img.height * scale);
     }
-    console.log('Clearing canvas, objects count:', fabricCanvas.getObjects().length);
-    fabricCanvas.getObjects().forEach(obj => fabricCanvas.remove(obj));
-    fabricCanvas.renderAll();
+    
+    setDrawingHistory([]);
+    saveToHistory(context, canvas);
     toast.success("Canvas cleared!");
   };
 
   const handleUndo = () => {
-    if (!fabricCanvas) {
-      console.error('Canvas not initialized');
-      return;
-    }
-    const objects = fabricCanvas.getObjects();
-    console.log('Undoing, objects count:', objects.length);
-    if (objects.length > 0) {
-      fabricCanvas.remove(objects[objects.length - 1]);
-      fabricCanvas.renderAll();
+    if (!context || !canvasRef.current || drawingHistory.length <= 1) return;
+    
+    const newHistory = [...drawingHistory];
+    newHistory.pop(); // Remove current state
+    const previousState = newHistory[newHistory.length - 1];
+    
+    if (previousState) {
+      context.putImageData(previousState, 0, 0);
+      setDrawingHistory(newHistory);
     }
   };
 
   const handleDownload = () => {
-    if (!fabricCanvas) {
-      console.error('Canvas not initialized');
+    if (!canvasRef.current) {
       toast.error('Canvas not ready');
       return;
     }
-    console.log('Downloading canvas as PNG');
+    
     try {
-      const dataURL = fabricCanvas.toDataURL({
-        format: 'png',
-        quality: 1,
-        multiplier: 1,
-      });
+      const dataURL = canvasRef.current.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = `${pageTitle}-colored.png`;
       link.href = dataURL;
@@ -241,6 +268,7 @@ export const OnlineColoringDialog = ({
                   variant="outline" 
                   size="sm" 
                   onClick={handleUndo}
+                  disabled={drawingHistory.length <= 1}
                   className="flex-1 sm:flex-initial h-9 sm:h-8 touch-manipulation"
                 >
                   <Undo className="h-4 w-4" />
@@ -268,7 +296,17 @@ export const OnlineColoringDialog = ({
 
             {/* Canvas */}
             <div className="border rounded-lg overflow-hidden bg-white touch-manipulation">
-              <canvas ref={canvasRef} className="max-w-full" />
+              <canvas 
+                ref={canvasRef}
+                className="max-w-full cursor-crosshair"
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+              />
             </div>
           </div>
         </ScrollArea>
