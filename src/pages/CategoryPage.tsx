@@ -293,6 +293,33 @@ const CategoryPage = () => {
           }))
         }}
       />
+
+      {/* Category-specific FAQ Schema for important categories */}
+      {['christmas', 'halloween', 'pokemon', 'frozen', 'unicorns', 'dinosaurs'].includes(category.slug) && (
+        <StructuredData
+          type="FAQPage"
+          data={{
+            questions: [
+              {
+                question: `Are these ${category.name} coloring pages free?`,
+                answer: `Yes! All ${category.name} coloring pages on Color Minds are 100% free to download and print. You can print as many copies as you need for personal use, homeschooling, or classroom activities without any cost.`
+              },
+              {
+                question: `How do I print ${category.name} coloring pages?`,
+                answer: `To print ${category.name} coloring pages, simply click on any design you like, then click the "Print" button. Your browser's print dialog will open. We recommend using standard letter (8.5x11) or A4 paper for best results. You can print in black and white or color.`
+              },
+              {
+                question: `What age are ${category.name} coloring pages suitable for?`,
+                answer: `Our ${category.name} coloring pages are suitable for all ages! We have simple designs perfect for toddlers and preschoolers (ages 2-5), medium complexity for elementary kids (ages 6-10), and intricate patterns for teens and adults (ages 11+).`
+              },
+              {
+                question: `Can I use these ${category.name} coloring pages for commercial purposes?`,
+                answer: `These ${category.name} coloring pages are free for personal use, educational purposes, and non-commercial activities. For commercial licensing, please contact us.`
+              }
+            ]
+          }}
+        />
+      )}
       
       <main className="flex-1">
         <Breadcrumbs items={breadcrumbItems} />
@@ -387,6 +414,43 @@ const CategoryPage = () => {
                 </div>
               ) : paginatedPages.length > 0 ? (
                 <>
+                  {/* SEO Content Block - Only for important categories */}
+                  {category.description && (allColoringPages?.length || 0) > 10 && (
+                    <div className="mb-8 p-6 rounded-lg bg-gradient-to-br from-primary/5 to-secondary/5 border">
+                      <h2 className="text-xl md:text-2xl font-semibold mb-4">
+                        About {category.name} Coloring Pages
+                      </h2>
+                      <div className="prose prose-sm md:prose max-w-none text-muted-foreground">
+                        <p className="mb-3">
+                          {category.description}
+                        </p>
+                        <p className="mb-3">
+                          Our collection features <strong>{allColoringPages?.length || 0}+ free printable {category.name.toLowerCase()} coloring pages</strong>, 
+                          carefully designed for various skill levels. Whether you're looking for simple designs for young children or intricate patterns 
+                          for adults, you'll find the perfect coloring page here.
+                        </p>
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                          <div className="flex items-start gap-2">
+                            <span className="text-primary font-medium">✓</span>
+                            <span>100% free to download and print</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-primary font-medium">✓</span>
+                            <span>High-quality printable designs</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-primary font-medium">✓</span>
+                            <span>Perfect for home and classroom use</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-primary font-medium">✓</span>
+                            <span>New pages added regularly</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Coloring Pages Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     {paginatedPages.map((page) => (
@@ -415,6 +479,34 @@ const CategoryPage = () => {
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                   />
+
+                  {/* Printing Guide - Only for categories with many pages */}
+                  {(allColoringPages?.length || 0) > 15 && (
+                    <div className="mt-12 p-6 rounded-lg bg-muted/50 border">
+                      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                        <span>🖨️</span>
+                        <span>How to Print {category.name} Coloring Pages</span>
+                      </h2>
+                      <div className="space-y-3 text-sm text-muted-foreground">
+                        <div className="flex items-start gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">1</span>
+                          <p><strong className="text-foreground">Choose your favorite design</strong> - Browse through our collection of {allColoringPages?.length || 0}+ {category.name.toLowerCase()} coloring pages and click on the one you like.</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">2</span>
+                          <p><strong className="text-foreground">Click the Print button</strong> - This will open your browser's print dialog with the coloring page ready to print.</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">3</span>
+                          <p><strong className="text-foreground">Select your settings</strong> - Choose paper size (letter or A4), orientation, and quality. We recommend using 20-24lb paper for best results.</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">4</span>
+                          <p><strong className="text-foreground">Start coloring!</strong> - Use crayons, colored pencils, markers, or any medium you prefer. All designs are optimized for easy printing.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="text-center py-12">
