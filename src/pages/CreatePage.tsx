@@ -148,11 +148,7 @@ export default function CreatePage() {
   };
 
   const handleGenerationTypeChange = (value: 'single' | 'series') => {
-    if (value === 'series' && subscription?.tier !== 'premium') {
-      setUpgradeFeature('series');
-      setUpgradeDialogOpen(true);
-      return;
-    }
+    // Allow users to see the series UI first, check premium only when generating
     setGenerationType(value);
   };
 
@@ -176,10 +172,17 @@ export default function CreatePage() {
       return;
     }
 
+    // Check if trying to generate series without premium
+    if (generationType === 'series' && subscription?.tier !== 'premium') {
+      setUpgradeFeature('series');
+      setUpgradeDialogOpen(true);
+      return;
+    }
+
     if (!prompt.trim()) {
       toast({
         title: "Please enter a prompt",
-        description: "Describe the coloring page you want",
+        description: generationType === 'series' ? "Describe the story theme" : "Describe the coloring page you want",
         variant: "destructive",
       });
       return;
@@ -459,23 +462,44 @@ export default function CreatePage() {
 
             {/* Series Length (only for series generation) */}
             {generationType === 'series' && (
-              <div>
-                <label className="text-sm font-medium">Series Length</label>
-                <Select value={seriesLength} onValueChange={setSeriesLength} disabled={isGenerating}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="4">4 Pages</SelectItem>
-                    <SelectItem value="5">5 Pages</SelectItem>
-                    <SelectItem value="6">6 Pages</SelectItem>
-                    <SelectItem value="7">7 Pages</SelectItem>
-                    <SelectItem value="8">8 Pages</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-2">
-                  More pages = more detailed story progression
-                </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Series Length</label>
+                  <Select value={seriesLength} onValueChange={setSeriesLength} disabled={isGenerating}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="4">4 Pages</SelectItem>
+                      <SelectItem value="5">5 Pages</SelectItem>
+                      <SelectItem value="6">6 Pages</SelectItem>
+                      <SelectItem value="7">7 Pages</SelectItem>
+                      <SelectItem value="8">8 Pages</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    More pages = more detailed story progression
+                  </p>
+                </div>
+
+                {/* Series Examples */}
+                <Card className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Series Generation Examples
+                  </h4>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <p>✨ <strong>Baby Dinosaur Adventure:</strong> 8 pages from hatching to making friends</p>
+                    <p>🌊 <strong>Ocean Explorer:</strong> 6 pages discovering underwater creatures</p>
+                    <p>🚀 <strong>Space Journey:</strong> 7 pages traveling through planets</p>
+                    <p>🦄 <strong>Unicorn Kingdom:</strong> 5 pages exploring magical forests</p>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-primary/10">
+                    <p className="text-xs text-muted-foreground">
+                      💡 Each page connects naturally to tell a complete story
+                    </p>
+                  </div>
+                </Card>
               </div>
             )}
 
