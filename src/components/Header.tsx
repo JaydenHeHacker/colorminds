@@ -126,7 +126,7 @@ export const Header = () => {
                 <DropdownMenuContent align="end" className="z-50 bg-popover">
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <Calendar className="h-4 w-4 mr-2" />
-                    我的中心
+                    My Profile
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/favorites')}>
                     <Heart className="h-4 w-4 mr-2" />
@@ -183,7 +183,7 @@ export const Header = () => {
             setMobileMenuOpen(false);
           }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                我的中心
+                My Profile
               </button>}
             <button onClick={() => scrollToSection('categories')} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
               Categories

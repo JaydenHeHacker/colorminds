@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Trophy, Flame, Star, Medal } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, subMonths, addMonths } from "date-fns";
-import { zhCN } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 
 interface ColoringCalendarProps {
@@ -13,13 +12,13 @@ interface ColoringCalendarProps {
 }
 
 const ACHIEVEMENT_CONFIG = {
-  first_download: { icon: Star, label: "首次下载", color: "text-yellow-500" },
-  ten_downloads: { icon: Trophy, label: "下载达人", color: "text-blue-500" },
-  fifty_downloads: { icon: Medal, label: "涂色专家", color: "text-purple-500" },
-  hundred_downloads: { icon: Trophy, label: "百图大师", color: "text-orange-500" },
-  three_day_streak: { icon: Flame, label: "3天连击", color: "text-red-500" },
-  seven_day_streak: { icon: Flame, label: "7天连击", color: "text-red-600" },
-  thirty_day_streak: { icon: Flame, label: "30天连击", color: "text-red-700" },
+  first_download: { icon: Star, label: "First Download", color: "text-yellow-500" },
+  ten_downloads: { icon: Trophy, label: "Download Expert", color: "text-blue-500" },
+  fifty_downloads: { icon: Medal, label: "Coloring Master", color: "text-purple-500" },
+  hundred_downloads: { icon: Trophy, label: "Century Club", color: "text-orange-500" },
+  three_day_streak: { icon: Flame, label: "3-Day Streak", color: "text-red-500" },
+  seven_day_streak: { icon: Flame, label: "7-Day Streak", color: "text-red-600" },
+  thirty_day_streak: { icon: Flame, label: "30-Day Streak", color: "text-red-700" },
 };
 
 export const ColoringCalendar = ({ userId }: ColoringCalendarProps) => {
@@ -126,7 +125,7 @@ export const ColoringCalendar = ({ userId }: ColoringCalendarProps) => {
               <Star className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">总下载</p>
+              <p className="text-sm text-muted-foreground">Total Downloads</p>
               <p className="text-2xl font-bold">{stats?.downloads || 0}</p>
             </div>
           </div>
@@ -138,7 +137,7 @@ export const ColoringCalendar = ({ userId }: ColoringCalendarProps) => {
               <Trophy className="h-6 w-6 text-blue-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">总打印</p>
+              <p className="text-sm text-muted-foreground">Total Prints</p>
               <p className="text-2xl font-bold">{stats?.prints || 0}</p>
             </div>
           </div>
@@ -150,8 +149,8 @@ export const ColoringCalendar = ({ userId }: ColoringCalendarProps) => {
               <Flame className="h-6 w-6 text-red-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">连续天数</p>
-              <p className="text-2xl font-bold">{stats?.streak || 0}天</p>
+              <p className="text-sm text-muted-foreground">Current Streak</p>
+              <p className="text-2xl font-bold">{stats?.streak || 0} days</p>
             </div>
           </div>
         </Card>
@@ -162,7 +161,7 @@ export const ColoringCalendar = ({ userId }: ColoringCalendarProps) => {
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            涂色日历
+            Coloring Calendar
           </h3>
           <div className="flex gap-2">
             <Button
@@ -170,34 +169,34 @@ export const ColoringCalendar = ({ userId }: ColoringCalendarProps) => {
               variant="outline"
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
             >
-              上月
+              Prev
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setCurrentMonth(new Date())}
             >
-              本月
+              Today
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
             >
-              下月
+              Next
             </Button>
           </div>
         </div>
 
         <div className="mb-4 text-center">
           <p className="text-lg font-medium">
-            {format(currentMonth, 'yyyy年 M月', { locale: zhCN })}
+            {format(currentMonth, 'MMMM yyyy')}
           </p>
         </div>
 
-        {/* 星期标题 */}
+        {/* Week headers */}
         <div className="grid grid-cols-7 gap-2 mb-2">
-          {['日', '一', '二', '三', '四', '五', '六'].map(day => (
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
             <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
               {day}
             </div>
@@ -245,11 +244,11 @@ export const ColoringCalendar = ({ userId }: ColoringCalendarProps) => {
         <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded border-2 border-primary bg-primary/10" />
-            <span>有涂色活动</span>
+            <span>Activity</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded border-2 border-border" />
-            <span>无活动</span>
+            <span>No Activity</span>
           </div>
         </div>
       </Card>
@@ -258,7 +257,7 @@ export const ColoringCalendar = ({ userId }: ColoringCalendarProps) => {
       <Card className="p-6">
         <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Trophy className="h-5 w-5" />
-          我的成就
+          My Achievements
         </h3>
 
         {achievements && achievements.length > 0 ? (
@@ -279,7 +278,7 @@ export const ColoringCalendar = ({ userId }: ColoringCalendarProps) => {
                   </div>
                   <p className="text-sm font-medium text-center">{config.label}</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(achievement.unlocked_at), 'MM/dd', { locale: zhCN })}
+                    {format(new Date(achievement.unlocked_at), 'MM/dd')}
                   </p>
                 </div>
               );
@@ -288,7 +287,7 @@ export const ColoringCalendar = ({ userId }: ColoringCalendarProps) => {
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <Trophy className="h-12 w-12 mx-auto mb-3 opacity-20" />
-            <p>开始涂色旅程，解锁成就徽章！</p>
+            <p>Start your coloring journey to unlock achievements!</p>
           </div>
         )}
       </Card>

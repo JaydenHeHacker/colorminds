@@ -82,7 +82,7 @@ export const PrintBasket = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['print-basket'] });
-      toast.success("已从打印篮移除");
+      toast.success("Removed from print basket");
     },
   });
 
@@ -97,7 +97,7 @@ export const PrintBasket = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['print-basket'] });
-      toast.success("打印篮已清空");
+      toast.success("Print basket cleared");
       setIsOpen(false);
     },
   });
@@ -110,17 +110,17 @@ export const PrintBasket = () => {
     }
 
     if (!basketItems || basketItems.length === 0) {
-      toast.error("打印篮是空的");
+      toast.error("Print basket is empty");
       return;
     }
 
-    toast.loading("正在生成PDF...", { id: 'batch-print' });
+    toast.loading("Generating PDF...", { id: 'batch-print' });
 
     try {
       // 创建打印内容
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        toast.error("请允许弹出窗口");
+        toast.error("Please allow pop-ups");
         return;
       }
 
@@ -130,7 +130,7 @@ export const PrintBasket = () => {
         <!DOCTYPE html>
         <html>
           <head>
-            <title>批量打印 - Color Minds</title>
+            <title>Batch Print - Color Minds</title>
             <style>
               @page { 
                 margin: 0.5in;
@@ -198,10 +198,10 @@ export const PrintBasket = () => {
 
       printWindow.document.close();
       
-      // 等待图片加载完成
+      // Wait for images to load
       setTimeout(() => {
         printWindow.print();
-        toast.success(`准备打印 ${pages.length} 张图`, { id: 'batch-print' });
+        toast.success(`Ready to print ${pages.length} pages`, { id: 'batch-print' });
       }, 1000);
 
       // 记录打印历史
@@ -217,7 +217,7 @@ export const PrintBasket = () => {
 
     } catch (error) {
       console.error('Print error:', error);
-      toast.error("打印失败", { id: 'batch-print' });
+      toast.error("Print failed", { id: 'batch-print' });
     }
   };
 
@@ -232,7 +232,7 @@ export const PrintBasket = () => {
           <Button
             size="lg"
             className="fixed bottom-6 right-6 z-50 h-16 w-16 rounded-full shadow-2xl hover:shadow-colorful hover:scale-110 transition-all group"
-            aria-label="打印篮"
+            aria-label="Print Basket"
           >
             <div className="relative">
               <ShoppingBasket className="h-6 w-6 transition-transform group-hover:scale-110" />
@@ -251,7 +251,7 @@ export const PrintBasket = () => {
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-2xl">
               <ShoppingBasket className="h-6 w-6" />
-              打印篮
+              Print Basket
               {!isPremium && (
                 <Badge variant="secondary" className="gap-1">
                   <Sparkles className="h-3 w-3" />
@@ -268,16 +268,16 @@ export const PrintBasket = () => {
                 <div className="flex items-start gap-3">
                   <Sparkles className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                   <div className="flex-1 space-y-2">
-                    <p className="text-sm font-medium">批量打印是Premium功能</p>
+                    <p className="text-sm font-medium">Batch Print is a Premium Feature</p>
                     <p className="text-xs text-muted-foreground">
-                      升级后可一键打印篮中所有图片，节省50%时间
+                      Upgrade to print all items at once and save 50% time
                     </p>
                     <Button 
                       size="sm" 
                       onClick={() => setShowUpgradeDialog(true)}
                       className="w-full"
                     >
-                      立即升级
+                      Upgrade Now
                     </Button>
                   </div>
                 </div>
@@ -292,13 +292,13 @@ export const PrintBasket = () => {
               <div className="text-center py-12 space-y-4">
                 <ShoppingBasket className="h-16 w-16 mx-auto opacity-20" />
                 <div>
-                  <h3 className="font-semibold mb-2">打印篮是空的</h3>
+                  <h3 className="font-semibold mb-2">Print Basket is Empty</h3>
                   <p className="text-sm text-muted-foreground">
-                    浏览图库，点击🛒图标添加到打印篮
+                    Browse the gallery and click the 🛒 icon to add items
                   </p>
                 </div>
                 <Button onClick={() => { setIsOpen(false); navigate('/'); }}>
-                  开始浏览
+                  Start Browsing
                 </Button>
               </div>
             ) : (
@@ -320,7 +320,7 @@ export const PrintBasket = () => {
                           {item.coloring_pages.title}
                         </h4>
                         <p className="text-xs text-muted-foreground">
-                          {item.coloring_pages.categories?.name || '未分类'}
+                          {item.coloring_pages.categories?.name || 'Uncategorized'}
                         </p>
                       </div>
                       <Button
@@ -344,7 +344,7 @@ export const PrintBasket = () => {
                     disabled={!isPremium}
                   >
                     <Printer className="h-5 w-5" />
-                    {isPremium ? `批量打印 (${basketCount}张)` : '需要Premium解锁'}
+                    {isPremium ? `Batch Print (${basketCount} pages)` : 'Premium Required'}
                   </Button>
                   <Button
                     onClick={() => clearMutation.mutate()}
@@ -352,16 +352,16 @@ export const PrintBasket = () => {
                     className="w-full"
                     disabled={clearMutation.isPending}
                   >
-                    清空打印篮
+                    Clear Basket
                   </Button>
                 </div>
 
-                {/* 统计信息 */}
+                {/* Statistics */}
                 <div className="text-center text-sm text-muted-foreground pt-2">
-                  共 {basketCount} 张图片
+                  Total: {basketCount} pages
                   {isPremium && (
                     <p className="text-xs mt-1">
-                      预计节省 {basketCount * 10} 秒操作时间 ⚡
+                      Save ~{basketCount * 10} seconds ⚡
                     </p>
                   )}
                 </div>

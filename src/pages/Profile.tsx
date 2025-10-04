@@ -51,10 +51,10 @@ const Profile = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("已退出登录");
+      toast.success("Logged out successfully");
       navigate("/");
     } catch (error) {
-      toast.error("退出失败");
+      toast.error("Logout failed");
     }
   };
 
@@ -75,7 +75,7 @@ const Profile = () => {
               className="gap-2 mb-6"
             >
               <ArrowLeft className="h-4 w-4" />
-              返回首页
+              Back to Home
             </Button>
 
             {/* 用户信息卡片 */}
@@ -85,10 +85,10 @@ const Profile = () => {
                   <User className="h-12 w-12 text-primary" />
                 </div>
                 
-                <div className="flex-1 space-y-2">
+                  <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-3 flex-wrap">
                     <h1 className="text-2xl md:text-3xl font-bold">
-                      {user.email?.split('@')[0] || '用户'}
+                      {user.email?.split('@')[0] || 'User'}
                     </h1>
                     {isPremium && (
                       <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-full">
@@ -105,7 +105,7 @@ const Profile = () => {
                       className="mt-2"
                     >
                       <Crown className="h-4 w-4 mr-2" />
-                      升级到Premium
+                      Upgrade to Premium
                     </Button>
                   )}
                 </div>
@@ -116,7 +116,7 @@ const Profile = () => {
                   className="gap-2"
                 >
                   <LogOut className="h-4 w-4" />
-                  退出登录
+                  Log Out
                 </Button>
               </div>
             </Card>
@@ -126,11 +126,11 @@ const Profile = () => {
               <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
                 <TabsTrigger value="calendar" className="gap-2">
                   <Calendar className="h-4 w-4" />
-                  涂色日历
+                  Coloring Calendar
                 </TabsTrigger>
                 <TabsTrigger value="favorites" className="gap-2">
                   <Heart className="h-4 w-4" />
-                  我的收藏
+                  My Favorites
                 </TabsTrigger>
               </TabsList>
 
@@ -142,13 +142,13 @@ const Profile = () => {
                 <Card className="p-6">
                   <div className="text-center py-8">
                     <Heart className="h-16 w-16 mx-auto mb-4 opacity-20" />
-                    <h3 className="text-xl font-semibold mb-2">查看我的收藏</h3>
+                    <h3 className="text-xl font-semibold mb-2">View My Favorites</h3>
                     <p className="text-muted-foreground mb-6">
-                      访问收藏页面查看所有喜欢的涂色图
+                      Visit the favorites page to see all your liked coloring pages
                     </p>
                     <Button onClick={() => navigate('/favorites')} className="gap-2">
                       <Heart className="h-4 w-4" />
-                      前往收藏页面
+                      Go to Favorites
                     </Button>
                   </div>
                 </Card>
