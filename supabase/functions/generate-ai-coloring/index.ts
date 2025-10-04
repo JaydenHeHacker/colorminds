@@ -142,12 +142,29 @@ serve(async (req) => {
         'remove': 'Remove the background completely, focus only on the main subject with a plain white background'
       };
 
-      optimizedPrompt = `Convert this photo into a clean, black-and-white coloring page. Requirements:
+      optimizedPrompt = `CRITICAL: Convert this photo into a black-and-white coloring page while PRESERVING ALL ORIGINAL FEATURES.
+
+MUST PRESERVE:
+- Exact facial expressions, emotions, and gestures from the photo
+- Original poses, positions, and body language
+- All distinctive features and characteristics of subjects
+- The composition and layout of the original image
+- Maintain accurate proportions and spatial relationships
+
+CONVERSION SETTINGS:
 - Line complexity: ${complexityMap[line_complexity || 'medium']}
 - Style: ${styleMap[image_style || 'original']}
 - Line thickness: ${weightMap[line_weight || 'medium']}
 - Background: ${bgMap[background_mode || 'keep']}
-- Output: Pure black lines on white background, no shading, no gray tones, suitable for printing and coloring`;
+
+OUTPUT REQUIREMENTS:
+- Pure black outlines on white background
+- No shading, no gray tones, no colors
+- Keep the image as faithful as possible to the original photo
+- Only convert to line art, DO NOT reimagine or recreate the scene
+- Suitable for printing and coloring
+
+IMPORTANT: This should look like a traced version of the original photo, not a new artistic interpretation.`;
 
       aiRequestBody = {
         model: 'google/gemini-2.5-flash-image-preview',

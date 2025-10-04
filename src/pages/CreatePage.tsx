@@ -508,13 +508,13 @@ export default function CreatePage() {
                     <>
                       <ImageIcon className="w-5 h-5 text-amber-600" />
                       <div>
-                        <p className="font-semibold flex items-center gap-2">
+                        <div className="font-semibold flex items-center gap-2">
                           Image to Image Mode
                           <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-xs">
                             <Crown className="w-3 h-3 mr-1" />
                             Premium
                           </Badge>
-                        </p>
+                        </div>
                         <p className="text-xs text-muted-foreground">Convert photo to coloring page</p>
                       </div>
                     </>
