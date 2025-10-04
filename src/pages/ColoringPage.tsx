@@ -7,8 +7,9 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecommendedPages } from "@/components/RecommendedPages";
 import { CreateCTA } from "@/components/CreateCTA";
 import { Button } from "@/components/ui/button";
-import { Printer, Heart, Share2, ArrowLeft, Loader2, Eye, Sparkles } from "lucide-react";
+import { Printer, Heart, Share2, ArrowLeft, Loader2, Eye, Sparkles, Palette } from "lucide-react";
 import { ColorInspirationDialog } from "@/components/ColorInspirationDialog";
+import { OnlineColoringDialog } from "@/components/OnlineColoringDialog";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShareDialog } from "@/components/ShareDialog";
@@ -23,6 +24,7 @@ const ColoringPage = () => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
   const [isInspirationOpen, setIsInspirationOpen] = useState(false);
+  const [isColoringOpen, setIsColoringOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -448,15 +450,24 @@ const ColoringPage = () => {
                     </Button>
                   </div>
                   <div className="flex gap-3">
-                    <Button 
-                      variant="secondary"
-                      onClick={() => setIsInspirationOpen(true)}
-                      size="lg"
-                      className="flex-1 gap-2"
-                    >
-                      <Sparkles className="h-5 w-5" />
-                      AI Inspiration
-                    </Button>
+              <Button
+                variant="secondary"
+                onClick={() => setIsInspirationOpen(true)}
+                size="lg"
+                className="flex-1 gap-2"
+              >
+                <Sparkles className="h-5 w-5" />
+                AI Inspiration
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => setIsColoringOpen(true)}
+                size="lg"
+                className="flex-1 gap-2"
+              >
+                <Palette className="h-5 w-5" />
+                Online Coloring
+              </Button>
                   </div>
                   <div className="flex gap-3">
                     <Button 
@@ -629,6 +640,13 @@ const ColoringPage = () => {
       <ColorInspirationDialog
         open={isInspirationOpen}
         onOpenChange={setIsInspirationOpen}
+        imageUrl={page.image_url}
+        pageTitle={page.title}
+      />
+      
+      <OnlineColoringDialog
+        open={isColoringOpen}
+        onOpenChange={setIsColoringOpen}
         imageUrl={page.image_url}
         pageTitle={page.title}
       />
