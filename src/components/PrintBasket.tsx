@@ -222,6 +222,8 @@ export const PrintBasket = () => {
   };
 
   const basketCount = basketItems?.length || 0;
+  const FREE_USER_LIMIT = 3;
+  const isAtLimit = !isPremium && basketCount >= FREE_USER_LIMIT;
 
   if (!user) return null;
 
@@ -262,22 +264,27 @@ export const PrintBasket = () => {
           </SheetHeader>
 
           <div className="mt-6 space-y-4">
-            {/* Premium提示 */}
+            {/* Free用户限制提示 */}
             {!isPremium && (
               <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-4 border border-primary/20">
                 <div className="flex items-start gap-3">
                   <Sparkles className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                   <div className="flex-1 space-y-2">
-                    <p className="text-sm font-medium">Batch Print is a Premium Feature</p>
+                    <p className="text-sm font-medium">
+                      {isAtLimit ? 'Print Basket Limit Reached' : 'Free Plan Limitations'}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      Upgrade to print all items at once and save 50% time
+                      {isAtLimit 
+                        ? `You've reached the free limit of ${FREE_USER_LIMIT} items. Upgrade for unlimited items and batch printing!`
+                        : `Free: ${basketCount}/${FREE_USER_LIMIT} items • Premium: Unlimited + Batch Print`
+                      }
                     </p>
                     <Button 
                       size="sm" 
                       onClick={() => setShowUpgradeDialog(true)}
                       className="w-full"
                     >
-                      Upgrade Now
+                      {isAtLimit ? 'Upgrade to Add More' : 'Upgrade Now'}
                     </Button>
                   </div>
                 </div>

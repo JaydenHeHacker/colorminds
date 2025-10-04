@@ -108,6 +108,7 @@ export const ColoringCard = ({
       if (!user || !id) return;
 
       if (isInBasket) {
+        // 从打印篮移除
         const { error } = await supabase
           .from('print_basket')
           .delete()
@@ -115,6 +116,26 @@ export const ColoringCard = ({
           .eq('coloring_page_id', id);
         if (error) throw error;
       } else {
+        // 添加到打印篮前检查限制
+        // 先检查是否是Premium用户
+        const { data: subData } = await supabase.functions.invoke('check-subscription');
+        const isPremium = subData?.subscribed || false;
+        
+        if (!isPremium) {
+          // Free用户，检查数量限制
+          const { data: basketItems, error: countError } = await supabase
+            .from('print_basket')
+            .select('id', { count: 'exact' })
+            .eq('user_id', user.id);
+          
+          if (countError) throw countError;
+          
+          const FREE_USER_LIMIT = 3;
+          if (basketItems && basketItems.length >= FREE_USER_LIMIT) {
+            throw new Error(`FREE_LIMIT:Free users can only add up to ${FREE_USER_LIMIT} items. Upgrade to Premium for unlimited items!`);
+          }
+        }
+
         const { error } = await supabase
           .from('print_basket')
           .insert({ user_id: user.id, coloring_page_id: id });
@@ -126,8 +147,19 @@ export const ColoringCard = ({
       queryClient.invalidateQueries({ queryKey: ['print-basket'] });
       sonnerToast.success(isInBasket ? "已从打印篮移除" : "已添加到打印篮");
     },
-    onError: () => {
-      sonnerToast.error("操作失败");
+    onError: (error: Error) => {
+      if (error.message.startsWith('FREE_LIMIT:')) {
+        const message = error.message.replace('FREE_LIMIT:', '');
+        sonnerToast.error(message, {
+          description: "Upgrade to Premium for unlimited print basket items",
+          action: {
+            label: "Upgrade",
+            onClick: () => navigate('/credits-store')
+          }
+        });
+      } else {
+        sonnerToast.error("操作失败");
+      }
     }
   });
 
