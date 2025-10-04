@@ -11,12 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Crown, Zap, Lock, Wand2, Eye, EyeOff, BookOpen } from "lucide-react";
+import { Sparkles, Crown, Zap, Lock, Wand2, Eye, EyeOff, BookOpen, Type, Image } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SeriesExamplesShowcase } from "@/components/SeriesExamplesShowcase";
+import { ImageUploadZone } from "@/components/ImageUploadZone";
 
 export default function CreatePage() {
   const navigate = useNavigate();
@@ -28,12 +29,18 @@ export default function CreatePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
-  const [upgradeFeature, setUpgradeFeature] = useState<'speed' | 'privacy' | 'quantity' | 'ai-polish' | 'series'>('speed');
+  const [upgradeFeature, setUpgradeFeature] = useState<'speed' | 'privacy' | 'quantity' | 'ai-polish' | 'series' | 'image-to-image'>('speed');
   const [imageQuantity, setImageQuantity] = useState("1");
   const [isPrivate, setIsPrivate] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [generationType, setGenerationType] = useState<'single' | 'series'>('single');
   const [seriesLength, setSeriesLength] = useState("4");
+  const [inputMode, setInputMode] = useState<'text' | 'image'>('text');
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [lineComplexity, setLineComplexity] = useState('medium');
+  const [imageStyle, setImageStyle] = useState('original');
+  const [lineWeight, setLineWeight] = useState('medium');
+  const [backgroundMode, setBackgroundMode] = useState('keep');
 
   // Load categories - get children of "All" root category
   const { data: categories } = useQuery({
@@ -153,6 +160,22 @@ export default function CreatePage() {
     setGenerationType(value);
   };
 
+  const handleInputModeChange = (value: 'text' | 'image') => {
+    // Image-to-image is Premium only, check immediately
+    if (value === 'image' && subscription?.tier !== 'premium') {
+      setUpgradeFeature('image-to-image');
+      setUpgradeDialogOpen(true);
+      return;
+    }
+    setInputMode(value);
+    // Clear previous selections when switching modes
+    if (value === 'image') {
+      setPrompt('');
+    } else {
+      setSelectedImage(null);
+    }
+  };
+
   const handleGenerate = async () => {
     // Check if user is logged in first
     if (!user) {
@@ -180,10 +203,20 @@ export default function CreatePage() {
       return;
     }
 
-    if (!prompt.trim()) {
+    // Validate based on input mode
+    if (inputMode === 'text' && !prompt.trim()) {
       toast({
         title: "Please enter a prompt",
         description: generationType === 'series' ? "Describe the story theme" : "Describe the coloring page you want",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (inputMode === 'image' && !selectedImage) {
+      toast({
+        title: "Please upload an image",
+        description: "Upload a photo to convert to coloring page",
         variant: "destructive",
       });
       return;
@@ -379,30 +412,57 @@ export default function CreatePage() {
         {/* Creation Form */}
         <Card className="p-8 mb-8">
           <div className="space-y-6">
-            {/* Generation Type Selection */}
+            {/* Input Mode Selection */}
             <div>
               <label className="block text-sm font-medium mb-3">
-                Generation Type
+                Input Method
               </label>
-              <Tabs value={generationType} onValueChange={(v) => handleGenerationTypeChange(v as 'single' | 'series')}>
+              <Tabs value={inputMode} onValueChange={(v) => handleInputModeChange(v as 'text' | 'image')}>
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="single">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Single Page
+                  <TabsTrigger value="text">
+                    <Type className="w-4 h-4 mr-2" />
+                    Text Prompt
                   </TabsTrigger>
-                  <TabsTrigger value="series">
-                    <BookOpen className="w-4 h-4 mr-2" />
-                    Series
-                    {!isPremium && <Crown className="w-3 h-3 ml-2 text-amber-500" />}
+                  <TabsTrigger value="image">
+                    <Image className="w-4 h-4 mr-2" />
+                    Upload Image
+                    <Crown className="w-3 h-3 ml-2 text-amber-500" />
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
               <p className="text-sm text-muted-foreground mt-2">
-                {generationType === 'single' 
-                  ? "Generate a single coloring page"
-                  : "Generate 4-8 connected pages with a cohesive story"}
+                {inputMode === 'text' 
+                  ? "Describe what you want to create"
+                  : "Upload a photo to convert into a coloring page"}
               </p>
             </div>
+
+            {/* Generation Type Selection - Only for text mode */}
+            {inputMode === 'text' && (
+              <div>
+                <label className="block text-sm font-medium mb-3">
+                  Generation Type
+                </label>
+                <Tabs value={generationType} onValueChange={(v) => handleGenerationTypeChange(v as 'single' | 'series')}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="single">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Single Page
+                    </TabsTrigger>
+                    <TabsTrigger value="series">
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Series
+                      {!isPremium && <Crown className="w-3 h-3 ml-2 text-amber-500" />}
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {generationType === 'single' 
+                    ? "Generate a single coloring page"
+                    : "Generate 4-8 connected pages with a cohesive story"}
+                </p>
+              </div>
+            )}
 
             {/* Category Selection */}
             <div>
@@ -426,8 +486,9 @@ export default function CreatePage() {
               </p>
             </div>
 
-            {/* Prompt Input with AI Polish */}
-            <div>
+            {/* Text Input or Image Upload based on mode */}
+            {inputMode === 'text' ? (
+              <div>
               <label className="block text-sm font-medium mb-2">
                 {generationType === 'single' ? 'Describe the coloring page you want *' : 'Series Theme & Story *'}
               </label>
@@ -460,9 +521,25 @@ export default function CreatePage() {
                   : "AI will create a cohesive story arc across multiple pages"}
               </p>
             </div>
+            ) : (
+              <ImageUploadZone
+                onImageSelect={setSelectedImage}
+                selectedImage={selectedImage}
+                onRemove={() => setSelectedImage(null)}
+                lineComplexity={lineComplexity}
+                onLineComplexityChange={setLineComplexity}
+                style={imageStyle}
+                onStyleChange={setImageStyle}
+                lineWeight={lineWeight}
+                onLineWeightChange={setLineWeight}
+                backgroundMode={backgroundMode}
+                onBackgroundModeChange={setBackgroundMode}
+                disabled={isGenerating}
+              />
+            )}
 
-            {/* Series Length (only for series generation) */}
-            {generationType === 'series' && (
+            {/* Series Length (only for text series generation) */}
+            {inputMode === 'text' && generationType === 'series' && (
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium">Series Length</label>
@@ -488,8 +565,8 @@ export default function CreatePage() {
               </div>
             )}
 
-            {/* Image Quantity & Privacy Settings (only for single generation) */}
-            {generationType === 'single' && (
+            {/* Image Quantity & Privacy Settings (only for single text generation) */}
+            {inputMode === 'text' && generationType === 'single' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Number of Images</label>

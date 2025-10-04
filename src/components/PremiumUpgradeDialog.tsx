@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 interface PremiumUpgradeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  feature: 'speed' | 'privacy' | 'quantity' | 'ai-polish' | 'series';
+  feature: 'speed' | 'privacy' | 'quantity' | 'ai-polish' | 'series' | 'image-to-image';
 }
 
 const featureContent = {
@@ -64,6 +64,17 @@ const featureContent = {
       "Better value - series costs less per page"
     ],
     savings: "Save credits with series generation"
+  },
+  'image-to-image': {
+    title: "Photo to Coloring Page Conversion",
+    description: "Transform your photos into beautiful coloring pages",
+    benefits: [
+      "Convert family photos, pet pictures, or any image",
+      "Adjust line complexity for different age groups",
+      "Choose from realistic, cartoon, or cute styles",
+      "Control line thickness and background processing"
+    ],
+    savings: "Premium exclusive feature"
   }
 };
 
