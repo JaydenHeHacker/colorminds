@@ -20,6 +20,8 @@ interface ColoringCardProps {
   seriesTitle?: string | null;
   seriesOrder?: number | null;
   seriesTotal?: number | null;
+  publishedAt?: string | null;
+  showNewBadge?: boolean;
 }
 
 export const ColoringCard = ({ 
@@ -32,7 +34,9 @@ export const ColoringCard = ({
   seriesId,
   seriesTitle,
   seriesOrder,
-  seriesTotal
+  seriesTotal,
+  publishedAt,
+  showNewBadge = false
 }: ColoringCardProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -223,8 +227,29 @@ export const ColoringCard = ({
 
   const config = difficultyConfig[difficulty];
 
+  const formatPublishedDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays <= 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
   return (
     <Card className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-colorful hover:-translate-y-1 relative animate-fade-in">
+      {/* NEW Badge */}
+      {showNewBadge && (
+        <div className="absolute top-3 left-3 z-10">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-accent to-primary text-white shadow-lg animate-pulse">
+            ✨ NEW
+          </span>
+        </div>
+      )}
+      
       {/* Action buttons in top-right corner */}
       <div className="absolute top-3 right-3 z-10 flex gap-2">
         <Button
@@ -299,6 +324,12 @@ export const ColoringCard = ({
         {seriesId && seriesTitle && (
           <p className="text-xs text-muted-foreground line-clamp-1 group-hover:text-foreground transition-colors">
             Part of: {seriesTitle}
+          </p>
+        )}
+        {publishedAt && (
+          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+            <span>📅</span>
+            <time dateTime={publishedAt}>{formatPublishedDate(publishedAt)}</time>
           </p>
         )}
       </div>

@@ -173,6 +173,18 @@ const Index = () => {
     pages
   }));
 
+  // Get recently published pages (last 7 days)
+  const getRecentlyPublished = () => {
+    if (!standalonePages.length) return [];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    return standalonePages
+      .filter(page => page.published_at && new Date(page.published_at) >= sevenDaysAgo)
+      .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
+      .slice(0, 12);
+  };
+
   // Get today's featured pages (rotates daily based on date)
   const getTodaysFeatured = () => {
     if (!standalonePages.length) return [];
@@ -185,6 +197,8 @@ const Index = () => {
     }
     return featured;
   };
+
+  const recentlyPublished = getRecentlyPublished();
 
   // Pages to display (either selected series pages or standalone pages)
   const pagesToDisplay = selectedSeriesId
@@ -210,6 +224,9 @@ const Index = () => {
     ? `Browse ${selectedCategory.toLowerCase()} coloring pages - 100% free and printable! Download high-quality designs for kids and adults. Print instantly at home or in the classroom.`
     : 'Discover 1000+ free printable coloring pages for kids and adults. Browse animals, holidays, fantasy characters, and exclusive AI-generated story series. Download and print high-quality designs instantly - perfect for home or classroom!';
 
+  // Get most recent published date for SEO
+  const mostRecentUpdate = coloringPages?.[0]?.published_at || new Date().toISOString();
+
   return (
     <div className="min-h-screen flex flex-col">
       <SocialMeta
@@ -217,6 +234,7 @@ const Index = () => {
         description={pageDescription}
         image={coloringPages?.[0]?.image_url}
         type="website"
+        modifiedTime={mostRecentUpdate}
         keywords={[
           'free coloring pages',
           'printable coloring pages',
@@ -304,6 +322,54 @@ const Index = () => {
           </div>
         </section>
         
+        {/* Recently Published Section - Only show on homepage without filters */}
+        {!selectedCategory && !selectedSeriesId && !searchQuery && recentlyPublished.length > 0 && (
+          <section className="py-12 md:py-16 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 relative overflow-hidden">
+            {/* Decorative background elements */}
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+            </div>
+            
+            <div className="container px-4 relative z-10">
+              <div className="text-center mb-8 md:mb-10">
+                <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-accent/20 to-primary/20 border-2 border-primary/30 mb-4 animate-fade-in">
+                  <span className="text-2xl animate-bounce">✨</span>
+                  <span className="text-sm font-bold text-primary uppercase tracking-wider">Fresh Content</span>
+                  <span className="text-2xl animate-bounce" style={{ animationDelay: '0.2s' }}>🎨</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                  Recently Published Coloring Pages
+                </h2>
+                <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+                  🔥 Brand new designs added in the last 7 days - Download and print the freshest coloring pages now!
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                {recentlyPublished.map((page, index) => (
+                  <div key={page.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                    <ColoringCard
+                      id={page.id}
+                      slug={page.slug}
+                      title={page.title}
+                      image={page.image_url}
+                      category={page.categories?.name || 'Uncategorized'}
+                      difficulty={page.difficulty as "easy" | "medium" | "hard"}
+                      seriesId={page.series_id}
+                      seriesTitle={page.series_title}
+                      seriesOrder={page.series_order}
+                      seriesTotal={page.series_total}
+                      publishedAt={page.published_at}
+                      showNewBadge={index < 4}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* AI Creation CTA after search */}
         <LazySection className="container px-4 py-8">
           <CreateCTA variant="inline" context="category" />
@@ -349,6 +415,7 @@ const Index = () => {
                       seriesTitle={page.series_title}
                       seriesOrder={page.series_order}
                       seriesTotal={page.series_total}
+                      publishedAt={page.published_at}
                     />
                   ))
                 ) : (
@@ -450,6 +517,7 @@ const Index = () => {
                     seriesTitle={page.series_title}
                     seriesOrder={page.series_order}
                     seriesTotal={page.series_total}
+                    publishedAt={page.published_at}
                   />
                 ))
               ) : (
