@@ -50,9 +50,15 @@ export const OnlineColoringDialog = ({
       return;
     }
 
-    // Set canvas size
-    canvas.width = 800;
-    canvas.height = 600;
+    // Set canvas size to match container
+    const container = containerRef.current;
+    if (container) {
+      canvas.width = Math.min(container.clientWidth, 1200);
+      canvas.height = Math.min(container.clientHeight, 800);
+    } else {
+      canvas.width = 800;
+      canvas.height = 600;
+    }
     
     // Create a separate drawing layer canvas
     const drawingCanvas = document.createElement('canvas');
@@ -60,26 +66,35 @@ export const OnlineColoringDialog = ({
     drawingCanvas.height = canvas.height;
     drawingLayerRef.current = drawingCanvas;
     
-    // Set drawing settings
+    // Initialize drawing context for the drawing layer
+    const drawCtx = drawingCanvas.getContext("2d");
+    if (drawCtx) {
+      drawCtx.lineCap = "round";
+      drawCtx.lineJoin = "round";
+    }
+    
+    // Set drawing settings for main context
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     
     setContext(ctx);
 
-    // Load background image
+    // Load background image with proper CORS handling
     const img = new Image();
     img.crossOrigin = "anonymous";
     
     img.onload = () => {
       backgroundImageRef.current = img;
-      renderCanvas(ctx, canvas, img, drawingCanvas, zoom, panOffset);
+      renderCanvas(ctx, canvas, img, drawingCanvas, 1, { x: 0, y: 0 });
       toast.success("Canvas ready! Scroll to zoom, drag to pan");
     };
     
-    img.onerror = () => {
+    img.onerror = (e) => {
+      console.error("Image load error:", e);
       toast.error("Failed to load image. Please try again.");
     };
     
+    // Set src after crossOrigin to ensure CORS is applied
     img.src = imageUrl;
 
     // Cleanup
@@ -230,6 +245,8 @@ export const OnlineColoringDialog = ({
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    
     if (!drawingLayerRef.current) return;
     
     if (isPanning) {
@@ -251,6 +268,8 @@ export const OnlineColoringDialog = ({
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    
     if (!drawingLayerRef.current) return;
     
     if (isPanning) {
@@ -272,7 +291,7 @@ export const OnlineColoringDialog = ({
     
     const { x, y } = getTransformedCoords(e);
     drawCtx.strokeStyle = isEraser ? "#ffffff" : activeColor;
-    drawCtx.lineWidth = brushSize / zoom; // Adjust brush size for zoom
+    drawCtx.lineWidth = brushSize; // Use actual brush size without zoom adjustment for drawing layer
     drawCtx.lineCap = "round";
     drawCtx.lineJoin = "round";
     drawCtx.lineTo(x, y);
@@ -446,11 +465,19 @@ export const OnlineColoringDialog = ({
             </div>
 
             {/* Canvas */}
-            <div className="border rounded-lg overflow-hidden bg-white touch-manipulation">
+            <div 
+              ref={containerRef}
+              className="border rounded-lg overflow-hidden bg-white touch-manipulation"
+              style={{ minHeight: '400px' }}
+            >
               <canvas 
                 ref={canvasRef}
-                className="max-w-full"
-                style={{ cursor: isPanning ? 'move' : 'crosshair' }}
+                className="max-w-full h-auto"
+                style={{ 
+                  cursor: isPanning ? 'move' : 'crosshair',
+                  display: 'block',
+                  touchAction: 'none'
+                }}
                 onWheel={handleWheel}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
