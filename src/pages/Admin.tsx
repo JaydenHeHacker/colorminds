@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ArrowLeft, LogOut, Settings, BarChart3, FolderTree, TrendingUp, Users, CalendarClock, Zap } from "lucide-react";
+import { Loader2, ArrowLeft, LogOut, Settings, BarChart3, FolderTree, TrendingUp, Users, CalendarClock, Zap, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ManageColoringPages from "@/components/admin/ManageColoringPages";
@@ -16,6 +16,7 @@ import UserManagement from "@/components/admin/UserManagement";
 import PublishingSchedule from "@/components/admin/PublishingSchedule";
 import { AutoGenerateControl } from "@/components/admin/AutoGenerateControl";
 import ManageArtwork from "@/components/admin/ManageArtwork";
+import ManageContactMessages from "@/components/admin/ManageContactMessages";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -166,7 +167,7 @@ export default function Admin() {
       </div>
       <div className="container py-4 sm:py-8 px-2 sm:px-4">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 mb-4 sm:mb-8 h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 mb-4 sm:mb-8 h-auto">
             <TabsTrigger value="dashboard" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">数据概览</span>
@@ -207,6 +208,11 @@ export default function Admin() {
               <span className="hidden sm:inline">管理页面</span>
               <span className="sm:hidden">页面</span>
             </TabsTrigger>
+            <TabsTrigger value="contact" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">联系消息</span>
+              <span className="sm:hidden">消息</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -239,6 +245,10 @@ export default function Admin() {
 
           <TabsContent value="artwork">
             <ManageArtwork />
+          </TabsContent>
+
+          <TabsContent value="contact">
+            <ManageContactMessages />
           </TabsContent>
         </Tabs>
       </div>

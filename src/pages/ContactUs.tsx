@@ -43,9 +43,18 @@ export default function ContactUs() {
     setSubmitting(true);
 
     try {
-      // TODO: Implement actual email sending logic
-      // For now, just simulate the submission
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert({
+          name: name.trim(),
+          email: email.trim(),
+          subject: subject.trim(),
+          message: message.trim(),
+        });
+
+      if (error) throw error;
 
       toast({
         title: "Message sent!",
@@ -58,6 +67,7 @@ export default function ContactUs() {
       setSubject("");
       setMessage("");
     } catch (error) {
+      console.error("Error submitting contact form:", error);
       toast({
         title: "Failed to send",
         description: "Please try again later",
