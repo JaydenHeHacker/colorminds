@@ -1,4 +1,4 @@
-import { Search, Menu, Heart, LogIn, LogOut, User, X, Calendar } from "lucide-react";
+import { Menu, Heart, LogIn, LogOut, User, X, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
@@ -17,8 +17,6 @@ export const Header = () => {
   const isMobile = useIsMobile();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
   const {
     isAdmin
   } = useUserRole(user);
@@ -43,14 +41,7 @@ export const Header = () => {
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
   };
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchQuery)}`);
-      setShowSearch(false);
-      setSearchQuery("");
-    }
-  };
+  
   const scrollToSection = (sectionId: string) => {
     if (location.pathname !== '/') {
       navigate(`/#${sectionId}`);
@@ -96,24 +87,8 @@ export const Header = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Desktop Search */}
-            {!isMobile && (showSearch ? <form onSubmit={handleSearch} className="flex items-center gap-2">
-                  
-                  <Button type="button" variant="ghost" size="icon" onClick={() => setShowSearch(false)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </form> : <Button variant="ghost" size="icon" onClick={() => setShowSearch(true)}>
-                  <Search className="h-5 w-5" />
-                </Button>)}
-
-            {/* Mobile Search Button */}
-            {isMobile && <Button variant="ghost" size="icon" onClick={() => setShowSearch(true)}>
-                <Search className="h-5 w-5" />
-              </Button>}
-
             <Button variant="default" size="sm" onClick={() => navigate("/create")} className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-              <Search className="h-4 w-4" />
-              <span className="hidden md:inline">✨ Create</span>
+              <span>✨ Create</span>
             </Button>
 
             {user ? <DropdownMenu>
@@ -175,7 +150,6 @@ export const Header = () => {
             navigate('/create');
             setMobileMenuOpen(false);
           }} className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80">
-              <Search className="h-5 w-5" />
               ✨ Create Your Own
             </Button>
             {user && <button onClick={() => {
@@ -223,24 +197,6 @@ export const Header = () => {
                 <LogIn className="h-5 w-5" />
                 Log In
               </Button>}
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      {/* Mobile Search Drawer */}
-      <Drawer open={showSearch && isMobile} onOpenChange={setShowSearch}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Search Coloring Pages</DrawerTitle>
-          </DrawerHeader>
-          <div className="p-4">
-            <form onSubmit={handleSearch} className="space-y-4">
-              <Input type="text" placeholder="Search by title, category, or series..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full" autoFocus />
-              <Button type="submit" className="w-full gap-2">
-                <Search className="h-4 w-4" />
-                Search
-              </Button>
-            </form>
           </div>
         </DrawerContent>
       </Drawer>
