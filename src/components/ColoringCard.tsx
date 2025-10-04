@@ -1,12 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heart, Loader2 } from "lucide-react";
+import { Heart, Loader2, ShoppingBasket } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast as sonnerToast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface ColoringCardProps {
   id?: string;
@@ -41,6 +42,8 @@ export const ColoringCard = ({
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isInBasket, setIsInBasket] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -57,6 +60,7 @@ export const ColoringCard = ({
   useEffect(() => {
     if (user && id) {
       checkFavoriteStatus();
+      checkBasketStatus();
     }
   }, [user, id]);
 
@@ -81,6 +85,51 @@ export const ColoringCard = ({
       setIsCheckingFavorite(false);
     }
   };
+
+  const checkBasketStatus = async () => {
+    if (!id || !user) return;
+    
+    try {
+      const { data } = await supabase
+        .from('print_basket')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('coloring_page_id', id)
+        .maybeSingle();
+      
+      setIsInBasket(!!data);
+    } catch (error) {
+      console.error('Error checking basket:', error);
+    }
+  };
+
+  const basketMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !id) return;
+
+      if (isInBasket) {
+        const { error } = await supabase
+          .from('print_basket')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('coloring_page_id', id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('print_basket')
+          .insert({ user_id: user.id, coloring_page_id: id });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      setIsInBasket(!isInBasket);
+      queryClient.invalidateQueries({ queryKey: ['print-basket'] });
+      sonnerToast.success(isInBasket ? "已从打印篮移除" : "已添加到打印篮");
+    },
+    onError: () => {
+      sonnerToast.error("操作失败");
+    }
+  });
 
   const handleToggleFavorite = async () => {
     if (!user) {
@@ -125,6 +174,15 @@ export const ColoringCard = ({
     }
   };
 
+  const handleToggleBasket = () => {
+    if (!user) {
+      sonnerToast.error("请先登录");
+      navigate("/auth");
+      return;
+    }
+    basketMutation.mutate();
+  };
+
   const difficultyConfig = {
     easy: { label: "Easy", icon: "🟢", color: "bg-green-500/10 text-green-700 border-green-200" },
     medium: { label: "Medium", icon: "🟡", color: "bg-yellow-500/10 text-yellow-700 border-yellow-200" },
@@ -135,21 +193,37 @@ export const ColoringCard = ({
 
   return (
     <Card className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-colorful hover:-translate-y-1 relative animate-fade-in">
-      {/* Favorite button in top-right corner */}
-      <Button
-        size="icon"
-        variant={isFavorited ? "default" : "secondary"}
-        className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all hover:scale-110"
-        onClick={handleToggleFavorite}
-        disabled={isCheckingFavorite || isTogglingFavorite}
-        aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
-      >
-        {isTogglingFavorite ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Heart className={`h-4 w-4 transition-all ${isFavorited ? 'fill-current scale-110' : ''}`} />
-        )}
-      </Button>
+      {/* Action buttons in top-right corner */}
+      <div className="absolute top-3 right-3 z-10 flex gap-2">
+        <Button
+          size="icon"
+          variant={isInBasket ? "default" : "secondary"}
+          className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all hover:scale-110"
+          onClick={handleToggleBasket}
+          disabled={basketMutation.isPending}
+          aria-label={isInBasket ? "从打印篮移除" : "添加到打印篮"}
+        >
+          {basketMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ShoppingBasket className={`h-4 w-4 transition-all ${isInBasket ? 'fill-current scale-110' : ''}`} />
+          )}
+        </Button>
+        <Button
+          size="icon"
+          variant={isFavorited ? "default" : "secondary"}
+          className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all hover:scale-110"
+          onClick={handleToggleFavorite}
+          disabled={isCheckingFavorite || isTogglingFavorite}
+          aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+        >
+          {isTogglingFavorite ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Heart className={`h-4 w-4 transition-all ${isFavorited ? 'fill-current scale-110' : ''}`} />
+          )}
+        </Button>
+      </div>
 
       <Link to={slug ? `/coloring-page/${slug}` : '#'} className="block" aria-label={`View ${title} coloring page`}>
         <div className="aspect-square overflow-hidden bg-muted relative">

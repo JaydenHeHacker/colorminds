@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { PrintBasket } from "@/components/PrintBasket";
 import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import ColoringPage from "./pages/ColoringPage";
@@ -10,6 +11,7 @@ import CategoryPage from "./pages/CategoryPage";
 import SeriesPage from "./pages/SeriesPage";
 import AllSeries from "./pages/AllSeries";
 import Favorites from "./pages/Favorites";
+import Profile from "./pages/Profile";
 import Sitemap from "./pages/Sitemap";
 import ImageSitemap from "./pages/ImageSitemap";
 import Admin from "./pages/Admin";
@@ -28,6 +30,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <PrintBasket />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/browse" element={<Browse />} />
@@ -38,6 +41,7 @@ const App = () => (
           <Route path="/series" element={<AllSeries />} />
           <Route path="/series/:slug" element={<SeriesPage />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/create" element={<CreatePage />} />
           <Route path="/credits" element={<CreditsStore />} />
           <Route path="/credits-store" element={<CreditsStore />} />

@@ -168,6 +168,17 @@ const ColoringPage = () => {
     try {
       toast.info("Loading image for print...");
       
+      // 记录打印历史
+      if (user) {
+        await supabase
+          .from('coloring_history')
+          .insert({
+            user_id: user.id,
+            coloring_page_id: page.id,
+            action_type: 'print'
+          });
+      }
+      
       // Create a hidden iframe for printing
       const iframe = document.createElement('iframe');
       iframe.style.position = 'fixed';

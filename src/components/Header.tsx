@@ -1,4 +1,4 @@
-import { Search, Menu, Heart, LogIn, LogOut, User, X } from "lucide-react";
+import { Search, Menu, Heart, LogIn, LogOut, User, X, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
@@ -124,6 +124,10 @@ export const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="z-50 bg-popover">
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    我的中心
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/favorites')}>
                     <Heart className="h-4 w-4 mr-2" />
                     My Favorites
@@ -174,6 +178,13 @@ export const Header = () => {
               <Search className="h-5 w-5" />
               ✨ Create Your Own
             </Button>
+            {user && <button onClick={() => {
+            navigate('/profile');
+            setMobileMenuOpen(false);
+          }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                我的中心
+              </button>}
             <button onClick={() => scrollToSection('categories')} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
               Categories
             </button>

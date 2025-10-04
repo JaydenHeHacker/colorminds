@@ -213,6 +213,38 @@ export type Database = {
           },
         ]
       }
+      coloring_history: {
+        Row: {
+          action_type: string
+          coloring_page_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          coloring_page_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          coloring_page_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coloring_history_coloring_page_id_fkey"
+            columns: ["coloring_page_id"]
+            isOneToOne: false
+            referencedRelation: "coloring_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coloring_pages: {
         Row: {
           category_id: string | null
@@ -428,6 +460,35 @@ export type Database = {
           },
         ]
       }
+      print_basket: {
+        Row: {
+          added_at: string | null
+          coloring_page_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          coloring_page_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string | null
+          coloring_page_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_basket_coloring_page_id_fkey"
+            columns: ["coloring_page_id"]
+            isOneToOne: false
+            referencedRelation: "coloring_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -473,6 +534,33 @@ export type Database = {
           key?: string
           updated_at?: string | null
           value?: string
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_name: string
+          achievement_type: string
+          id: string
+          metadata: Json | null
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievement_name: string
+          achievement_type: string
+          id?: string
+          metadata?: Json | null
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievement_name?: string
+          achievement_type?: string
+          id?: string
+          metadata?: Json | null
+          unlocked_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -571,6 +659,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_unlock_achievements: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
