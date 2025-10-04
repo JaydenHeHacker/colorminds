@@ -31,13 +31,31 @@ export const OnlineColoringDialog = ({
   const [activeColor, setActiveColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
   const [isEraser, setIsEraser] = useState(false);
+  const isInitializedRef = useRef(false);
 
   // Initialize canvas when dialog opens
   useEffect(() => {
-    if (!open || !canvasRef.current || fabricCanvas) return;
+    console.log('useEffect triggered, open:', open, 'canvasRef:', !!canvasRef.current, 'isInitialized:', isInitializedRef.current);
+    
+    if (!open) {
+      console.log('Dialog not open, skipping');
+      return;
+    }
+    
+    if (!canvasRef.current) {
+      console.log('Canvas ref not ready, skipping');
+      return;
+    }
+    
+    if (isInitializedRef.current) {
+      console.log('Already initialized, skipping');
+      return;
+    }
 
     console.log('Initializing canvas for online coloring');
     console.log('Image URL:', imageUrl);
+    
+    isInitializedRef.current = true;
 
     const canvas = new FabricCanvas(canvasRef.current, {
       width: 800,
@@ -95,7 +113,7 @@ export const OnlineColoringDialog = ({
     }
 
     setFabricCanvas(canvas);
-  }, [open]);
+  }, [open, imageUrl, activeColor, brushSize]);
 
   // Cleanup when dialog closes
   useEffect(() => {
@@ -103,8 +121,9 @@ export const OnlineColoringDialog = ({
       console.log('Disposing canvas on dialog close');
       fabricCanvas.dispose();
       setFabricCanvas(null);
+      isInitializedRef.current = false;
     }
-  }, [open]);
+  }, [open, fabricCanvas]);
 
   useEffect(() => {
     if (!fabricCanvas || !fabricCanvas.freeDrawingBrush) return;
