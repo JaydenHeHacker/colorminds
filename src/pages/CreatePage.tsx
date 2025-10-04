@@ -283,7 +283,14 @@ export default function CreatePage() {
         });
 
         await loadUserData(user.id);
-        navigate('/community');
+        
+        // Jump to the first generated page
+        if (data?.images && data.images.length > 0 && data.images[0].generationId) {
+          navigate(`/my-creations/${data.images[0].generationId}`);
+        } else {
+          // Fallback to profile if no generation ID
+          navigate('/profile');
+        }
       } else {
         let requestBody: any = {
           category_id: selectedCategoryId,
