@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { StructuredData } from "@/components/StructuredData";
 import { SocialMeta } from "@/components/SocialMeta";
 
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 6;
 
 const CategoryPage = () => {
   const { "*": pathSlug } = useParams<{ "*": string }>();
