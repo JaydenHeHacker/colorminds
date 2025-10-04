@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 interface PremiumUpgradeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  feature: 'speed' | 'privacy' | 'quantity' | 'ai-polish';
+  feature: 'speed' | 'privacy' | 'quantity' | 'ai-polish' | 'series';
 }
 
 const featureContent = {
@@ -53,6 +53,17 @@ const featureContent = {
       "Learn from AI suggestions"
     ],
     savings: "Better results with less effort"
+  },
+  series: {
+    title: "Create Story Series",
+    description: "Generate 4-8 connected coloring pages with a cohesive narrative",
+    benefits: [
+      "AI creates a complete story arc across pages",
+      "Each page flows naturally to the next",
+      "Perfect for creating coloring books",
+      "Better value - series costs less per page"
+    ],
+    savings: "Save credits with series generation"
   }
 };
 

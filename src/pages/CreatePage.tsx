@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Crown, Zap, Lock, Wand2, Eye, EyeOff } from "lucide-react";
+import { Sparkles, Crown, Zap, Lock, Wand2, Eye, EyeOff, BookOpen } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CreatePage() {
   const navigate = useNavigate();
@@ -26,10 +27,12 @@ export default function CreatePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
-  const [upgradeFeature, setUpgradeFeature] = useState<'speed' | 'privacy' | 'quantity' | 'ai-polish'>('speed');
+  const [upgradeFeature, setUpgradeFeature] = useState<'speed' | 'privacy' | 'quantity' | 'ai-polish' | 'series'>('speed');
   const [imageQuantity, setImageQuantity] = useState("1");
   const [isPrivate, setIsPrivate] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [generationType, setGenerationType] = useState<'single' | 'series'>('single');
+  const [seriesLength, setSeriesLength] = useState("4");
 
   // Load categories - get children of "All" root category
   const { data: categories } = useQuery({
@@ -144,6 +147,15 @@ export default function CreatePage() {
     setUpgradeDialogOpen(true);
   };
 
+  const handleGenerationTypeChange = (value: 'single' | 'series') => {
+    if (value === 'series' && subscription?.tier !== 'premium') {
+      setUpgradeFeature('series');
+      setUpgradeDialogOpen(true);
+      return;
+    }
+    setGenerationType(value);
+  };
+
   const handleGenerate = async () => {
     // Check if user is logged in first
     if (!user) {
@@ -212,30 +224,64 @@ export default function CreatePage() {
         setProgress(50);
       }
 
-      // Call edge function to generate
-      const { data, error } = await supabase.functions.invoke('generate-ai-coloring', {
-        body: { 
-          prompt,
-          category_id: selectedCategoryId,
-          is_private: isPrivate,
+      // Call appropriate edge function based on generation type
+      if (generationType === 'series') {
+        // For series generation
+        const { data: categoryData } = await supabase
+          .from('categories')
+          .select('name')
+          .eq('id', selectedCategoryId)
+          .single();
+
+        const { data, error } = await supabase.functions.invoke('generate-story-series', {
+          body: {
+            category: categoryData?.name || 'General',
+            theme: prompt,
+            difficulty: 'easy',
+            seriesLength: parseInt(seriesLength)
+          }
+        });
+
+        if (error) throw error;
+
+        setProgress(100);
+        
+        toast({
+          title: "Series generation successful!",
+          description: `Created ${seriesLength} connected coloring pages`,
+        });
+
+        // Reload user data
+        await loadUserData(user.id);
+        
+        // Navigate to the series page if available
+        navigate('/community');
+      } else {
+        // For single image generation
+        const { data, error } = await supabase.functions.invoke('generate-ai-coloring', {
+          body: { 
+            prompt,
+            category_id: selectedCategoryId,
+            is_private: isPrivate,
+          }
+        });
+
+        if (error) throw error;
+
+        setProgress(100);
+        
+        toast({
+          title: "Generation successful!",
+          description: "Your coloring page is ready",
+        });
+
+        // Reload user data
+        await loadUserData(user.id);
+        
+        // Navigate to the generated page
+        if (data?.generation_id) {
+          navigate(`/my-creations/${data.generation_id}`);
         }
-      });
-
-      if (error) throw error;
-
-      setProgress(100);
-      
-      toast({
-        title: "Generation successful!",
-        description: "Your coloring page is ready",
-      });
-
-      // Reload user data
-      await loadUserData(user.id);
-      
-      // Navigate to the generated page
-      if (data?.generation_id) {
-        navigate(`/my-creations/${data.generation_id}`);
       }
     } catch (error: any) {
       console.error("Generation error:", error);
@@ -329,6 +375,31 @@ export default function CreatePage() {
         {/* Creation Form */}
         <Card className="p-8 mb-8">
           <div className="space-y-6">
+            {/* Generation Type Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-3">
+                Generation Type
+              </label>
+              <Tabs value={generationType} onValueChange={(v) => handleGenerationTypeChange(v as 'single' | 'series')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="single">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Single Page
+                  </TabsTrigger>
+                  <TabsTrigger value="series">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Series
+                    {!isPremium && <Crown className="w-3 h-3 ml-2 text-amber-500" />}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <p className="text-sm text-muted-foreground mt-2">
+                {generationType === 'single' 
+                  ? "Generate a single coloring page"
+                  : "Generate 4-8 connected pages with a cohesive story"}
+              </p>
+            </div>
+
             {/* Category Selection */}
             <div>
               <label className="block text-sm font-medium mb-2">
@@ -354,13 +425,17 @@ export default function CreatePage() {
             {/* Prompt Input with AI Polish */}
             <div>
               <label className="block text-sm font-medium mb-2">
-                Describe the coloring page you want *
+                {generationType === 'single' ? 'Describe the coloring page you want *' : 'Series Theme & Story *'}
               </label>
               <div className="relative">
                 <Textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Example: A cute kitten playing in a garden with butterflies and flowers, simple lines suitable for kids"
+                  placeholder={
+                    generationType === 'single'
+                      ? "Example: A cute kitten playing in a garden with butterflies and flowers, simple lines suitable for kids"
+                      : "Example: A baby dinosaur's adventure from hatching to making friends in the jungle"
+                  }
                   className="min-h-[120px] pr-12"
                   disabled={isGenerating}
                 />
@@ -376,14 +451,39 @@ export default function CreatePage() {
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Tip: Click the magic wand to let AI enhance your prompt
+                {generationType === 'single'
+                  ? "Tip: Click the magic wand to let AI enhance your prompt"
+                  : "AI will create a cohesive story arc across multiple pages"}
               </p>
             </div>
 
-            {/* Image Quantity & Privacy Settings */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Number of Images</label>
+            {/* Series Length (only for series generation) */}
+            {generationType === 'series' && (
+              <div>
+                <label className="text-sm font-medium">Series Length</label>
+                <Select value={seriesLength} onValueChange={setSeriesLength} disabled={isGenerating}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="4">4 Pages</SelectItem>
+                    <SelectItem value="5">5 Pages</SelectItem>
+                    <SelectItem value="6">6 Pages</SelectItem>
+                    <SelectItem value="7">7 Pages</SelectItem>
+                    <SelectItem value="8">8 Pages</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-2">
+                  More pages = more detailed story progression
+                </p>
+              </div>
+            )}
+
+            {/* Image Quantity & Privacy Settings (only for single generation) */}
+            {generationType === 'single' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Number of Images</label>
                 <Select value={imageQuantity} onValueChange={handleQuantityChange} disabled={isGenerating}>
                   <SelectTrigger>
                     <SelectValue />
@@ -436,6 +536,7 @@ export default function CreatePage() {
                 </p>
               </div>
             </div>
+            )}
 
             {/* Progress with Speed Boost */}
             {isGenerating && (
