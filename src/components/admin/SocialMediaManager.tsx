@@ -104,28 +104,49 @@ export function SocialMediaManager() {
     try {
       setLoading(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
 
-      // Insert placeholder connection
-      const { error } = await supabase
-        .from('social_media_connections')
-        .upsert({
-          user_id: user.id,
-          platform,
-          access_token: 'PLACEHOLDER_TOKEN',
-          username: 'placeholder_user',
-          is_active: true,
-        }, {
-          onConflict: 'user_id,platform'
+      if (platform === 'pinterest') {
+        // Verify real Pinterest connection
+        const { data, error } = await supabase.functions.invoke('verify-pinterest-connection', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
         });
 
-      if (error) throw error;
+        if (error || !data?.success) {
+          throw new Error(data?.error || 'Pinterest 连接失败');
+        }
 
-      toast({
-        title: "连接成功",
-        description: `${platform === 'reddit' ? 'Reddit' : 'Pinterest'} 账号已连接（占位符模式）`,
-      });
+        toast({
+          title: "连接成功",
+          description: `Pinterest 账号 @${data.username} 已连接，共 ${data.boardsCount} 个 Board`,
+        });
+      } else {
+        // Reddit placeholder
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { error } = await supabase
+          .from('social_media_connections')
+          .upsert({
+            user_id: user.id,
+            platform,
+            access_token: 'PLACEHOLDER_TOKEN',
+            username: 'placeholder_user',
+            is_active: true,
+          }, {
+            onConflict: 'user_id,platform'
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "连接成功",
+          description: "Reddit 账号已连接（占位符模式）",
+        });
+      }
 
       loadConnections();
     } catch (error) {
