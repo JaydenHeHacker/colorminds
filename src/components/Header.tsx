@@ -76,9 +76,9 @@ export const Header = () => {
           <div className="flex items-center gap-6">
             <a href="/" className="flex items-center space-x-3">
               <img src={logo} alt="Color Minds Logo" className="h-12 w-auto md:h-16 object-contain transition-smooth hover:scale-105" />
-              <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent gradient-rainbow">
+              <span className="text-xl md:text-2xl font-bold bg-clip-text text-transparent gradient-rainbow">
                 Color Minds
-              </h1>
+              </span>
             </a>
             
             <div className="hidden md:flex items-center gap-4">

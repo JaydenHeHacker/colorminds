@@ -10,6 +10,9 @@ import { FAQ } from "@/components/FAQ";
 import { AboutSection } from "@/components/AboutSection";
 import { CreateCTA } from "@/components/CreateCTA";
 import { Footer } from "@/components/Footer";
+import { SocialMeta } from "@/components/SocialMeta";
+import { StructuredData } from "@/components/StructuredData";
+import { LazySection } from "@/components/LazySection";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -196,8 +199,40 @@ const Index = () => {
     : null;
 
 
+  // SEO meta data
+  const pageTitle = selectedCategory 
+    ? `${selectedCategory} Coloring Pages - Free Printables | Color Minds`
+    : searchQuery
+    ? `Search: "${searchQuery}" - Coloring Pages | Color Minds`
+    : 'Free Printable Coloring Pages for Kids & Adults | Color Minds';
+    
+  const pageDescription = selectedCategory
+    ? `Download free ${selectedCategory} coloring pages. High-quality printable designs for kids and adults. Print instantly at home!`
+    : 'Discover thousands of free printable coloring pages for kids and adults. Animals, holidays, fantasy characters, and exclusive AI-generated story series. Download and print instantly!';
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SocialMeta
+        title={pageTitle}
+        description={pageDescription}
+        image={coloringPages?.[0]?.image_url}
+        type="website"
+        keywords={['coloring pages', 'free printables', 'kids coloring', 'adult coloring', selectedCategory || '']}
+      />
+      
+      <StructuredData
+        type="CollectionPage"
+        data={{
+          category: selectedCategory || 'All Categories',
+          description: pageDescription,
+          numberOfItems: filteredPages?.length || 0,
+          items: pagesToDisplay.slice(0, 12).map(page => ({
+            title: page.title,
+            image: page.image_url
+          }))
+        }}
+      />
+      
       <Header />
       
       <main className="flex-1">
@@ -219,12 +254,7 @@ const Index = () => {
           onCategorySelect={setSelectedCategory}
         />
 
-        {/* AI Creation CTA after categories */}
-        <section className="container px-4 py-8">
-          <CreateCTA variant="inline" context="category" />
-        </section>
-        
-        {/* Search Bar */}
+        {/* Search Bar - Moved up for better UX */}
         <section className="py-6 md:py-8 bg-background">
           <div className="container px-4">
             <div className="max-w-2xl mx-auto">
@@ -236,6 +266,7 @@ const Index = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 md:pl-10 h-11 md:h-12 text-sm md:text-base"
+                  aria-label="Search coloring pages"
                 />
               </div>
               {searchQuery && (
@@ -246,10 +277,15 @@ const Index = () => {
             </div>
           </div>
         </section>
+        
+        {/* AI Creation CTA after search */}
+        <LazySection className="container px-4 py-8">
+          <CreateCTA variant="inline" context="category" />
+        </LazySection>
 
         {/* Favorites Section */}
         {user && showFavorites && (
-          <section className="py-12 md:py-16 lg:py-20 bg-background" id="favorites-section">
+          <article className="py-12 md:py-16 lg:py-20 bg-background" id="favorites-section">
             <div className="container px-4">
               <div className="text-center mb-6 md:mb-8">
                 <div className="flex items-center justify-center gap-2 mb-3 md:mb-4">
@@ -305,10 +341,10 @@ const Index = () => {
                 )}
               </div>
             </div>
-          </section>
+          </article>
         )}
         
-        <section className="py-12 md:py-16 lg:py-20 bg-muted/30" id="popular">
+        <article className="py-12 md:py-16 lg:py-20 bg-muted/30" id="popular">
           <div className="container px-4">
             <div className="text-center mb-6 md:mb-8">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
@@ -411,10 +447,15 @@ const Index = () => {
               </div>
             )}
           </div>
-        </section>
+        </article>
         
-        <AboutSection />
-        <FAQ />
+        <LazySection>
+          <AboutSection />
+        </LazySection>
+        
+        <LazySection>
+          <FAQ />
+        </LazySection>
       </main>
       
       <Footer />

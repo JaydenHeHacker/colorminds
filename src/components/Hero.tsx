@@ -3,6 +3,7 @@ import { Download, Palette } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ImageOptimizer } from "@/components/ImageOptimizer";
 
 export const Hero = () => {
   const { data: stats } = useQuery({
@@ -83,12 +84,13 @@ export const Hero = () => {
             </div>
           </div>
           
-          <div className="relative hidden md:block">
+          <div className="relative">
             <div className="aspect-video rounded-3xl overflow-hidden shadow-colorful">
-              <img
+              <ImageOptimizer
                 src={heroBanner}
-                alt="Colorful coloring pages and art supplies"
+                alt="Colorful coloring pages and art supplies - Free printable collection"
                 className="w-full h-full object-cover"
+                priority={true}
               />
             </div>
           </div>
