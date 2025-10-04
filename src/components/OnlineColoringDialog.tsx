@@ -32,14 +32,9 @@ export const OnlineColoringDialog = ({
   const [brushSize, setBrushSize] = useState(5);
   const [isEraser, setIsEraser] = useState(false);
 
+  // Initialize canvas when dialog opens
   useEffect(() => {
-    if (!open || !canvasRef.current) return;
-    
-    // Don't recreate if canvas already exists
-    if (fabricCanvas) {
-      console.log('Canvas already exists, skipping initialization');
-      return;
-    }
+    if (!open || !canvasRef.current || fabricCanvas) return;
 
     console.log('Initializing canvas for online coloring');
     console.log('Image URL:', imageUrl);
@@ -100,7 +95,7 @@ export const OnlineColoringDialog = ({
     }
 
     setFabricCanvas(canvas);
-  }, [open, fabricCanvas, imageUrl, activeColor, brushSize]);
+  }, [open]);
 
   // Cleanup when dialog closes
   useEffect(() => {
@@ -109,7 +104,7 @@ export const OnlineColoringDialog = ({
       fabricCanvas.dispose();
       setFabricCanvas(null);
     }
-  }, [open, fabricCanvas]);
+  }, [open]);
 
   useEffect(() => {
     if (!fabricCanvas || !fabricCanvas.freeDrawingBrush) return;
