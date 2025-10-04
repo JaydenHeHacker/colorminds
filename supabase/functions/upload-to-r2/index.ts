@@ -23,10 +23,23 @@ serve(async (req) => {
       throw new Error('R2 credentials not configured');
     }
 
-    console.log('Uploading to R2:', { fileName, bucket: R2_BUCKET_NAME });
+    if (!imageData || !fileName) {
+      throw new Error('imageData and fileName are required');
+    }
+
+    console.log('Uploading to R2:', { fileName, bucket: R2_BUCKET_NAME, imageDataLength: imageData.length });
+
+    // Handle both data URL format and pure base64
+    let base64Data: string;
+    if (imageData.includes(',')) {
+      // Data URL format: data:image/png;base64,xxxxx
+      base64Data = imageData.split(',')[1];
+    } else {
+      // Already pure base64
+      base64Data = imageData;
+    }
 
     // Convert base64 to Uint8Array
-    const base64Data = imageData.split(',')[1];
     const binaryString = atob(base64Data);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
@@ -43,11 +56,17 @@ serve(async (req) => {
       port: 443,
     });
 
+    // Determine content type from filename
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    const contentType = extension === 'jpg' || extension === 'jpeg' ? 'image/jpeg' : 'image/png';
+
+    console.log('Uploading file with content type:', contentType);
+
     // Upload to R2
     await s3Client.putObject(fileName, bytes, {
       bucketName: R2_BUCKET_NAME,
       metadata: {
-        'Content-Type': 'image/png',
+        'Content-Type': contentType,
       },
     });
 
