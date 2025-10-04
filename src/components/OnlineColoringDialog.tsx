@@ -31,12 +31,14 @@ export const OnlineColoringDialog = ({
   const [activeColor, setActiveColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
   const [isEraser, setIsEraser] = useState(false);
+  const isInitializedRef = useRef(false);
 
   // Initialize canvas when dialog opens
   useEffect(() => {
-    if (!open || !canvasRef.current || fabricCanvas) return;
+    if (!open || !canvasRef.current || isInitializedRef.current) return;
 
     console.log('Initializing canvas...');
+    isInitializedRef.current = true;
     
     const canvas = new FabricCanvas(canvasRef.current, {
       width: 800,
@@ -89,7 +91,7 @@ export const OnlineColoringDialog = ({
 
     loadImage();
     setFabricCanvas(canvas);
-  }, [open, imageUrl, activeColor, brushSize, fabricCanvas]);
+  }, [open, imageUrl, activeColor, brushSize]);
 
   // Cleanup when dialog closes
   useEffect(() => {
@@ -97,6 +99,7 @@ export const OnlineColoringDialog = ({
       console.log('Disposing canvas on dialog close');
       fabricCanvas.dispose();
       setFabricCanvas(null);
+      isInitializedRef.current = false;
     }
   }, [open, fabricCanvas]);
 
