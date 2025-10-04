@@ -242,6 +242,30 @@ export type Database = {
           },
         ]
       }
+      color_inspiration_cache: {
+        Row: {
+          created_at: string
+          generated_image_data: string
+          id: string
+          source_image_url: string
+          style: string
+        }
+        Insert: {
+          created_at?: string
+          generated_image_data: string
+          id?: string
+          source_image_url: string
+          style: string
+        }
+        Update: {
+          created_at?: string
+          generated_image_data?: string
+          id?: string
+          source_image_url?: string
+          style?: string
+        }
+        Relationships: []
+      }
       coloring_history: {
         Row: {
           action_type: string

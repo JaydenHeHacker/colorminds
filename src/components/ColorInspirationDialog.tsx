@@ -46,7 +46,11 @@ export const ColorInspirationDialog = ({
 
       if (data?.imageUrl) {
         setGeneratedImage(data.imageUrl);
-        toast.success("AI coloring inspiration generated!");
+        if (data.cached) {
+          toast.success("Loaded from cache!");
+        } else {
+          toast.success("AI coloring inspiration generated!");
+        }
       } else {
         throw new Error("No image generated");
       }
