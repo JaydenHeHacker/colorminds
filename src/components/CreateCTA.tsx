@@ -86,22 +86,37 @@ export const CreateCTA = ({
   // Empty state variant (when no results)
   if (variant === "empty-state") {
     return (
-      <div className="text-center py-12">
-        <div className="flex justify-center mb-4">
-          {content.icon}
+      <div className="text-center py-16 px-4 animate-fade-in">
+        <div className="flex justify-center mb-6 animate-scale-in">
+          <div className="relative">
+            {content.icon}
+            <div className="absolute inset-0 animate-pulse opacity-30 blur-xl">
+              {content.icon}
+            </div>
+          </div>
         </div>
-        <h3 className="text-xl font-semibold mb-2">{displayTitle}</h3>
-        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+        <h3 className="text-2xl font-bold mb-3">{displayTitle}</h3>
+        <p className="text-muted-foreground mb-8 max-w-md mx-auto text-base leading-relaxed">
           {displayDescription}
         </p>
-        <Button 
-          size="lg" 
-          onClick={() => navigate('/create')}
-          className="bg-gradient-to-r from-primary to-primary/80"
-        >
-          <Sparkles className="w-5 h-5 mr-2" />
-          Try AI Creation
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button 
+            size="lg" 
+            onClick={() => navigate('/create')}
+            className="bg-gradient-to-r from-primary to-primary/80 hover:shadow-colorful transition-all hover-scale"
+          >
+            <Sparkles className="w-5 h-5 mr-2" />
+            Try AI Creation
+          </Button>
+          <Button 
+            size="lg" 
+            variant="outline"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="hover-scale"
+          >
+            Browse All Categories
+          </Button>
+        </div>
       </div>
     );
   }

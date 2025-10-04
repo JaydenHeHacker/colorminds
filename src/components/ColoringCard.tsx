@@ -134,31 +134,35 @@ export const ColoringCard = ({
   const config = difficultyConfig[difficulty];
 
   return (
-    <Card className="group overflow-hidden border-2 hover:border-primary/50 transition-smooth shadow-sm hover:shadow-colorful relative">
+    <Card className="group overflow-hidden border-2 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-colorful hover:-translate-y-1 relative animate-fade-in">
       {/* Favorite button in top-right corner */}
       <Button
         size="icon"
         variant={isFavorited ? "default" : "secondary"}
-        className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+        className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all hover:scale-110"
         onClick={handleToggleFavorite}
         disabled={isCheckingFavorite || isTogglingFavorite}
+        aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
       >
         {isTogglingFavorite ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
-          <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+          <Heart className={`h-4 w-4 transition-all ${isFavorited ? 'fill-current scale-110' : ''}`} />
         )}
       </Button>
 
-      <Link to={slug ? `/coloring-page/${slug}` : '#'} className="block">
+      <Link to={slug ? `/coloring-page/${slug}` : '#'} className="block" aria-label={`View ${title} coloring page`}>
         <div className="aspect-square overflow-hidden bg-muted relative">
           {!imageLoaded && !imageError && (
-            <Skeleton className="absolute inset-0" />
+            <div className="absolute inset-0">
+              <Skeleton className="absolute inset-0 animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5" />
+            </div>
           )}
           <img
             src={imageError ? '/placeholder.svg' : image}
             alt={`${title} - ${category} coloring page for kids and adults - Free printable`}
-            className={`w-full h-full object-cover transition-smooth group-hover:scale-105 ${
+            className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:rotate-1 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
             loading="lazy"
@@ -171,23 +175,23 @@ export const ColoringCard = ({
         </div>
       </Link>
       
-      <div className="p-4">
+      <div className="p-4 bg-gradient-to-b from-background to-muted/20">
         <div className="flex flex-wrap gap-2 mb-3">
-          <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
+          <span className="inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20 transition-colors group-hover:bg-primary/20">
             {category}
           </span>
-          <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full border ${config.color}`}>
+          <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-full border transition-all ${config.color}`}>
             {config.icon} {config.label}
           </span>
           {seriesId && seriesTitle && (
-            <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-secondary/20 to-accent/20 text-secondary-foreground border border-secondary/30">
+            <span className="inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-secondary/20 to-accent/20 text-secondary-foreground border border-secondary/30 transition-all group-hover:from-secondary/30 group-hover:to-accent/30">
               📚 {seriesOrder}/{seriesTotal}
             </span>
           )}
         </div>
-        <h3 className="font-semibold text-lg line-clamp-2 mb-2">{title}</h3>
+        <h3 className="font-semibold text-lg line-clamp-2 mb-2 group-hover:text-primary transition-colors">{title}</h3>
         {seriesId && seriesTitle && (
-          <p className="text-xs text-muted-foreground line-clamp-1">
+          <p className="text-xs text-muted-foreground line-clamp-1 group-hover:text-foreground transition-colors">
             Part of: {seriesTitle}
           </p>
         )}

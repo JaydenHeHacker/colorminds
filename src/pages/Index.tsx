@@ -238,6 +238,20 @@ const Index = () => {
       <main className="flex-1">
         <Hero />
         
+        {/* Content Introduction - Better hierarchy */}
+        {!selectedCategory && !selectedSeriesId && !searchQuery && (
+          <section className="py-8 bg-background">
+            <div className="container px-4">
+              <div className="max-w-3xl mx-auto text-center">
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  Browse our curated collection by category, search for specific themes, or discover daily featured pages. 
+                  All coloring pages are <strong>100% free</strong> to download and print at home!
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+        
         {(selectedCategory || selectedSeriesId || searchQuery) && (
           <Breadcrumbs 
             items={[
