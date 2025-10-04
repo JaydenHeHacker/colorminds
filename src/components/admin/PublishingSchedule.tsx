@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Calendar, Clock, FileText, TrendingUp, Send, CalendarDays, CheckSquare, Edit2 } from "lucide-react";
+import { Pagination } from "@/components/Pagination";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth } from "date-fns";
@@ -41,10 +42,30 @@ export default function PublishingSchedule() {
   const [showBatchScheduleDialog, setShowBatchScheduleDialog] = useState(false);
   const [batchScheduledDate, setBatchScheduledDate] = useState("");
   const [batchScheduledTime, setBatchScheduledTime] = useState("09:00");
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
 
-  // 获取所有页面
+  // 获取总数
+  const { data: totalCount } = useQuery({
+    queryKey: ['publishing-schedule-count', selectedStatus],
+    queryFn: async () => {
+      let query = supabase
+        .from('coloring_pages')
+        .select('*', { count: 'exact', head: true });
+
+      if (selectedStatus !== 'all') {
+        query = query.eq('status', selectedStatus);
+      }
+
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  // 获取分页数据
   const { data: pages, isLoading } = useQuery({
-    queryKey: ['publishing-schedule', selectedStatus],
+    queryKey: ['publishing-schedule', selectedStatus, currentPage],
     queryFn: async () => {
       let query = supabase
         .from('coloring_pages')
@@ -56,7 +77,8 @@ export default function PublishingSchedule() {
             slug
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
 
       if (selectedStatus !== 'all') {
         query = query.eq('status', selectedStatus);
@@ -67,6 +89,9 @@ export default function PublishingSchedule() {
       return data;
     },
   });
+
+  // 计算总页数
+  const pageCount = Math.ceil((totalCount || 0) / itemsPerPage);
 
   // 获取统计数据
   const { data: stats } = useQuery({
@@ -195,6 +220,12 @@ export default function PublishingSchedule() {
     } else {
       setSelectedPages(new Set(pages?.map(p => p.id) || []));
     }
+  };
+
+  const handlePageChange = (selectedItem: { selected: number }) => {
+    setCurrentPage(selectedItem.selected);
+    setSelectedPages(new Set()); // 清空选择
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBatchSchedule = () => {
@@ -455,114 +486,138 @@ export default function PublishingSchedule() {
 
           {/* 内容列表 */}
           <div className="space-y-3">
-            {pages?.map((page) => (
-              <Card key={page.id} className="p-4">
-                <div className="flex gap-4">
-                  <div className="flex items-center">
-                    <Checkbox
-                      checked={selectedPages.has(page.id)}
-                      onCheckedChange={() => handleToggleSelect(page.id)}
-                    />
-                  </div>
+            {isLoading ? (
+              <Card className="p-8">
+                <div className="text-center text-muted-foreground">加载中...</div>
+              </Card>
+            ) : pages && pages.length > 0 ? (
+              pages.map((page) => (
+                <Card key={page.id} className="p-4">
+                  <div className="flex gap-4">
+                    <div className="flex items-center">
+                      <Checkbox
+                        checked={selectedPages.has(page.id)}
+                        onCheckedChange={() => handleToggleSelect(page.id)}
+                      />
+                    </div>
 
-                  <div className="w-20 h-20 rounded-lg overflow-hidden border-2 bg-white flex-shrink-0">
-                    <img
-                      src={page.image_url}
-                      alt={page.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                    <div className="w-20 h-20 rounded-lg overflow-hidden border-2 bg-white flex-shrink-0">
+                      <img
+                        src={page.image_url}
+                        alt={page.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
 
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{page.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {page.categories?.name}
-                        </p>
-                        {page.scheduled_publish_at && page.status === 'scheduled' && (
-                          <p className="text-sm text-blue-600 mt-1">
-                            定时发布：{format(new Date(page.scheduled_publish_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{page.title}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {page.categories?.name}
                           </p>
-                        )}
-                        {page.published_at && page.status === 'published' && (
-                          <p className="text-sm text-green-600 mt-1">
-                            已发布：{format(new Date(page.published_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
-                          </p>
-                        )}
-                      </div>
+                          {page.scheduled_publish_at && page.status === 'scheduled' && (
+                            <p className="text-sm text-blue-600 mt-1">
+                              定时发布：{format(new Date(page.scheduled_publish_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                            </p>
+                          )}
+                          {page.published_at && page.status === 'published' && (
+                            <p className="text-sm text-green-600 mt-1">
+                              已发布：{format(new Date(page.published_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                            </p>
+                          )}
+                        </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-sm ${statusConfig[page.status as PublishStatus]?.bgColor} ${statusConfig[page.status as PublishStatus]?.color}`}>
-                          {statusConfig[page.status as PublishStatus]?.label}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 rounded-full text-sm ${statusConfig[page.status as PublishStatus]?.bgColor} ${statusConfig[page.status as PublishStatus]?.color}`}>
+                            {statusConfig[page.status as PublishStatus]?.label}
+                          </span>
 
-                        {page.status === 'draft' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEditSchedule(page)}
-                            >
-                              <Clock className="h-4 w-4 mr-1" />
-                              定时发布
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handlePublishNow(page.id)}
-                              disabled={updateStatusMutation.isPending}
-                            >
-                              <Send className="h-4 w-4 mr-1" />
-                              立即发布
-                            </Button>
-                          </>
-                        )}
+                          {page.status === 'draft' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditSchedule(page)}
+                              >
+                                <Clock className="h-4 w-4 mr-1" />
+                                定时发布
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handlePublishNow(page.id)}
+                                disabled={updateStatusMutation.isPending}
+                              >
+                                <Send className="h-4 w-4 mr-1" />
+                                立即发布
+                              </Button>
+                            </>
+                          )}
 
-                        {page.status === 'scheduled' && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditSchedule(page)}
-                              title="编辑定时"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
+                          {page.status === 'scheduled' && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditSchedule(page)}
+                                title="编辑定时"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleMoveToDraft(page.id)}
+                                disabled={updateStatusMutation.isPending}
+                              >
+                                移至草稿
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handlePublishNow(page.id)}
+                                disabled={updateStatusMutation.isPending}
+                              >
+                                立即发布
+                              </Button>
+                            </>
+                          )}
+
+                          {page.status === 'published' && (
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => handleMoveToDraft(page.id)}
                               disabled={updateStatusMutation.isPending}
                             >
-                              移至草稿
+                              撤回
                             </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handlePublishNow(page.id)}
-                              disabled={updateStatusMutation.isPending}
-                            >
-                              立即发布
-                            </Button>
-                          </>
-                        )}
-
-                        {page.status === 'published' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleMoveToDraft(page.id)}
-                            disabled={updateStatusMutation.isPending}
-                          >
-                            撤回
-                          </Button>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </Card>
+              ))
+            ) : (
+              <Card className="p-8">
+                <div className="text-center text-muted-foreground">暂无内容</div>
               </Card>
-            ))}
+            )}
           </div>
+
+          {/* 分页控件 */}
+          {!isLoading && pageCount > 1 && (
+            <div className="mt-6">
+              <Pagination
+                pageCount={pageCount}
+                currentPage={currentPage}
+                onPageChange={handlePageChange}
+              />
+              <div className="text-center text-sm text-muted-foreground mt-3">
+                共 {totalCount} 项，每页 {itemsPerPage} 项
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="calendar" className="space-y-4">
