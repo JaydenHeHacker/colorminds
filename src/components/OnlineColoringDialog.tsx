@@ -45,10 +45,14 @@ export const OnlineColoringDialog = ({
       width: 800,
       height: 600,
       backgroundColor: "#ffffff",
-      isDrawingMode: false, // Start with false, enable after image loads
+      isDrawingMode: true, // Enable drawing mode immediately
     });
 
-    console.log('Canvas created successfully');
+    // Initialize brush immediately after canvas creation
+    canvas.freeDrawingBrush.color = activeColor;
+    canvas.freeDrawingBrush.width = brushSize;
+    
+    console.log('Canvas created successfully with drawing mode enabled');
 
     // Load the coloring page image as background
     const loadImage = async () => {
@@ -70,14 +74,6 @@ export const OnlineColoringDialog = ({
         
         canvas.backgroundImage = fabricImg;
         canvas.renderAll();
-        
-        // Enable drawing mode and initialize brush after image loads
-        canvas.isDrawingMode = true;
-        if (canvas.freeDrawingBrush) {
-          canvas.freeDrawingBrush.color = activeColor;
-          canvas.freeDrawingBrush.width = brushSize;
-          console.log('Brush initialized');
-        }
         
         console.log('Canvas ready!');
         toast.success('Canvas ready! Start coloring!');
