@@ -70,28 +70,53 @@ const CategoryPage = () => {
     queryFn: async () => {
       if (!rootCategory?.id) return [];
       
-      // For "all" category, get its direct children (not by level, but by parent_id)
+      // First get all subcategories
       let query = supabase
         .from('categories')
-        .select(`
-          *,
-          coloring_pages!inner(count)
-        `)
-        .eq('coloring_pages.status', 'published');
+        .select('*');
       
       if (isAllCategory) {
-        // Get direct children of "all" category
         query = query.eq('parent_id', category.id);
       } else {
         query = query.eq('parent_id', rootCategory.id);
       }
       
-      const { data, error } = await query
+      const { data: subCats, error } = await query
         .order('order_position', { ascending: true })
         .order('name', { ascending: true });
       
       if (error) throw error;
-      return data;
+      if (!subCats) return [];
+      
+      // For each subcategory, get count of published pages (including its children)
+      const subCatsWithCounts = await Promise.all(
+        subCats.map(async (subCat) => {
+          // Get all child categories of this subcategory
+          const { data: children } = await supabase
+            .from('categories')
+            .select('id')
+            .eq('parent_id', subCat.id);
+          
+          const categoryIds = [subCat.id];
+          if (children && children.length > 0) {
+            categoryIds.push(...children.map(c => c.id));
+          }
+          
+          // Count published pages in this category and its children
+          const { count } = await supabase
+            .from('coloring_pages')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'published')
+            .in('category_id', categoryIds);
+          
+          return {
+            ...subCat,
+            coloring_pages: [{ count: count || 0 }]
+          };
+        })
+      );
+      
+      return subCatsWithCounts;
     },
     enabled: !!rootCategory?.id,
   });
