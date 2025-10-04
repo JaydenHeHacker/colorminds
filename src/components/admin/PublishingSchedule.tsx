@@ -516,16 +516,21 @@ export default function PublishingSchedule() {
                           <p className="text-sm text-muted-foreground">
                             {page.categories?.name}
                           </p>
-                          {page.scheduled_publish_at && page.status === 'scheduled' && (
-                            <p className="text-sm text-blue-600 mt-1">
-                              定时发布：{format(new Date(page.scheduled_publish_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs text-muted-foreground">
+                              生成时间：{format(new Date(page.created_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
                             </p>
-                          )}
-                          {page.published_at && page.status === 'published' && (
-                            <p className="text-sm text-green-600 mt-1">
-                              已发布：{format(new Date(page.published_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
-                            </p>
-                          )}
+                            {page.published_at && (
+                              <p className="text-xs text-green-600">
+                                发布时间：{format(new Date(page.published_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                              </p>
+                            )}
+                            {page.scheduled_publish_at && page.status === 'scheduled' && (
+                              <p className="text-xs text-blue-600">
+                                定时发布：{format(new Date(page.scheduled_publish_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                              </p>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-2">
