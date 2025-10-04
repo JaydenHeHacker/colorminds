@@ -35,6 +35,9 @@ export const OnlineColoringDialog = ({
   useEffect(() => {
     if (!canvasRef.current || !open) return;
 
+    console.log('Initializing canvas for online coloring');
+    console.log('Image URL:', imageUrl);
+
     const canvas = new FabricCanvas(canvasRef.current, {
       width: 800,
       height: 600,
@@ -42,10 +45,13 @@ export const OnlineColoringDialog = ({
       isDrawingMode: true,
     });
 
+    console.log('Canvas created successfully');
+
     // Load the coloring page image as background
     fabric.FabricImage.fromURL(imageUrl, {
       crossOrigin: 'anonymous'
     }).then((img) => {
+      console.log('Image loaded:', img.width, 'x', img.height);
       const scale = Math.min(800 / img.width!, 600 / img.height!);
       img.set({
         scaleX: scale,
@@ -55,6 +61,8 @@ export const OnlineColoringDialog = ({
       });
       canvas.backgroundImage = img;
       canvas.renderAll();
+      console.log('Background image set and rendered');
+      toast.success('Canvas ready! Start coloring!');
     }).catch((err) => {
       console.error('Error loading background image:', err);
       toast.error('Failed to load coloring page image');
@@ -64,11 +72,15 @@ export const OnlineColoringDialog = ({
     if (canvas.freeDrawingBrush) {
       canvas.freeDrawingBrush.color = activeColor;
       canvas.freeDrawingBrush.width = brushSize;
+      console.log('Brush initialized with color:', activeColor, 'size:', brushSize);
+    } else {
+      console.error('Failed to initialize brush');
     }
 
     setFabricCanvas(canvas);
 
     return () => {
+      console.log('Disposing canvas');
       canvas.dispose();
     };
   }, [open, imageUrl]);
@@ -94,15 +106,23 @@ export const OnlineColoringDialog = ({
   };
 
   const handleClear = () => {
-    if (!fabricCanvas) return;
+    if (!fabricCanvas) {
+      console.error('Canvas not initialized');
+      return;
+    }
+    console.log('Clearing canvas, objects count:', fabricCanvas.getObjects().length);
     fabricCanvas.getObjects().forEach(obj => fabricCanvas.remove(obj));
     fabricCanvas.renderAll();
     toast.success("Canvas cleared!");
   };
 
   const handleUndo = () => {
-    if (!fabricCanvas) return;
+    if (!fabricCanvas) {
+      console.error('Canvas not initialized');
+      return;
+    }
     const objects = fabricCanvas.getObjects();
+    console.log('Undoing, objects count:', objects.length);
     if (objects.length > 0) {
       fabricCanvas.remove(objects[objects.length - 1]);
       fabricCanvas.renderAll();
@@ -110,17 +130,27 @@ export const OnlineColoringDialog = ({
   };
 
   const handleDownload = () => {
-    if (!fabricCanvas) return;
-    const dataURL = fabricCanvas.toDataURL({
-      format: 'png',
-      quality: 1,
-      multiplier: 1,
-    });
-    const link = document.createElement('a');
-    link.download = `${pageTitle}-colored.png`;
-    link.href = dataURL;
-    link.click();
-    toast.success("Image downloaded!");
+    if (!fabricCanvas) {
+      console.error('Canvas not initialized');
+      toast.error('Canvas not ready');
+      return;
+    }
+    console.log('Downloading canvas as PNG');
+    try {
+      const dataURL = fabricCanvas.toDataURL({
+        format: 'png',
+        quality: 1,
+        multiplier: 1,
+      });
+      const link = document.createElement('a');
+      link.download = `${pageTitle}-colored.png`;
+      link.href = dataURL;
+      link.click();
+      toast.success("Image downloaded!");
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      toast.error('Failed to download image');
+    }
   };
 
   const handleClose = () => {
