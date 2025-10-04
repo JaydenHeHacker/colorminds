@@ -29,8 +29,8 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { platform, count = 1 } = await req.json();
-    console.log('Auto-posting request:', { userId: user.id, platform, count });
+    const { platform, count = 1, preview = false, pageId } = await req.json();
+    console.log('Auto-posting request:', { userId: user.id, platform, count, preview, pageId });
 
     // Get Pinterest connection and access token
     const { data: connection, error: connError } = await supabase
@@ -63,17 +63,53 @@ Deno.serve(async (req) => {
     console.log('Using board:', targetBoard.name, targetBoard.id);
 
     // Get unpublished coloring pages
-    const { data: coloringPages, error: pagesError } = await supabase
-      .from('coloring_pages')
-      .select('*')
-      .eq('status', 'published')
-      .is('last_posted_at', null)
-      .limit(count);
+    let coloringPages;
+    if (pageId) {
+      // Use specific page for confirmed post
+      const { data, error: pagesError } = await supabase
+        .from('coloring_pages')
+        .select('*')
+        .eq('id', pageId)
+        .single();
+      
+      if (pagesError) throw pagesError;
+      coloringPages = [data];
+    } else {
+      // Get unpublished pages
+      const { data, error: pagesError } = await supabase
+        .from('coloring_pages')
+        .select('*')
+        .eq('status', 'published')
+        .is('last_posted_at', null)
+        .limit(count);
 
-    if (pagesError) throw pagesError;
+      if (pagesError) throw pagesError;
+      coloringPages = data;
+    }
 
     if (!coloringPages || coloringPages.length === 0) {
       throw new Error('No unpublished coloring pages available');
+    }
+
+    // If preview mode, return preview data
+    if (preview) {
+      const page = coloringPages[0];
+      const content = await generateMarketingContent(page);
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          preview: {
+            pageId: page.id,
+            title: content.title,
+            description: content.description,
+            imageUrl: page.image_url,
+            boardName: targetBoard.name,
+            boardId: targetBoard.id,
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const results = [];

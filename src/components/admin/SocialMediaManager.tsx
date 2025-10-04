@@ -57,6 +57,9 @@ export function SocialMediaManager() {
   const [loading, setLoading] = useState(false);
   const [autoPosting, setAutoPosting] = useState(false);
   const [postDialogOpen, setPostDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   
   // Form states
   const [platform, setPlatform] = useState<'reddit' | 'pinterest'>('reddit');
@@ -246,6 +249,80 @@ export function SocialMediaManager() {
     setBoardId('');
   };
 
+  const handlePreviewPost = async () => {
+    try {
+      setIsGeneratingPreview(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.functions.invoke('auto-post-to-social', {
+        body: { platform: 'pinterest', count: 1, preview: true },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.preview) {
+        setPreviewData(data.preview);
+        setPreviewDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      toast({
+        title: "预览生成失败",
+        description: error instanceof Error ? error.message : "请重试",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPreview(false);
+    }
+  };
+
+  const handleConfirmPost = async () => {
+    if (!previewData) return;
+
+    try {
+      setAutoPosting(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.functions.invoke('auto-post-to-social', {
+        body: { 
+          platform: 'pinterest', 
+          count: 1,
+          pageId: previewData.pageId,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "发布成功",
+        description: `已成功发布到 Pinterest`,
+      });
+
+      setPreviewDialogOpen(false);
+      setPreviewData(null);
+      loadPosts();
+    } catch (error) {
+      console.error('Error posting:', error);
+      toast({
+        title: "发布失败",
+        description: error instanceof Error ? error.message : "请重试",
+        variant: "destructive",
+      });
+    } finally {
+      setAutoPosting(false);
+    }
+  };
+
   const handleAutoPost = async (count: number = 1) => {
     try {
       setAutoPosting(true);
@@ -364,21 +441,30 @@ export function SocialMediaManager() {
         <CardContent className="space-y-4">
           <div className="flex gap-2">
             <Button 
-              onClick={() => handleAutoPost(1)} 
-              disabled={autoPosting || !connections.find(c => c.platform === 'pinterest' && c.is_active)}
+              onClick={handlePreviewPost}
+              disabled={isGeneratingPreview || autoPosting || !connections.find(c => c.platform === 'pinterest' && c.is_active)}
               className="flex-1"
             >
-              {autoPosting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              发布 1 个帖子
+              {isGeneratingPreview && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              预览并发布
             </Button>
             <Button 
-              onClick={() => handleAutoPost(3)} 
+              onClick={() => handleAutoPost(1)} 
               disabled={autoPosting || !connections.find(c => c.platform === 'pinterest' && c.is_active)}
               variant="secondary"
               className="flex-1"
             >
               {autoPosting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              发布 3 个帖子
+              直接发布 1 个
+            </Button>
+            <Button 
+              onClick={() => handleAutoPost(3)} 
+              disabled={autoPosting || !connections.find(c => c.platform === 'pinterest' && c.is_active)}
+              variant="outline"
+              className="flex-1"
+            >
+              {autoPosting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              批量发布 3 个
             </Button>
           </div>
           {!connections.find(c => c.platform === 'pinterest' && c.is_active) && (
@@ -540,6 +626,68 @@ export function SocialMediaManager() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>预览帖子</DialogTitle>
+            <DialogDescription>
+              查看 AI 生成的内容，确认后发布到 Pinterest
+            </DialogDescription>
+          </DialogHeader>
+          
+          {previewData && (
+            <div className="space-y-4">
+              <div className="border rounded-lg overflow-hidden">
+                <img 
+                  src={previewData.imageUrl} 
+                  alt={previewData.title}
+                  className="w-full h-64 object-cover"
+                />
+              </div>
+
+              <div>
+                <Label>标题</Label>
+                <div className="mt-1 p-3 bg-muted rounded-md">
+                  {previewData.title}
+                </div>
+              </div>
+
+              <div>
+                <Label>描述</Label>
+                <div className="mt-1 p-3 bg-muted rounded-md whitespace-pre-wrap">
+                  {previewData.description}
+                </div>
+              </div>
+
+              <div>
+                <Label>发布到</Label>
+                <div className="mt-1 p-3 bg-muted rounded-md">
+                  📌 Board: {previewData.boardName}
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  onClick={handleConfirmPost}
+                  disabled={autoPosting}
+                  className="flex-1"
+                >
+                  {autoPosting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  确认发布
+                </Button>
+                <Button 
+                  onClick={() => setPreviewDialogOpen(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  取消
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
