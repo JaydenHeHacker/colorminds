@@ -1,5 +1,11 @@
 project_id = "gggmfhgavzworznuagzv"
 
+[functions.post-to-reddit]
+verify_jwt = true
+
+[functions.post-to-pinterest]
+verify_jwt = true
+
 [functions.generate-coloring-page]
 verify_jwt = false
 

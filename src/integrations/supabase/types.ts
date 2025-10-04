@@ -596,6 +596,113 @@ export type Database = {
         }
         Relationships: []
       }
+      social_media_connections: {
+        Row: {
+          access_token: string | null
+          connected_at: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          platform: string
+          refresh_token: string | null
+          updated_at: string | null
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          connected_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          platform: string
+          refresh_token?: string | null
+          updated_at?: string | null
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          connected_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          platform?: string
+          refresh_token?: string | null
+          updated_at?: string | null
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      social_posts: {
+        Row: {
+          coloring_page_id: string | null
+          created_at: string | null
+          description: string | null
+          error_message: string | null
+          id: string
+          image_url: string | null
+          metadata: Json | null
+          platform: string
+          post_id: string | null
+          post_url: string | null
+          posted_at: string | null
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          coloring_page_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          error_message?: string | null
+          id?: string
+          image_url?: string | null
+          metadata?: Json | null
+          platform: string
+          post_id?: string | null
+          post_url?: string | null
+          posted_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          coloring_page_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          error_message?: string | null
+          id?: string
+          image_url?: string | null
+          metadata?: Json | null
+          platform?: string
+          post_id?: string | null
+          post_url?: string | null
+          posted_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_posts_coloring_page_id_fkey"
+            columns: ["coloring_page_id"]
+            isOneToOne: false
+            referencedRelation: "coloring_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           created_at: string | null
