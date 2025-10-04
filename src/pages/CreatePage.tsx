@@ -155,11 +155,6 @@ export default function CreatePage() {
   };
 
   const handleSelectInputMode = (mode: 'text' | 'image') => {
-    if (mode === 'image' && subscription?.tier !== 'premium') {
-      setUpgradeFeature('image-to-image');
-      setUpgradeDialogOpen(true);
-      return;
-    }
     setInputMode(mode);
   };
 
@@ -185,6 +180,12 @@ export default function CreatePage() {
         variant: "destructive",
       });
       navigate("/auth?redirect=/create");
+      return;
+    }
+
+    if (inputMode === 'image' && subscription?.tier !== 'premium') {
+      setUpgradeFeature('image-to-image');
+      setUpgradeDialogOpen(true);
       return;
     }
 
@@ -470,16 +471,42 @@ export default function CreatePage() {
             </div>
           ) : (
             <Card className="p-8 mb-8">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBackToSelection}
-                className="mb-6"
-                disabled={isGenerating}
-              >
-                <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
-                Back to mode selection
-              </Button>
+              {/* Mode indicator and switch */}
+              <div className="flex items-center justify-between p-4 mb-6 bg-secondary/30 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  {inputMode === 'text' ? (
+                    <>
+                      <Sparkles className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="font-semibold">Text to Image Mode</p>
+                        <p className="text-xs text-muted-foreground">Create from description</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="w-5 h-5 text-amber-600" />
+                      <div>
+                        <p className="font-semibold flex items-center gap-2">
+                          Image to Image Mode
+                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-xs">
+                            <Crown className="w-3 h-3 mr-1" />
+                            Premium
+                          </Badge>
+                        </p>
+                        <p className="text-xs text-muted-foreground">Convert photo to coloring page</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={handleBackToSelection}
+                  size="sm"
+                  disabled={isGenerating}
+                >
+                  Switch Mode
+                </Button>
+              </div>
 
               <div className="space-y-6">
                 {inputMode === 'text' ? (
