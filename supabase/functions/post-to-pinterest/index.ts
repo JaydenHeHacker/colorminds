@@ -54,7 +54,10 @@ Deno.serve(async (req) => {
       throw new Error('Pinterest not connected. Please connect your Pinterest account first.');
     }
 
-    const accessToken = connection.access_token || 'PINTEREST_ACCESS_TOKEN_PLACEHOLDER';
+    const accessToken = Deno.env.get('PINTEREST_ACCESS_TOKEN');
+    if (!accessToken) {
+      throw new Error('Pinterest access token not configured');
+    }
     
     // Post to Pinterest API
     const pinResponse = await createPin(
@@ -115,9 +118,6 @@ async function createPin(
   imageUrl: string,
   link?: string
 ) {
-  // Placeholder implementation
-  // In production, you would use Pinterest API v5:
-  // POST https://api.pinterest.com/v5/pins
   console.log('Creating Pinterest pin:', { boardId, title, imageUrl });
   
   try {
@@ -135,19 +135,24 @@ async function createPin(
       pinData.link = link;
     }
 
-    // Actual API call would be:
-    // const response = await fetch('https://api.pinterest.com/v5/pins', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${accessToken}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(pinData),
-    // });
+    const response = await fetch('https://api.pinterest.com/v5/pins', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(pinData),
+    });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Pinterest API error: ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
     return {
-      id: 'pin_' + Date.now(),
-      url: `https://www.pinterest.com/pin/placeholder`,
+      id: data.id,
+      url: `https://www.pinterest.com/pin/${data.id}`,
     };
   } catch (error) {
     console.error('Pinterest API error:', error);
