@@ -152,9 +152,44 @@ export default function CreatePage() {
     setImageQuantity(value);
   };
 
-  const handleAiPolish = () => {
-    setUpgradeFeature('ai-polish');
-    setUpgradeDialogOpen(true);
+  const handleAiPolish = async () => {
+    if (subscription?.tier !== 'premium') {
+      setUpgradeFeature('ai-polish');
+      setUpgradeDialogOpen(true);
+      return;
+    }
+
+    if (!prompt.trim()) {
+      toast({
+        title: "Please enter a prompt first",
+        description: "Enter your prompt and then click the magic wand to optimize it",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('optimize-prompt', {
+        body: { prompt }
+      });
+
+      if (error) throw error;
+
+      if (data?.optimizedPrompt) {
+        setPrompt(data.optimizedPrompt);
+        toast({
+          title: "Prompt optimized!",
+          description: "Your prompt has been enhanced by AI",
+        });
+      }
+    } catch (error) {
+      console.error('Error optimizing prompt:', error);
+      toast({
+        title: "Failed to optimize prompt",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleGenerationTypeChange = (value: 'single' | 'series') => {
