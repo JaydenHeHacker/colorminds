@@ -42,66 +42,70 @@ export const OnlineColoringDialog = ({
       return;
     }
     
-    if (!canvasRef.current) {
-      console.log('Canvas ref not available yet, skipping initialization');
-      return;
-    }
+    // Add a small delay to ensure canvas element is mounted
+    const timeoutId = setTimeout(() => {
+      if (!canvasRef.current) {
+        console.log('Canvas ref still not available after delay');
+        return;
+      }
 
-    console.log('Starting canvas initialization...');
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    
-    if (!ctx) {
-      console.error("Failed to get canvas context");
-      return;
-    }
+      console.log('Starting canvas initialization...');
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      
+      if (!ctx) {
+        console.error("Failed to get canvas context");
+        return;
+      }
 
-    console.log('Canvas context obtained successfully');
+      console.log('Canvas context obtained successfully');
 
-    // Set canvas size
-    canvas.width = 800;
-    canvas.height = 600;
-    
-    // Set initial drawing settings
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    
-    setContext(ctx);
+      // Set canvas size
+      canvas.width = 800;
+      canvas.height = 600;
+      
+      // Set initial drawing settings
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      
+      setContext(ctx);
 
-    // Load background image
-    console.log('Loading background image from:', imageUrl);
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    
-    img.onload = () => {
-      console.log("Background image loaded successfully, size:", img.width, 'x', img.height);
-      backgroundImageRef.current = img;
+      // Load background image
+      console.log('Loading background image from:', imageUrl);
+      const img = new Image();
+      img.crossOrigin = "anonymous";
       
-      // Calculate scale to fit canvas
-      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-      const x = (canvas.width - img.width * scale) / 2;
-      const y = (canvas.height - img.height * scale) / 2;
+      img.onload = () => {
+        console.log("Background image loaded successfully, size:", img.width, 'x', img.height);
+        backgroundImageRef.current = img;
+        
+        // Calculate scale to fit canvas
+        const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+        const x = (canvas.width - img.width * scale) / 2;
+        const y = (canvas.height - img.height * scale) / 2;
+        
+        // Draw background image
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+        
+        // Save initial state
+        saveToHistory(ctx, canvas);
+        
+        toast.success("Canvas ready! Start coloring!");
+      };
       
-      // Draw background image
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+      img.onerror = () => {
+        console.error("Failed to load background image");
+        toast.error("Failed to load coloring page image");
+      };
       
-      // Save initial state
-      saveToHistory(ctx, canvas);
-      
-      toast.success("Canvas ready! Start coloring!");
-    };
-    
-    img.onerror = () => {
-      console.error("Failed to load background image");
-      toast.error("Failed to load coloring page image");
-    };
-    
-    img.src = imageUrl;
+      img.src = imageUrl;
+    }, 100); // 100ms delay to wait for DOM
 
     // Cleanup
     return () => {
+      clearTimeout(timeoutId);
       setContext(null);
       setDrawingHistory([]);
       backgroundImageRef.current = null;
