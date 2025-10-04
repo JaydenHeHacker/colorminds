@@ -50,26 +50,12 @@ export const OnlineColoringDialog = ({
 
     console.log('Canvas created successfully');
 
-    // Load the coloring page image as background using img tag to handle CORS
+    // Load the coloring page image as background using fromURL
     const loadImage = async () => {
       try {
-        console.log('Loading image...');
+        console.log('Loading image with fromURL...');
         
-        // Create an HTMLImageElement with crossOrigin
-        const imgElement = new Image();
-        imgElement.crossOrigin = 'anonymous';
-        
-        // Wait for image to load
-        await new Promise((resolve, reject) => {
-          imgElement.onload = resolve;
-          imgElement.onerror = reject;
-          imgElement.src = imageUrl;
-        });
-        
-        console.log('Image loaded, creating Fabric image');
-        
-        const img = await fabric.FabricImage.fromObject({
-          src: imgElement.src,
+        const img = await fabric.FabricImage.fromURL(imageUrl, {
           crossOrigin: 'anonymous'
         });
         
