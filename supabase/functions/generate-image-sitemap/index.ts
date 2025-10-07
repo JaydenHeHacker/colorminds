@@ -55,19 +55,31 @@ Deno.serve(async (req) => {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`;
 
-    if (pages) {
+    if (pages && pages.length > 0) {
       pages.forEach(page => {
+        // Skip if no image URL
+        if (!page.image_url) {
+          console.log(`Skipping page ${page.slug} - no image URL`);
+          return;
+        }
+
         const pageUrl = `${baseUrl}/coloring-page/${page.slug}`;
         const lastmod = page.updated_at ? page.updated_at.split('T')[0] : new Date().toISOString().split('T')[0];
-        const categoryName = (page.categories as any)?.name || 'Coloring Page';
+        
+        // Handle categories - it might be an object or null
+        const categoryName = page.categories && typeof page.categories === 'object' && 'name' in page.categories
+          ? (page.categories as any).name
+          : 'Coloring Page';
+        
+        const caption = page.description || `Free printable ${page.title} coloring page. Perfect for kids and adults who love ${categoryName} coloring pages.`;
         
         xml += `
   <url>
-    <loc>${pageUrl}</loc>
+    <loc>${escapeXml(pageUrl)}</loc>
     <image:image>
       <image:loc>${escapeXml(page.image_url)}</image:loc>
       <image:title>${escapeXml(page.title)}</image:title>
-      <image:caption>${escapeXml(page.description || `Free printable ${page.title} coloring page. Perfect for kids and adults who love ${categoryName} coloring pages.`)}</image:caption>
+      <image:caption>${escapeXml(caption)}</image:caption>
       <image:geo_location>Worldwide</image:geo_location>
       <image:license>https://creativecommons.org/licenses/by-nc/4.0/</image:license>
     </image:image>
@@ -76,6 +88,8 @@ Deno.serve(async (req) => {
     <priority>0.8</priority>
   </url>`;
       });
+    } else {
+      console.log('No pages found for image sitemap');
     }
 
     xml += `
