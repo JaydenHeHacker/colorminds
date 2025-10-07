@@ -212,29 +212,33 @@ async function generateAIContent(
   page: ColoringPage,
   allowedSubreddits: string[]
 ): Promise<{ title: string; description: string; subreddit: string }> {
+  // 清理 subreddit 名称，移除 r/ 前缀
+  const cleanSubreddits = allowedSubreddits.map(s => s.replace(/^r\//, ''));
+  
   const prompt = `You are a Reddit marketing expert for a coloring page website.
 
 Coloring Page: "${page.title}"
 ${page.description ? `Description: ${page.description}` : ''}
 
-Allowed subreddits: ${allowedSubreddits.map(s => `r/${s}`).join(', ')}
+Allowed subreddits: ${cleanSubreddits.join(', ')}
 
 Generate:
 1. A catchy, natural Reddit post title (max 150 chars)
 2. A friendly description text (2-3 sentences, mention it's free to download)
-3. Choose the BEST subreddit from the allowed list
+3. Choose the BEST subreddit from the allowed list (WITHOUT r/ prefix, just the name)
 
 Rules:
 - Title should NOT sound like an ad
 - Be authentic and engaging
 - Choose subreddit based on content relevance
 - Description should invite engagement
+- Return subreddit name WITHOUT 'r/' prefix
 
 Respond in JSON format:
 {
   "title": "...",
   "description": "...",
-  "subreddit": "..."
+  "subreddit": "test"
 }`;
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -246,7 +250,7 @@ Respond in JSON format:
     body: JSON.stringify({
       model: 'google/gemini-2.5-flash',
       messages: [
-        { role: 'system', content: 'You are a helpful AI that generates Reddit marketing content. Always respond in valid JSON format.' },
+        { role: 'system', content: 'You are a helpful AI that generates Reddit marketing content. Always respond in valid JSON format. Return subreddit names WITHOUT r/ prefix.' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.8,
@@ -261,7 +265,7 @@ Respond in JSON format:
     return {
       title: `Check out this ${page.title} coloring page!`,
       description: `I found this beautiful coloring page and wanted to share it with the community. It's free to download and perfect for relaxation! 🎨`,
-      subreddit: allowedSubreddits[0] || 'test'
+      subreddit: cleanSubreddits[0] || 'test'
     };
   }
 
@@ -273,10 +277,12 @@ Respond in JSON format:
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
+      // 确保清理返回的 subreddit 名称
+      const cleanedSubreddit = (parsed.subreddit || cleanSubreddits[0] || 'test').replace(/^r\//, '');
       return {
         title: parsed.title || `Check out this ${page.title} coloring page!`,
         description: parsed.description || `Beautiful coloring page available for free download! 🎨`,
-        subreddit: parsed.subreddit || allowedSubreddits[0] || 'test'
+        subreddit: cleanedSubreddit
       };
     }
   } catch (parseError) {
@@ -287,7 +293,7 @@ Respond in JSON format:
   return {
     title: `Check out this ${page.title} coloring page!`,
     description: `I found this beautiful coloring page and wanted to share it. Free to download! 🎨`,
-    subreddit: allowedSubreddits[0] || 'test'
+    subreddit: cleanSubreddits[0] || 'test'
   };
 }
 
