@@ -44,8 +44,15 @@ interface SocialPost {
   id: string;
   platform: string;
   title: string;
+  description: string | null;
   post_url: string | null;
+  image_url: string | null;
   status: string;
+  error_message: string | null;
+  subreddit: string | null;
+  ai_generated: boolean;
+  engagement_score: number;
+  reply_count: number;
   posted_at: string | null;
   created_at: string;
 }
@@ -997,52 +1004,129 @@ export function SocialMediaManager() {
 
       <Card>
         <CardHeader>
-          <CardTitle>发布历史</CardTitle>
-          <CardDescription>查看你的社交媒体发布记录</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>📊 营销动作历史</CardTitle>
+              <CardDescription>查看所有自动和手动发布的详细记录</CardDescription>
+            </div>
+            <Button
+              onClick={loadPosts}
+              variant="outline"
+              size="sm"
+            >
+              🔄 刷新
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>平台</TableHead>
-                <TableHead>标题</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>发布时间</TableHead>
-                <TableHead>操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {posts.map((post) => (
-                <TableRow key={post.id}>
-                  <TableCell className="capitalize">{post.platform}</TableCell>
-                  <TableCell>{post.title}</TableCell>
-                  <TableCell>
-                    <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
-                      {post.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {post.posted_at 
-                      ? new Date(post.posted_at).toLocaleDateString('zh-CN')
-                      : '-'}
-                  </TableCell>
-                  <TableCell>
+          <div className="space-y-4">
+            {posts.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                暂无发布记录
+              </p>
+            ) : (
+              posts.map((post) => (
+                <div
+                  key={post.id}
+                  className="border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors"
+                >
+                  {/* 头部：平台、状态、时间 */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="capitalize">
+                        {post.platform === 'reddit' ? '🔴 Reddit' : '📌 Pinterest'}
+                      </Badge>
+                      {post.ai_generated && (
+                        <Badge variant="secondary">
+                          🤖 AI 自动
+                        </Badge>
+                      )}
+                      <Badge variant={post.status === 'published' ? 'default' : post.status === 'failed' ? 'destructive' : 'secondary'}>
+                        {post.status === 'published' ? '✅ 已发布' : post.status === 'failed' ? '❌ 失败' : post.status}
+                      </Badge>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {post.posted_at 
+                        ? new Date(post.posted_at).toLocaleString('zh-CN', { 
+                            year: 'numeric',
+                            month: '2-digit', 
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : '待发布'}
+                    </span>
+                  </div>
+
+                  {/* 标题 */}
+                  <div>
+                    <h4 className="font-medium text-base mb-1">{post.title}</h4>
+                    {post.subreddit && (
+                      <p className="text-sm text-muted-foreground">
+                        📍 r/{post.subreddit}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* 描述 */}
+                  {post.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {post.description}
+                    </p>
+                  )}
+
+                  {/* 互动数据 */}
+                  {(post.engagement_score > 0 || post.reply_count > 0) && (
+                    <div className="flex gap-4 text-sm">
+                      {post.engagement_score > 0 && (
+                        <span className="text-muted-foreground">
+                          👍 互动分: {post.engagement_score}
+                        </span>
+                      )}
+                      {post.reply_count > 0 && (
+                        <span className="text-muted-foreground">
+                          💬 回复: {post.reply_count}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 错误信息 */}
+                  {post.error_message && (
+                    <div className="p-2 bg-destructive/10 border border-destructive/20 rounded text-sm text-destructive">
+                      ⚠️ {post.error_message}
+                    </div>
+                  )}
+
+                  {/* 操作按钮 */}
+                  <div className="flex gap-2 pt-2">
                     {post.post_url && (
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         asChild
                       >
                         <a href={post.post_url} target="_blank" rel="noopener noreferrer">
-                          查看
+                          🔗 查看帖子
                         </a>
                       </Button>
                     )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    {post.image_url && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                      >
+                        <a href={post.image_url} target="_blank" rel="noopener noreferrer">
+                          🖼️ 查看图片
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
 

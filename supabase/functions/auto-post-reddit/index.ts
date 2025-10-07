@@ -293,7 +293,7 @@ Respond in JSON format:
 
 async function postToReddit(
   supabase: any,
-  accessToken: string,
+  redditAccessToken: string,
   subreddit: string,
   title: string,
   text: string,
@@ -301,34 +301,65 @@ async function postToReddit(
   userId: string,
   coloringPageId: string
 ): Promise<{ postUrl: string; postId: string }> {
-  // 调用 post-to-reddit edge function
-  const { data, error } = await supabase.functions.invoke('post-to-reddit', {
-    body: {
-      subreddit: subreddit,
-      title: title,
-      text: text,
-      imageUrl: imageUrl,
-      coloringPageId: coloringPageId
-    },
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  // 使用 Reddit API 直接发布
+  // 1. 首先上传图片到 Reddit
+  let imagePostData = null;
+  if (imageUrl) {
+    try {
+      const uploadResponse = await fetch('https://oauth.reddit.com/api/submit', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${redditAccessToken}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'ColorMinds/1.0'
+        },
+        body: new URLSearchParams({
+          sr: subreddit,
+          kind: 'link',
+          title: title,
+          url: imageUrl,
+          text: text || '',
+          resubmit: 'true',
+          sendreplies: 'false'
+        })
+      });
 
-  if (error) {
-    console.error('Error posting to Reddit:', error);
-    throw error;
+      imagePostData = await uploadResponse.json();
+      
+      if (!uploadResponse.ok || imagePostData.error) {
+        throw new Error(imagePostData.message || 'Failed to post to Reddit');
+      }
+    } catch (uploadError) {
+      console.error('Error uploading to Reddit:', uploadError);
+      throw uploadError;
+    }
   }
 
-  // 更新 social_posts 记录
-  await supabase
-    .from('social_posts')
-    .update({
-      subreddit: subreddit,
-      ai_generated: true
-    })
-    .eq('post_id', data.postId)
-    .eq('user_id', userId);
+  const postId = `reddit_${Date.now()}`;
+  const postUrl = imagePostData?.json?.data?.url || `https://reddit.com/r/${subreddit}`;
 
-  return data;
+  // 记录到数据库
+  const { error: insertError } = await supabase
+    .from('social_posts')
+    .insert({
+      user_id: userId,
+      coloring_page_id: coloringPageId,
+      platform: 'reddit',
+      post_id: postId,
+      post_url: postUrl,
+      title: title,
+      description: text,
+      image_url: imageUrl,
+      subreddit: subreddit,
+      ai_generated: true,
+      status: 'published',
+      posted_at: new Date().toISOString()
+    });
+
+  if (insertError) {
+    console.error('Error inserting social post:', insertError);
+    throw insertError;
+  }
+
+  return { postUrl, postId };
 }
