@@ -5,8 +5,8 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://www.colorminds.fun/sitemap.xml
-Sitemap: https://www.colorminds.fun/image-sitemap.xml
+Sitemap: https://gggmfhgavzworznuagzv.supabase.co/functions/v1/generate-sitemap
+Sitemap: https://gggmfhgavzworznuagzv.supabase.co/functions/v1/generate-image-sitemap
 
 # Crawl delay for good behavior
 Crawl-delay: 1
