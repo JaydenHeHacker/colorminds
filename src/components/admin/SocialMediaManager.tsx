@@ -161,18 +161,25 @@ export function SocialMediaManager() {
       if (!session) throw new Error('Not authenticated');
 
       if (platform === 'reddit') {
-        // Get Reddit client ID from environment
-        const clientId = import.meta.env.VITE_REDDIT_CLIENT_ID || 'YOUR_REDDIT_CLIENT_ID';
+        // Get Reddit OAuth URL from backend
         const redirectUri = `${window.location.origin}${window.location.pathname}`;
-        const scope = 'identity submit';
-        const state = Math.random().toString(36).substring(7);
+        
+        const { data, error } = await supabase.functions.invoke('get-reddit-auth-url', {
+          body: { redirect_uri: redirectUri },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        
+        if (error || !data?.authUrl) {
+          throw new Error(data?.error || 'Failed to get Reddit auth URL');
+        }
         
         // Store state for verification
-        sessionStorage.setItem('reddit_oauth_state', state);
+        sessionStorage.setItem('reddit_oauth_state', data.state);
         
-        const authUrl = `https://www.reddit.com/api/v1/authorize?client_id=${clientId}&response_type=code&state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}&duration=permanent&scope=${scope}`;
-        
-        window.location.href = authUrl;
+        // Redirect to Reddit OAuth
+        window.location.href = data.authUrl;
         return;
       } else if (platform === 'pinterest') {
         // Verify real Pinterest connection
