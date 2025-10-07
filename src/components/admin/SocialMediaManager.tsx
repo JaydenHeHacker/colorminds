@@ -828,6 +828,9 @@ export function SocialMediaManager() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="0.033">2 分钟 🧪 极速测试</SelectItem>
+                    <SelectItem value="0.083">5 分钟 🧪 快速测试</SelectItem>
+                    <SelectItem value="0.167">10 分钟 🧪 测试用</SelectItem>
                     <SelectItem value="0.25">15 分钟 🧪 测试用</SelectItem>
                     <SelectItem value="0.5">30 分钟 🧪 测试用</SelectItem>
                     <SelectItem value="1">1 小时 🧪 测试用</SelectItem>
