@@ -215,30 +215,39 @@ async function generateAIContent(
   // 清理 subreddit 名称，移除 r/ 前缀
   const cleanSubreddits = allowedSubreddits.map(s => s.replace(/^r\//, ''));
   
-  const prompt = `You are a Reddit marketing expert for a coloring page website.
+  const prompt = `You are a casual Reddit user sharing cool stuff you found. Write like a REAL person, not a marketer.
 
 Coloring Page: "${page.title}"
-${page.description ? `Description: ${page.description}` : ''}
+${page.description ? `Context: ${page.description}` : ''}
 
-Allowed subreddits: ${cleanSubreddits.join(', ')}
+Target subreddits: ${cleanSubreddits.join(', ')}
 
-Generate:
-1. A catchy, natural Reddit post title (max 150 chars)
-2. A friendly description text (2-3 sentences, mention it's free to download)
-3. Choose the BEST subreddit from the allowed list (WITHOUT r/ prefix, just the name)
+Generate a Reddit post that sounds like a real person sharing something they're excited about:
 
-Rules:
-- Title should NOT sound like an ad
-- Be authentic and engaging
-- Choose subreddit based on content relevance
-- Description should invite engagement
-- Return subreddit name WITHOUT 'r/' prefix
+TITLE (max 150 chars):
+- Sound casual and authentic, like you're talking to friends
+- Use Reddit slang occasionally (ngl, tbh, lol, etc.)
+- Can include emojis but don't overdo it
+- NO marketing language ("perfect for", "ideal", "great gift")
+- Examples of good vibes: "This came out way cooler than expected", "Found this gem today", "Pretty happy with how this turned out"
 
-Respond in JSON format:
+DESCRIPTION (2-3 sentences):
+- Write like you're genuinely sharing, not selling
+- Use casual language: "kinda", "pretty", "honestly", "actually"
+- Can mention it's free but make it sound natural ("it's free btw" or "didn't cost anything")
+- NO phrases like: "perfect for all ages", "completely free to download", "hope you enjoy"
+- Share it like you found something cool and want others to see it
+- Add personality: "turned out better than I thought", "spent way too long on this lol", "this was actually fun"
+
+SUBREDDIT:
+- Pick the most relevant one from: ${cleanSubreddits.join(', ')}
+- Return just the name, NO 'r/' prefix
+
+Respond ONLY with valid JSON (no markdown):
 {
-  "title": "...",
-  "description": "...",
-  "subreddit": "test"
+  "title": "your casual title here",
+  "description": "your genuine-sounding description here",
+  "subreddit": "subreddit_name"
 }`;
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -250,10 +259,10 @@ Respond in JSON format:
     body: JSON.stringify({
       model: 'google/gemini-2.5-flash',
       messages: [
-        { role: 'system', content: 'You are a helpful AI that generates Reddit marketing content. Always respond in valid JSON format. Return subreddit names WITHOUT r/ prefix.' },
+        { role: 'system', content: 'You are a casual Reddit user sharing cool finds. Write like a real person, not an AI or marketer. Use natural language, occasional slang, and genuine enthusiasm. Always respond with valid JSON only, no markdown formatting. Never use r/ prefix in subreddit names.' },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.8,
+      temperature: 0.9,
     }),
   });
 
@@ -263,8 +272,8 @@ Respond in JSON format:
     
     // 降级方案：使用简单模板
     return {
-      title: `Check out this ${page.title} coloring page!`,
-      description: `I found this beautiful coloring page and wanted to share it with the community. It's free to download and perfect for relaxation! 🎨`,
+      title: `Found this ${page.title} coloring page, turned out pretty cool`,
+      description: `Honestly wasn't expecting much but this came out nice. Free to grab if anyone wants it 🎨`,
       subreddit: cleanSubreddits[0] || 'test'
     };
   }
@@ -291,8 +300,8 @@ Respond in JSON format:
 
   // 如果解析失败，返回默认值
   return {
-    title: `Check out this ${page.title} coloring page!`,
-    description: `I found this beautiful coloring page and wanted to share it. Free to download! 🎨`,
+    title: `${page.title} - came out better than expected ngl`,
+    description: `Spent some time on this and honestly pretty happy with it. It's free btw if anyone's interested 🎨`,
     subreddit: cleanSubreddits[0] || 'test'
   };
 }
