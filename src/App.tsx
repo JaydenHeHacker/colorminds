@@ -12,8 +12,6 @@ import SeriesPage from "./pages/SeriesPage";
 import AllSeries from "./pages/AllSeries";
 import Favorites from "./pages/Favorites";
 import Profile from "./pages/Profile";
-import Sitemap from "./pages/Sitemap";
-import ImageSitemap from "./pages/ImageSitemap";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import CreatePage from "./pages/CreatePage";
@@ -54,8 +52,6 @@ const App = () => (
           <Route path="/credits-store" element={<CreditsStore />} />
           <Route path="/community" element={<Community />} />
           <Route path="/gallery" element={<UserGallery />} />
-          <Route path="/sitemap.xml" element={<Sitemap />} />
-          <Route path="/image-sitemap.xml" element={<ImageSitemap />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/about-us" element={<AboutUs />} />
