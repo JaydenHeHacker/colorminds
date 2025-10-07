@@ -317,6 +317,25 @@ export function SocialMediaManager() {
     }
   };
 
+  const applyPhase2Config = async () => {
+    try {
+      setConfigLoading(true);
+      await updateAutoConfig({
+        posts_per_day: 6,
+        hours_between_posts: 4,
+        allowed_subreddits: ['test', 'coloring', 'ColoringPages', 'crafts']
+      });
+      toast({
+        title: "配置已应用",
+        description: "已切换到第二阶段推荐配置：6次/天，4小时间隔",
+      });
+    } catch (error) {
+      console.error('Error applying phase 2 config:', error);
+    } finally {
+      setConfigLoading(false);
+    }
+  };
+
   const handleConnect = async (platform: 'reddit' | 'pinterest') => {
     try {
       setLoading(true);
@@ -894,6 +913,23 @@ export function SocialMediaManager() {
                 </p>
               </div>
             )}
+
+            {/* 快速配置按钮 */}
+            <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
+              <h4 className="font-medium text-sm">⚡ 快速配置</h4>
+              <Button
+                onClick={applyPhase2Config}
+                disabled={configLoading}
+                variant="default"
+                className="w-full"
+              >
+                {configLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                🚀 使用第二阶段推荐配置
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                将应用：6次/天，4小时间隔，目标 subreddits: test, coloring, ColoringPages, crafts
+              </p>
+            </div>
 
             {/* 测试按钮 */}
             <div className="flex gap-2">
