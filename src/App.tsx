@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PrintBasket } from "@/components/PrintBasket";
+import Sitemap from "./pages/Sitemap";
+import ImageSitemap from "./pages/ImageSitemap";
 import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import ColoringPage from "./pages/ColoringPage";
@@ -58,6 +60,8 @@ const App = () => (
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/sitemap.xml" element={<Sitemap />} />
+          <Route path="/image-sitemap.xml" element={<ImageSitemap />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
