@@ -1,3 +1,0 @@
-# Proxy sitemap requests to Edge Functions (returns 200, not redirect)
-/sitemap.xml https://gggmfhgavzworznuagzv.supabase.co/functions/v1/generate-sitemap 200
-/image-sitemap.xml https://gggmfhgavzworznuagzv.supabase.co/functions/v1/generate-image-sitemap 200
