@@ -164,6 +164,8 @@ export function SocialMediaManager() {
         // Get Reddit OAuth URL from backend
         const redirectUri = `${window.location.origin}${window.location.pathname}`;
         
+        console.log('Calling get-reddit-auth-url with redirect_uri:', redirectUri);
+        
         const { data, error } = await supabase.functions.invoke('get-reddit-auth-url', {
           body: { redirect_uri: redirectUri },
           headers: {
@@ -171,8 +173,16 @@ export function SocialMediaManager() {
           },
         });
         
-        if (error || !data?.authUrl) {
-          throw new Error(data?.error || 'Failed to get Reddit auth URL');
+        console.log('Reddit auth URL response:', { data, error });
+        
+        if (error) {
+          console.error('Edge function error:', error);
+          throw new Error(`Edge function failed: ${JSON.stringify(error)}`);
+        }
+        
+        if (!data?.authUrl) {
+          console.error('No auth URL in response:', data);
+          throw new Error(data?.error || 'No auth URL returned from server');
         }
         
         // Store state for verification
