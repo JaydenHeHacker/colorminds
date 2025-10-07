@@ -188,6 +188,7 @@ export function SocialMediaManager() {
 
   const loadPosts = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('social_posts')
         .select('*')
@@ -196,8 +197,20 @@ export function SocialMediaManager() {
 
       if (error) throw error;
       setPosts(data || []);
+      
+      toast({
+        title: "刷新成功",
+        description: `已加载 ${data?.length || 0} 条记录`,
+      });
     } catch (error) {
       console.error('Error loading posts:', error);
+      toast({
+        title: "刷新失败",
+        description: error instanceof Error ? error.message : "请重试",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1013,7 +1026,9 @@ export function SocialMediaManager() {
               onClick={loadPosts}
               variant="outline"
               size="sm"
+              disabled={loading}
             >
+              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               🔄 刷新
             </Button>
           </div>
