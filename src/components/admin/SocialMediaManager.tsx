@@ -72,7 +72,57 @@ export function SocialMediaManager() {
   useEffect(() => {
     loadConnections();
     loadPosts();
+    handleOAuthCallback();
   }, []);
+
+  const handleOAuthCallback = async () => {
+    // Check if we're returning from Reddit OAuth
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    if (code && state) {
+      const savedState = sessionStorage.getItem('reddit_oauth_state');
+      
+      if (state === savedState) {
+        sessionStorage.removeItem('reddit_oauth_state');
+        
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) throw new Error('Not authenticated');
+          
+          const redirectUri = `${window.location.origin}${window.location.pathname}`;
+          
+          const { data, error } = await supabase.functions.invoke('verify-reddit-connection', {
+            body: { code, redirect_uri: redirectUri },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
+          
+          if (error || !data?.success) {
+            throw new Error(data?.error || 'Reddit 连接失败');
+          }
+          
+          toast({
+            title: "连接成功",
+            description: `Reddit 账号 u/${data.username} 已连接`,
+          });
+          
+          // Clean URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          loadConnections();
+        } catch (error) {
+          console.error('Error completing Reddit OAuth:', error);
+          toast({
+            title: "连接失败",
+            description: error instanceof Error ? error.message : "请重试",
+            variant: "destructive",
+          });
+        }
+      }
+    }
+  };
 
   const loadConnections = async () => {
     try {
@@ -110,7 +160,21 @@ export function SocialMediaManager() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      if (platform === 'pinterest') {
+      if (platform === 'reddit') {
+        // Get Reddit client ID from environment
+        const clientId = import.meta.env.VITE_REDDIT_CLIENT_ID || 'YOUR_REDDIT_CLIENT_ID';
+        const redirectUri = `${window.location.origin}${window.location.pathname}`;
+        const scope = 'identity submit';
+        const state = Math.random().toString(36).substring(7);
+        
+        // Store state for verification
+        sessionStorage.setItem('reddit_oauth_state', state);
+        
+        const authUrl = `https://www.reddit.com/api/v1/authorize?client_id=${clientId}&response_type=code&state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}&duration=permanent&scope=${scope}`;
+        
+        window.location.href = authUrl;
+        return;
+      } else if (platform === 'pinterest') {
         // Verify real Pinterest connection
         const { data, error } = await supabase.functions.invoke('verify-pinterest-connection', {
           headers: {
@@ -126,32 +190,9 @@ export function SocialMediaManager() {
           title: "连接成功",
           description: `Pinterest 账号 @${data.username} 已连接，共 ${data.boardsCount} 个 Board`,
         });
-      } else {
-        // Reddit placeholder
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-
-        const { error } = await supabase
-          .from('social_media_connections')
-          .upsert({
-            user_id: user.id,
-            platform,
-            access_token: 'PLACEHOLDER_TOKEN',
-            username: 'placeholder_user',
-            is_active: true,
-          }, {
-            onConflict: 'user_id,platform'
-          });
-
-        if (error) throw error;
-
-        toast({
-          title: "连接成功",
-          description: "Reddit 账号已连接（占位符模式）",
-        });
+        
+        loadConnections();
       }
-
-      loadConnections();
     } catch (error) {
       console.error('Error connecting:', error);
       toast({

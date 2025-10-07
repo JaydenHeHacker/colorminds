@@ -3,6 +3,9 @@ project_id = "gggmfhgavzworznuagzv"
 [functions.post-to-reddit]
 verify_jwt = true
 
+[functions.verify-reddit-connection]
+verify_jwt = true
+
 [functions.post-to-pinterest]
 verify_jwt = true
 

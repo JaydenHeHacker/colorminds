@@ -54,9 +54,11 @@ Deno.serve(async (req) => {
       throw new Error('Reddit not connected. Please connect your Reddit account first.');
     }
 
-    // TODO: Implement actual Reddit API posting
-    // For now, we'll use a placeholder
-    const accessToken = connection.access_token || 'REDDIT_ACCESS_TOKEN_PLACEHOLDER';
+    const accessToken = connection.access_token;
+    
+    if (!accessToken) {
+      throw new Error('No access token found for Reddit connection');
+    }
     
     let postResponse;
     if (body.imageUrl) {
@@ -133,15 +135,44 @@ async function postRedditImage(
   title: string,
   imageUrl: string
 ) {
-  // Placeholder implementation
-  // In production, you would:
-  // 1. Upload image to Reddit
-  // 2. Create a post with the uploaded image
   console.log('Posting image to Reddit:', { subreddit, title, imageUrl });
   
+  // Post as a link to the image URL
+  // Reddit doesn't support direct image uploads via OAuth for link posts
+  const response = await fetch('https://oauth.reddit.com/api/submit', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'User-Agent': 'ColorMinds/1.0',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      sr: subreddit,
+      kind: 'link',
+      title: title,
+      url: imageUrl,
+      resubmit: 'true',
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Reddit post error:', errorText);
+    throw new Error(`Failed to post to Reddit: ${errorText}`);
+  }
+
+  const data = await response.json();
+  
+  if (data.json?.errors?.length > 0) {
+    throw new Error(`Reddit API error: ${JSON.stringify(data.json.errors)}`);
+  }
+  
+  const postUrl = data.json?.data?.url || `https://reddit.com/r/${subreddit}`;
+  const postId = data.json?.data?.name || 'reddit_' + Date.now();
+  
   return {
-    id: 'reddit_' + Date.now(),
-    url: `https://reddit.com/r/${subreddit}/comments/placeholder`,
+    id: postId,
+    url: postUrl,
   };
 }
 
@@ -152,12 +183,42 @@ async function postRedditLink(
   url: string,
   text?: string
 ) {
-  // Placeholder implementation
   console.log('Posting link to Reddit:', { subreddit, title, url });
   
+  const response = await fetch('https://oauth.reddit.com/api/submit', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'User-Agent': 'ColorMinds/1.0',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      sr: subreddit,
+      kind: 'link',
+      title: title,
+      url: url,
+      resubmit: 'true',
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Reddit post error:', errorText);
+    throw new Error(`Failed to post to Reddit: ${errorText}`);
+  }
+
+  const data = await response.json();
+  
+  if (data.json?.errors?.length > 0) {
+    throw new Error(`Reddit API error: ${JSON.stringify(data.json.errors)}`);
+  }
+  
+  const postUrl = data.json?.data?.url || `https://reddit.com/r/${subreddit}`;
+  const postId = data.json?.data?.name || 'reddit_' + Date.now();
+  
   return {
-    id: 'reddit_' + Date.now(),
-    url: `https://reddit.com/r/${subreddit}/comments/placeholder`,
+    id: postId,
+    url: postUrl,
   };
 }
 
@@ -167,11 +228,40 @@ async function postRedditText(
   title: string,
   text: string
 ) {
-  // Placeholder implementation
   console.log('Posting text to Reddit:', { subreddit, title });
   
+  const response = await fetch('https://oauth.reddit.com/api/submit', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'User-Agent': 'ColorMinds/1.0',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      sr: subreddit,
+      kind: 'self',
+      title: title,
+      text: text,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Reddit post error:', errorText);
+    throw new Error(`Failed to post to Reddit: ${errorText}`);
+  }
+
+  const data = await response.json();
+  
+  if (data.json?.errors?.length > 0) {
+    throw new Error(`Reddit API error: ${JSON.stringify(data.json.errors)}`);
+  }
+  
+  const postUrl = data.json?.data?.url || `https://reddit.com/r/${subreddit}`;
+  const postId = data.json?.data?.name || 'reddit_' + Date.now();
+  
   return {
-    id: 'reddit_' + Date.now(),
-    url: `https://reddit.com/r/${subreddit}/comments/placeholder`,
+    id: postId,
+    url: postUrl,
   };
 }
