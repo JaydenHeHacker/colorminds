@@ -301,65 +301,100 @@ async function postToReddit(
   userId: string,
   coloringPageId: string
 ): Promise<{ postUrl: string; postId: string }> {
+  // 确保 subreddit 不带 r/ 前缀
+  const cleanSubreddit = subreddit.replace(/^r\//, '');
+  
+  console.log(`Posting to Reddit - subreddit: ${cleanSubreddit}, title: ${title}`);
+  
   // 使用 Reddit API 直接发布
-  // 1. 首先上传图片到 Reddit
-  let imagePostData = null;
-  if (imageUrl) {
-    try {
-      const uploadResponse = await fetch('https://oauth.reddit.com/api/submit', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${redditAccessToken}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'ColorMinds/1.0'
-        },
-        body: new URLSearchParams({
-          sr: subreddit,
-          kind: 'link',
-          title: title,
-          url: imageUrl,
-          text: text || '',
-          resubmit: 'true',
-          sendreplies: 'false'
-        })
-      });
-
-      imagePostData = await uploadResponse.json();
-      
-      if (!uploadResponse.ok || imagePostData.error) {
-        throw new Error(imagePostData.message || 'Failed to post to Reddit');
-      }
-    } catch (uploadError) {
-      console.error('Error uploading to Reddit:', uploadError);
-      throw uploadError;
-    }
-  }
-
-  const postId = `reddit_${Date.now()}`;
-  const postUrl = imagePostData?.json?.data?.url || `https://reddit.com/r/${subreddit}`;
-
-  // 记录到数据库
-  const { error: insertError } = await supabase
-    .from('social_posts')
-    .insert({
-      user_id: userId,
-      coloring_page_id: coloringPageId,
-      platform: 'reddit',
-      post_id: postId,
-      post_url: postUrl,
-      title: title,
-      description: text,
-      image_url: imageUrl,
-      subreddit: subreddit,
-      ai_generated: true,
-      status: 'published',
-      posted_at: new Date().toISOString()
+  try {
+    const uploadResponse = await fetch('https://oauth.reddit.com/api/submit', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${redditAccessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'ColorMinds/1.0'
+      },
+      body: new URLSearchParams({
+        sr: cleanSubreddit,
+        kind: 'link',
+        title: title,
+        url: imageUrl,
+        resubmit: 'true',
+        sendreplies: 'false'
+      })
     });
 
-  if (insertError) {
-    console.error('Error inserting social post:', insertError);
-    throw insertError;
-  }
+    const responseData = await uploadResponse.json();
+    console.log('Reddit API response:', JSON.stringify(responseData, null, 2));
+    
+    if (!uploadResponse.ok) {
+      throw new Error(`Reddit API error: ${JSON.stringify(responseData)}`);
+    }
+    
+    // 检查 Reddit API 响应中的错误
+    if (responseData.json?.errors?.length > 0) {
+      throw new Error(`Reddit API error: ${JSON.stringify(responseData.json.errors)}`);
+    }
+    
+    // 获取真实的帖子 URL 和 ID
+    const realPostUrl = responseData.json?.data?.url;
+    const realPostId = responseData.json?.data?.name;
+    
+    if (!realPostUrl || !realPostId) {
+      console.warn('Reddit did not return expected data, using fallback');
+    }
+    
+    const postId = realPostId || `reddit_${Date.now()}`;
+    const postUrl = realPostUrl || `https://reddit.com/r/${cleanSubreddit}`;
 
-  return { postUrl, postId };
+    console.log(`✅ Posted to Reddit successfully: ${postUrl}`);
+
+    // 记录到数据库
+    const { error: insertError } = await supabase
+      .from('social_posts')
+      .insert({
+        user_id: userId,
+        coloring_page_id: coloringPageId,
+        platform: 'reddit',
+        post_id: postId,
+        post_url: postUrl,
+        title: title,
+        description: text,
+        image_url: imageUrl,
+        subreddit: cleanSubreddit,
+        ai_generated: true,
+        status: 'published',
+        posted_at: new Date().toISOString()
+      });
+
+    if (insertError) {
+      console.error('Error inserting social post:', insertError);
+      throw insertError;
+    }
+
+    return { postUrl, postId };
+  } catch (error) {
+    console.error('Error posting to Reddit:', error);
+    
+    // 记录失败到数据库
+    await supabase
+      .from('social_posts')
+      .insert({
+        user_id: userId,
+        coloring_page_id: coloringPageId,
+        platform: 'reddit',
+        post_id: `failed_${Date.now()}`,
+        title: title,
+        description: text,
+        image_url: imageUrl,
+        subreddit: cleanSubreddit,
+        ai_generated: true,
+        status: 'failed',
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        posted_at: new Date().toISOString()
+      });
+    
+    throw error;
+  }
 }
