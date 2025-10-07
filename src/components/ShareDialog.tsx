@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Facebook, Twitter, Link2, MessageCircle, Mail, Check, Share2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { trackShare } from "@/utils/analytics";
 
 interface ShareDialogProps {
   isOpen: boolean;
@@ -91,6 +92,14 @@ export const ShareDialog = ({
   const shareToFacebook = () => {
     const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl('facebook'))}&quote=${encodeURIComponent(currentTemplate.text)}`;
     window.open(url, '_blank', 'width=600,height=400');
+    
+    // 追踪分享操作
+    trackShare({
+      method: 'facebook',
+      contentType: 'coloring_page',
+      itemId: pageId,
+      itemTitle: title,
+    });
   };
 
   const shareToTwitter = () => {
@@ -100,6 +109,14 @@ export const ShareDialog = ({
       : currentTemplate.text;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shortText)}&url=${encodeURIComponent(getShareUrl('twitter'))}`;
     window.open(url, '_blank', 'width=600,height=400');
+    
+    // 追踪分享操作
+    trackShare({
+      method: 'twitter',
+      contentType: 'coloring_page',
+      itemId: pageId,
+      itemTitle: title,
+    });
   };
 
   const shareToWhatsApp = () => {

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { trackAIInspiration } from "@/utils/analytics";
 
 interface ColorInspirationDialogProps {
   open: boolean;

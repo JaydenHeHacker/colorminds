@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast as sonnerToast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { trackFavorite, trackBasket } from "@/utils/analytics";
 
 interface ColoringCardProps {
   id?: string;
@@ -146,10 +147,29 @@ export const ColoringCard = ({
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      setIsInBasket(!isInBasket);
+    onSuccess: async () => {
+      const newIsInBasket = !isInBasket;
+      setIsInBasket(newIsInBasket);
       queryClient.invalidateQueries({ queryKey: ['print-basket'] });
       sonnerToast.success(isInBasket ? "Removed from print basket" : "Added to print basket");
+      
+      // 追踪打印篮操作
+      if (id && title && category && user) {
+        try {
+          const { count } = await supabase
+            .from('print_basket')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+          
+          trackBasket({
+            action: newIsInBasket ? 'add' : 'remove',
+            itemName: title,
+            basketSize: count || 0,
+          });
+        } catch (error) {
+          console.error('Error tracking basket:', error);
+        }
+      }
     },
     onError: (error: Error) => {
       if (error.message.startsWith('FREE_LIMIT:')) {
@@ -189,6 +209,14 @@ export const ColoringCard = ({
         
         setIsFavorited(false);
         sonnerToast.success("Removed from favorites");
+        
+        // 追踪收藏操作
+        trackFavorite({
+          action: 'remove',
+          pageId: id,
+          pageTitle: title,
+          category: category,
+        });
       } else {
         const { error } = await supabase
           .from('favorites')
@@ -201,6 +229,14 @@ export const ColoringCard = ({
         
         setIsFavorited(true);
         sonnerToast.success("Added to favorites");
+        
+        // 追踪收藏操作
+        trackFavorite({
+          action: 'add',
+          pageId: id,
+          pageTitle: title,
+          category: category,
+        });
       }
     } catch (error: any) {
       console.error('Error toggling favorite:', error);

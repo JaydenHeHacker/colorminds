@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { ShareDialog } from "@/components/ShareDialog";
 import { StructuredData } from "@/components/StructuredData";
 import { SocialMeta } from "@/components/SocialMeta";
+import { trackPrint, trackFavorite, trackAIInspiration, trackOnlineColoring, trackPreview } from "@/utils/analytics";
 
 const ColoringPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -143,6 +144,14 @@ const ColoringPage = () => {
         
         setIsFavorited(false);
         toast.success("Removed from favorites");
+        
+        // 追踪收藏操作
+        trackFavorite({
+          action: 'remove',
+          pageId: page.id,
+          pageTitle: page.title,
+          category: page.categories?.name || 'Uncategorized',
+        });
       } else {
         const { error } = await supabase
           .from('favorites')
@@ -155,6 +164,14 @@ const ColoringPage = () => {
         
         setIsFavorited(true);
         toast.success("Added to favorites");
+        
+        // 追踪收藏操作
+        trackFavorite({
+          action: 'add',
+          pageId: page.id,
+          pageTitle: page.title,
+          category: page.categories?.name || 'Uncategorized',
+        });
       }
     } catch (error: any) {
       console.error('Error toggling favorite:', error);
@@ -164,6 +181,14 @@ const ColoringPage = () => {
 
   const handlePrintPreview = () => {
     setIsPrintPreviewOpen(true);
+    
+    // 追踪预览操作
+    if (page) {
+      trackPreview({
+        pageTitle: page.title,
+        category: page.categories?.name || 'Uncategorized',
+      });
+    }
   };
 
   const handlePrint = async () => {
@@ -278,6 +303,14 @@ const ColoringPage = () => {
       
       await supabase.rpc('increment_download_count', { page_id: page.id });
       toast.success("Print dialog will open shortly...");
+      
+      // 追踪打印操作
+      trackPrint({
+        pageTitle: page.title,
+        category: page.categories?.name || 'Uncategorized',
+        difficulty: page.difficulty || 'medium',
+        seriesName: page.series_title,
+      });
     } catch (error) {
       console.error('Print error:', error);
       toast.error("Print failed. Please try again.");
@@ -449,10 +482,18 @@ const ColoringPage = () => {
                       Preview
                     </Button>
                   </div>
-                  <div className="flex gap-3">
+                   <div className="flex gap-3">
               <Button
                 variant="secondary"
-                onClick={() => setIsInspirationOpen(true)}
+                onClick={() => {
+                  setIsInspirationOpen(true);
+                  if (page) {
+                    trackAIInspiration({
+                      pageTitle: page.title,
+                      category: page.categories?.name || 'Uncategorized',
+                    });
+                  }
+                }}
                 size="lg"
                 className="flex-1 gap-2"
               >
@@ -461,14 +502,22 @@ const ColoringPage = () => {
               </Button>
               <Button
                 variant="secondary"
-                onClick={() => setIsColoringOpen(true)}
+                onClick={() => {
+                  setIsColoringOpen(true);
+                  if (page) {
+                    trackOnlineColoring({
+                      pageTitle: page.title,
+                      category: page.categories?.name || 'Uncategorized',
+                    });
+                  }
+                }}
                 size="lg"
                 className="flex-1 gap-2"
               >
                 <Palette className="h-5 w-5" />
                 Online Coloring
               </Button>
-                  </div>
+                   </div>
                   <div className="flex gap-3">
                     <Button 
                       variant={isFavorited ? "default" : "outline"}

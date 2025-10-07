@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Heart, BookOpen, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
+import { trackSearch, trackCategoryView } from "@/utils/analytics";
 
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -211,6 +212,29 @@ const Index = () => {
   const currentSeriesTitle = selectedSeriesId 
     ? seriesToDisplay.find(s => s.seriesId === selectedSeriesId)?.seriesTitle 
     : null;
+
+  // 追踪分析：分类浏览和搜索
+  useEffect(() => {
+    // 追踪分类浏览
+    if (selectedCategory && filteredPages) {
+      trackCategoryView({
+        categoryName: selectedCategory,
+        itemsCount: filteredPages.length,
+      });
+    }
+    
+    // 追踪搜索（带防抖，只在搜索完成后追踪）
+    if (searchQuery && pagesToDisplay) {
+      const timer = setTimeout(() => {
+        trackSearch({
+          searchTerm: searchQuery,
+          resultsCount: pagesToDisplay.length + (selectedSeriesId ? 0 : seriesToDisplay.length),
+        });
+      }, 1000); // 1秒防抖
+      
+      return () => clearTimeout(timer);
+    }
+  }, [selectedCategory, searchQuery, filteredPages, pagesToDisplay, seriesToDisplay, selectedSeriesId]);
 
 
   // SEO meta data

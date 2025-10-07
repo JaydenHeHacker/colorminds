@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Paintbrush, Eraser, Download, Undo, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { trackOnlineColoring } from "@/utils/analytics";
 
 interface OnlineColoringDialogProps {
   open: boolean;
