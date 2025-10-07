@@ -329,9 +329,12 @@ export function SocialMediaManager() {
         title: "配置已应用",
         description: "已切换到第二阶段推荐配置：6次/天，4小时间隔",
       });
+      
+      // 配置成功后自动测试发布一次
+      setConfigLoading(false);
+      await testAutoPost();
     } catch (error) {
       console.error('Error applying phase 2 config:', error);
-    } finally {
       setConfigLoading(false);
     }
   };
