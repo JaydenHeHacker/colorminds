@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('!!! ERROR GENERATING SITEMAP !!!');
     console.error('Error type:', error?.constructor?.name);
-    console.error('Error message:', error?.message);
+    console.error('Error message:', (error as Error)?.message);
     console.error('Full error:', error);
     return new Response(
       `<?xml version="1.0" encoding="UTF-8"?>

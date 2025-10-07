@@ -6,7 +6,7 @@ const corsHeaders = {
   'Content-Type': 'application/xml; charset=utf-8',
 };
 
-console.log('Generate Image Sitemap Edge Function v1.1 - Starting...');
+console.log('Generate Image Sitemap Edge Function v1.2 - Starting...');
 
 // Helper function to escape XML special characters
 const escapeXml = (unsafe: string): string => {
@@ -20,17 +20,26 @@ const escapeXml = (unsafe: string): string => {
 };
 
 Deno.serve(async (req) => {
+  console.log('=== IMAGE SITEMAP REQUEST RECEIVED ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', Object.fromEntries(req.headers.entries()));
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('Initializing Supabase client...');
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    console.log('Supabase URL:', supabaseUrl);
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch published coloring pages with image details
+    console.log('Fetching published coloring pages with images...');
     const { data: pages, error } = await supabase
       .from('coloring_pages')
       .select(`
@@ -47,7 +56,12 @@ Deno.serve(async (req) => {
       .eq('status', 'published')
       .order('updated_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching pages:', error);
+      throw error;
+    }
+    
+    console.log(`Found ${pages?.length || 0} published pages`);
 
     const baseUrl = 'https://www.colorminds.fun';
 
@@ -56,6 +70,7 @@ Deno.serve(async (req) => {
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`;
 
     if (pages && pages.length > 0) {
+      console.log('Building image sitemap XML...');
       pages.forEach(page => {
         // Skip if no image URL
         if (!page.image_url) {
@@ -107,7 +122,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('!!! ERROR GENERATING IMAGE SITEMAP !!!');
     console.error('Error type:', error?.constructor?.name);
-    console.error('Error message:', error?.message);
+    console.error('Error message:', (error as Error)?.message);
     console.error('Full error:', error);
     return new Response(
       `<?xml version="1.0" encoding="UTF-8"?>
