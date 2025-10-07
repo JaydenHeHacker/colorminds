@@ -50,6 +50,17 @@ interface SocialPost {
   created_at: string;
 }
 
+interface RedditAutoConfig {
+  id: string;
+  is_enabled: boolean;
+  posts_per_day: number;
+  hours_between_posts: number;
+  max_replies_per_post: number;
+  minutes_between_replies: number;
+  allowed_subreddits: string[];
+  last_post_at: string | null;
+}
+
 export function SocialMediaManager() {
   const { toast } = useToast();
   const [connections, setConnections] = useState<SocialConnection[]>([]);
@@ -60,6 +71,10 @@ export function SocialMediaManager() {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  
+  // Reddit auto-post config
+  const [autoConfig, setAutoConfig] = useState<RedditAutoConfig | null>(null);
+  const [configLoading, setConfigLoading] = useState(false);
   
   // Form states
   const [platform, setPlatform] = useState<'reddit' | 'pinterest'>('reddit');
@@ -72,6 +87,7 @@ export function SocialMediaManager() {
   useEffect(() => {
     loadConnections();
     loadPosts();
+    loadAutoConfig();
     handleOAuthCallback();
   }, []);
 
@@ -175,6 +191,109 @@ export function SocialMediaManager() {
       setPosts(data || []);
     } catch (error) {
       console.error('Error loading posts:', error);
+    }
+  };
+
+  const loadAutoConfig = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('reddit_auto_config')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        setAutoConfig(data);
+      } else {
+        // 创建默认配置
+        const { data: newConfig, error: insertError } = await supabase
+          .from('reddit_auto_config')
+          .insert({
+            user_id: user.id,
+            is_enabled: false,
+            posts_per_day: 2,
+            hours_between_posts: 6,
+            max_replies_per_post: 3,
+            minutes_between_replies: 30,
+            allowed_subreddits: ['test', 'coloring', 'ColoringPages']
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        setAutoConfig(newConfig);
+      }
+    } catch (error) {
+      console.error('Error loading auto config:', error);
+    }
+  };
+
+  const updateAutoConfig = async (updates: Partial<RedditAutoConfig>) => {
+    if (!autoConfig) return;
+
+    try {
+      setConfigLoading(true);
+      const { error } = await supabase
+        .from('reddit_auto_config')
+        .update(updates)
+        .eq('id', autoConfig.id);
+
+      if (error) throw error;
+
+      setAutoConfig({ ...autoConfig, ...updates });
+      toast({
+        title: "配置已更新",
+        description: "自动发布设置已保存",
+      });
+    } catch (error) {
+      console.error('Error updating config:', error);
+      toast({
+        title: "更新失败",
+        description: error instanceof Error ? error.message : "请重试",
+        variant: "destructive",
+      });
+    } finally {
+      setConfigLoading(false);
+    }
+  };
+
+  const testAutoPost = async () => {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.functions.invoke('auto-post-reddit', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "测试完成",
+        description: data.message || "查看控制台了解详情",
+      });
+
+      console.log('Auto-post test result:', data);
+      loadPosts();
+    } catch (error) {
+      console.error('Error testing auto-post:', error);
+      toast({
+        title: "测试失败",
+        description: error instanceof Error ? error.message : "请重试",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -645,6 +764,136 @@ export function SocialMediaManager() {
           </p>
         </CardContent>
       </Card>
+
+      {autoConfig && (
+        <Card>
+          <CardHeader>
+            <CardTitle>🤖 Reddit 智能自动营销</CardTitle>
+            <CardDescription>AI 自动生成文案并定时发布，遵守社区规则</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* 启用/禁用开关 */}
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <h4 className="font-medium">自动发布状态</h4>
+                <p className="text-sm text-muted-foreground">
+                  {autoConfig.is_enabled ? '✅ 已启用 - 系统将自动发布内容' : '❌ 已禁用 - 手动控制发布'}
+                </p>
+              </div>
+              <Button
+                variant={autoConfig.is_enabled ? "destructive" : "default"}
+                onClick={() => updateAutoConfig({ is_enabled: !autoConfig.is_enabled })}
+                disabled={configLoading || !connections.find(c => c.platform === 'reddit' && c.is_active)}
+              >
+                {configLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {autoConfig.is_enabled ? '停止自动发布' : '启用自动发布'}
+              </Button>
+            </div>
+
+            {/* 配置设置 */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>每天发布次数</Label>
+                <Select
+                  value={autoConfig.posts_per_day.toString()}
+                  onValueChange={(value) => updateAutoConfig({ posts_per_day: parseInt(value) })}
+                  disabled={configLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 次/天（最保守）</SelectItem>
+                    <SelectItem value="2">2 次/天（推荐）</SelectItem>
+                    <SelectItem value="3">3 次/天</SelectItem>
+                    <SelectItem value="4">4 次/天</SelectItem>
+                    <SelectItem value="5">5 次/天（最大）</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  保守策略避免被封禁
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>发布间隔（小时）</Label>
+                <Select
+                  value={autoConfig.hours_between_posts.toString()}
+                  onValueChange={(value) => updateAutoConfig({ hours_between_posts: parseInt(value) })}
+                  disabled={configLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2">2 小时</SelectItem>
+                    <SelectItem value="4">4 小时</SelectItem>
+                    <SelectItem value="6">6 小时（推荐）</SelectItem>
+                    <SelectItem value="8">8 小时</SelectItem>
+                    <SelectItem value="12">12 小时</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Subreddit 配置 */}
+            <div className="space-y-2">
+              <Label>允许的 Subreddits</Label>
+              <Textarea
+                value={autoConfig.allowed_subreddits.join(', ')}
+                onChange={(e) => {
+                  const subreddits = e.target.value
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(s => s.length > 0);
+                  updateAutoConfig({ allowed_subreddits: subreddits });
+                }}
+                placeholder="test, coloring, ColoringPages, crafts"
+                disabled={configLoading}
+                rows={2}
+              />
+              <p className="text-xs text-muted-foreground">
+                用逗号分隔，不需要 r/ 前缀。AI 会根据内容选择最适合的 subreddit。
+              </p>
+            </div>
+
+            {/* 状态显示 */}
+            {autoConfig.last_post_at && (
+              <div className="p-3 bg-muted rounded-lg text-sm">
+                <p className="font-medium mb-1">最后发布时间</p>
+                <p className="text-muted-foreground">
+                  {new Date(autoConfig.last_post_at).toLocaleString('zh-CN')}
+                </p>
+              </div>
+            )}
+
+            {/* 测试按钮 */}
+            <div className="flex gap-2">
+              <Button
+                onClick={testAutoPost}
+                disabled={loading || !connections.find(c => c.platform === 'reddit' && c.is_active)}
+                variant="outline"
+                className="flex-1"
+              >
+                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                🧪 测试运行一次
+              </Button>
+            </div>
+
+            {/* 说明 */}
+            <div className="p-4 bg-muted/50 rounded-lg text-sm space-y-2">
+              <h4 className="font-medium">🛡️ 安全保护机制</h4>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>AI 自动生成自然文案，避免模板化</li>
+                <li>严格遵守发布频率限制</li>
+                <li>避免重复发布同一内容到同一 subreddit</li>
+                <li>30天内不重复发布相同涂色页</li>
+                <li>根据涂色页内容智能选择 subreddit</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

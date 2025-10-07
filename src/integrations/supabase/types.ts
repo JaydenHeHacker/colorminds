@@ -599,6 +599,48 @@ export type Database = {
         }
         Relationships: []
       }
+      reddit_auto_config: {
+        Row: {
+          allowed_subreddits: string[] | null
+          created_at: string | null
+          hours_between_posts: number | null
+          id: string
+          is_enabled: boolean | null
+          last_post_at: string | null
+          max_replies_per_post: number | null
+          minutes_between_replies: number | null
+          posts_per_day: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          allowed_subreddits?: string[] | null
+          created_at?: string | null
+          hours_between_posts?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          last_post_at?: string | null
+          max_replies_per_post?: number | null
+          minutes_between_replies?: number | null
+          posts_per_day?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          allowed_subreddits?: string[] | null
+          created_at?: string | null
+          hours_between_posts?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          last_post_at?: string | null
+          max_replies_per_post?: number | null
+          minutes_between_replies?: number | null
+          posts_per_day?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       social_media_connections: {
         Row: {
           access_token: string | null
@@ -646,9 +688,11 @@ export type Database = {
       }
       social_posts: {
         Row: {
+          ai_generated: boolean | null
           coloring_page_id: string | null
           created_at: string | null
           description: string | null
+          engagement_score: number | null
           error_message: string | null
           id: string
           image_url: string | null
@@ -657,15 +701,19 @@ export type Database = {
           post_id: string | null
           post_url: string | null
           posted_at: string | null
+          reply_count: number | null
           status: string
+          subreddit: string | null
           title: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          ai_generated?: boolean | null
           coloring_page_id?: string | null
           created_at?: string | null
           description?: string | null
+          engagement_score?: number | null
           error_message?: string | null
           id?: string
           image_url?: string | null
@@ -674,15 +722,19 @@ export type Database = {
           post_id?: string | null
           post_url?: string | null
           posted_at?: string | null
+          reply_count?: number | null
           status?: string
+          subreddit?: string | null
           title: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          ai_generated?: boolean | null
           coloring_page_id?: string | null
           created_at?: string | null
           description?: string | null
+          engagement_score?: number | null
           error_message?: string | null
           id?: string
           image_url?: string | null
@@ -691,7 +743,9 @@ export type Database = {
           post_id?: string | null
           post_url?: string | null
           posted_at?: string | null
+          reply_count?: number | null
           status?: string
+          subreddit?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string

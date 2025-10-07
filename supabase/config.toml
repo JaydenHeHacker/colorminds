@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.generate-color-inspiration]
 verify_jwt = false
+
+[functions.auto-post-reddit]
+verify_jwt = false
