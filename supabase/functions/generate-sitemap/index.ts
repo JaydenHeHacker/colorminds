@@ -6,6 +6,8 @@ const corsHeaders = {
   'Content-Type': 'application/xml; charset=utf-8',
 };
 
+console.log('Generate Sitemap Edge Function v1.1 - Starting...');
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {

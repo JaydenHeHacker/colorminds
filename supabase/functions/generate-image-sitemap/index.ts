@@ -6,6 +6,8 @@ const corsHeaders = {
   'Content-Type': 'application/xml; charset=utf-8',
 };
 
+console.log('Generate Image Sitemap Edge Function v1.1 - Starting...');
+
 // Helper function to escape XML special characters
 const escapeXml = (unsafe: string): string => {
   if (!unsafe) return '';
@@ -57,7 +59,7 @@ Deno.serve(async (req) => {
       pages.forEach(page => {
         const pageUrl = `${baseUrl}/coloring-page/${page.slug}`;
         const lastmod = page.updated_at ? page.updated_at.split('T')[0] : new Date().toISOString().split('T')[0];
-        const categoryName = page.categories?.name || 'Coloring Page';
+        const categoryName = (page.categories as any)?.name || 'Coloring Page';
         
         xml += `
   <url>
