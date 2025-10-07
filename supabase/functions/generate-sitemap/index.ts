@@ -35,14 +35,6 @@ Deno.serve(async (req) => {
 
     if (categoriesError) throw categoriesError;
 
-    // Fetch series
-    const { data: series, error: seriesError } = await supabase
-      .from('series')
-      .select('slug, created_at')
-      .eq('status', 'published');
-
-    if (seriesError) throw seriesError;
-
     const baseUrl = 'https://www.colorminds.fun';
     const today = new Date().toISOString().split('T')[0];
 
@@ -63,12 +55,6 @@ Deno.serve(async (req) => {
     <priority>0.9</priority>
   </url>
   
-  <url>
-    <loc>${baseUrl}/series</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
   
   <url>
     <loc>${baseUrl}/create</loc>
@@ -105,19 +91,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Add series pages
-    if (series) {
-      series.forEach(s => {
-        const lastmod = s.created_at ? s.created_at.split('T')[0] : today;
-        xml += `
-  <url>
-    <loc>${baseUrl}/series/${s.slug}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>`;
-      });
-    }
 
     // Add coloring pages
     if (pages) {
