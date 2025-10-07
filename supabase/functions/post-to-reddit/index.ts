@@ -162,13 +162,20 @@ async function postRedditImage(
   }
 
   const data = await response.json();
+  console.log('Reddit API response:', JSON.stringify(data, null, 2));
   
   if (data.json?.errors?.length > 0) {
+    console.error('Reddit API errors:', data.json.errors);
     throw new Error(`Reddit API error: ${JSON.stringify(data.json.errors)}`);
   }
   
-  const postUrl = data.json?.data?.url || `https://reddit.com/r/${subreddit}`;
-  const postId = data.json?.data?.name || 'reddit_' + Date.now();
+  if (!data.json?.data?.url || !data.json?.data?.name) {
+    console.error('Missing expected data in response:', data);
+    throw new Error('Reddit did not return post URL or ID');
+  }
+  
+  const postUrl = data.json.data.url;
+  const postId = data.json.data.name;
   
   return {
     id: postId,
@@ -208,13 +215,20 @@ async function postRedditLink(
   }
 
   const data = await response.json();
+  console.log('Reddit API response:', JSON.stringify(data, null, 2));
   
   if (data.json?.errors?.length > 0) {
+    console.error('Reddit API errors:', data.json.errors);
     throw new Error(`Reddit API error: ${JSON.stringify(data.json.errors)}`);
   }
   
-  const postUrl = data.json?.data?.url || `https://reddit.com/r/${subreddit}`;
-  const postId = data.json?.data?.name || 'reddit_' + Date.now();
+  if (!data.json?.data?.url || !data.json?.data?.name) {
+    console.error('Missing expected data in response:', data);
+    throw new Error('Reddit did not return post URL or ID');
+  }
+  
+  const postUrl = data.json.data.url;
+  const postId = data.json.data.name;
   
   return {
     id: postId,
@@ -252,13 +266,20 @@ async function postRedditText(
   }
 
   const data = await response.json();
+  console.log('Reddit API response:', JSON.stringify(data, null, 2));
   
   if (data.json?.errors?.length > 0) {
+    console.error('Reddit API errors:', data.json.errors);
     throw new Error(`Reddit API error: ${JSON.stringify(data.json.errors)}`);
   }
   
-  const postUrl = data.json?.data?.url || `https://reddit.com/r/${subreddit}`;
-  const postId = data.json?.data?.name || 'reddit_' + Date.now();
+  if (!data.json?.data?.url || !data.json?.data?.name) {
+    console.error('Missing expected data in response:', data);
+    throw new Error('Reddit did not return post URL or ID');
+  }
+  
+  const postUrl = data.json.data.url;
+  const postId = data.json.data.name;
   
   return {
     id: postId,
