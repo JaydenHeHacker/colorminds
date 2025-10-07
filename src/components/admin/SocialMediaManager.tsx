@@ -808,6 +808,8 @@ export function SocialMediaManager() {
                     <SelectItem value="3">3 次/天</SelectItem>
                     <SelectItem value="4">4 次/天</SelectItem>
                     <SelectItem value="5">5 次/天（最大）</SelectItem>
+                    <SelectItem value="10">10 次/天 🧪 测试用</SelectItem>
+                    <SelectItem value="24">24 次/天 🧪 测试用</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
@@ -819,13 +821,16 @@ export function SocialMediaManager() {
                 <Label>发布间隔（小时）</Label>
                 <Select
                   value={autoConfig.hours_between_posts.toString()}
-                  onValueChange={(value) => updateAutoConfig({ hours_between_posts: parseInt(value) })}
+                  onValueChange={(value) => updateAutoConfig({ hours_between_posts: parseFloat(value) })}
                   disabled={configLoading}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="0.25">15 分钟 🧪 测试用</SelectItem>
+                    <SelectItem value="0.5">30 分钟 🧪 测试用</SelectItem>
+                    <SelectItem value="1">1 小时 🧪 测试用</SelectItem>
                     <SelectItem value="2">2 小时</SelectItem>
                     <SelectItem value="4">4 小时</SelectItem>
                     <SelectItem value="6">6 小时（推荐）</SelectItem>
