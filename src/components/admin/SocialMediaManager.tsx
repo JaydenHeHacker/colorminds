@@ -569,6 +569,85 @@ export function SocialMediaManager() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Reddit 测试</CardTitle>
+          <CardDescription>快速测试 Reddit 发布功能</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button 
+            onClick={async () => {
+              try {
+                setLoading(true);
+                
+                // 获取一个涂色页作为测试
+                const { data: coloringPages } = await supabase
+                  .from('coloring_pages')
+                  .select('id, title, image_url')
+                  .eq('status', 'published')
+                  .limit(1)
+                  .single();
+                
+                if (!coloringPages) {
+                  throw new Error('没有找到可用的涂色页');
+                }
+                
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) throw new Error('Not authenticated');
+                
+                const testData = {
+                  subreddit: 'test',
+                  title: `Testing coloring page: ${coloringPages.title}`,
+                  text: `This is an automated test post from ColorMinds.fun\n\nImage: ${coloringPages.image_url}`,
+                  imageUrl: coloringPages.image_url,
+                };
+                
+                console.log('Posting test to r/test:', testData);
+                
+                const { data, error } = await supabase.functions.invoke('post-to-reddit', {
+                  body: testData,
+                  headers: {
+                    Authorization: `Bearer ${session.access_token}`,
+                  },
+                });
+                
+                if (error) throw error;
+                
+                toast({
+                  title: "测试发布成功！",
+                  description: `已发布到 r/test，点击下方链接查看`,
+                });
+                
+                console.log('Test post result:', data);
+                loadPosts();
+              } catch (error) {
+                console.error('Error testing Reddit post:', error);
+                toast({
+                  title: "测试发布失败",
+                  description: error instanceof Error ? error.message : "请重试",
+                  variant: "destructive",
+                });
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading || !connections.find(c => c.platform === 'reddit' && c.is_active)}
+            className="w-full"
+          >
+            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            🧪 测试发布到 r/test
+          </Button>
+          {!connections.find(c => c.platform === 'reddit' && c.is_active) && (
+            <p className="text-sm text-muted-foreground">
+              请先连接 Reddit 账号
+            </p>
+          )}
+          <p className="text-sm text-muted-foreground">
+            点击按钮将自动从数据库选择一个涂色页并发布到 r/test 进行测试
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>手动发布</CardTitle>
           <CardDescription>手动创建和发布内容</CardDescription>
         </CardHeader>
