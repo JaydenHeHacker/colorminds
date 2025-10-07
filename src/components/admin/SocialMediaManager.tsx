@@ -81,17 +81,33 @@ export function SocialMediaManager() {
     const code = urlParams.get('code');
     const state = urlParams.get('state');
     
+    console.log('OAuth callback check:', { 
+      code: code ? 'present' : 'missing', 
+      state: state ? 'present' : 'missing',
+      url: window.location.href 
+    });
+    
     if (code && state) {
       const savedState = sessionStorage.getItem('reddit_oauth_state');
+      
+      console.log('State validation:', { 
+        receivedState: state, 
+        savedState, 
+        matches: state === savedState 
+      });
       
       if (state === savedState) {
         sessionStorage.removeItem('reddit_oauth_state');
         
         try {
+          console.log('Starting Reddit connection verification...');
+          
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) throw new Error('Not authenticated');
           
           const redirectUri = `${window.location.origin}${window.location.pathname}`;
+          
+          console.log('Calling verify-reddit-connection with redirect_uri:', redirectUri);
           
           const { data, error } = await supabase.functions.invoke('verify-reddit-connection', {
             body: { code, redirect_uri: redirectUri },
@@ -99,6 +115,8 @@ export function SocialMediaManager() {
               Authorization: `Bearer ${session.access_token}`,
             },
           });
+          
+          console.log('Verification response:', { data, error });
           
           if (error || !data?.success) {
             throw new Error(data?.error || 'Reddit 连接失败');
@@ -120,6 +138,13 @@ export function SocialMediaManager() {
             variant: "destructive",
           });
         }
+      } else {
+        console.error('State mismatch - possible CSRF attack');
+        toast({
+          title: "安全验证失败",
+          description: "请重新尝试连接",
+          variant: "destructive",
+        });
       }
     }
   };
