@@ -95,12 +95,20 @@ Deno.serve(async (req) => {
     xml += `
 </urlset>`;
 
+    console.log('Image sitemap generated successfully');
+    console.log('XML length:', xml.length);
+    console.log('Total images:', pages.length);
+    console.log('First 500 chars:', xml.substring(0, 500));
+
     return new Response(xml, {
       headers: corsHeaders,
       status: 200,
     });
   } catch (error) {
-    console.error('Error generating image sitemap:', error);
+    console.error('!!! ERROR GENERATING IMAGE SITEMAP !!!');
+    console.error('Error type:', error?.constructor?.name);
+    console.error('Error message:', error?.message);
+    console.error('Full error:', error);
     return new Response(
       `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"

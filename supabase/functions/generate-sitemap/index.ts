@@ -6,34 +6,52 @@ const corsHeaders = {
   'Content-Type': 'application/xml; charset=utf-8',
 };
 
-console.log('Generate Sitemap Edge Function v1.1 - Starting...');
+console.log('Generate Sitemap Edge Function v1.2 - Starting...');
 
 Deno.serve(async (req) => {
+  console.log('=== SITEMAP REQUEST RECEIVED ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', Object.fromEntries(req.headers.entries()));
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('Initializing Supabase client...');
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    console.log('Supabase URL:', supabaseUrl);
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch published coloring pages
+    console.log('Fetching published coloring pages...');
     const { data: pages, error: pagesError } = await supabase
       .from('coloring_pages')
       .select('slug, updated_at')
       .eq('status', 'published')
       .order('updated_at', { ascending: false });
 
-    if (pagesError) throw pagesError;
+    if (pagesError) {
+      console.error('Error fetching pages:', pagesError);
+      throw pagesError;
+    }
+    console.log(`Found ${pages?.length || 0} published pages`);
 
     // Fetch categories
+    console.log('Fetching categories...');
     const { data: categories, error: categoriesError } = await supabase
       .from('categories')
       .select('slug, created_at');
 
-    if (categoriesError) throw categoriesError;
+    if (categoriesError) {
+      console.error('Error fetching categories:', categoriesError);
+      throw categoriesError;
+    }
+    console.log(`Found ${categories?.length || 0} categories`);
 
     const baseUrl = 'https://www.colorminds.fun';
     const today = new Date().toISOString().split('T')[0];
@@ -109,12 +127,19 @@ Deno.serve(async (req) => {
     xml += `
 </urlset>`;
 
+    console.log('Sitemap generated successfully');
+    console.log('XML length:', xml.length);
+    console.log('First 500 chars:', xml.substring(0, 500));
+    
     return new Response(xml, {
       headers: corsHeaders,
       status: 200,
     });
   } catch (error) {
-    console.error('Error generating sitemap:', error);
+    console.error('!!! ERROR GENERATING SITEMAP !!!');
+    console.error('Error type:', error?.constructor?.name);
+    console.error('Error message:', error?.message);
+    console.error('Full error:', error);
     return new Response(
       `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
