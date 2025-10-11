@@ -116,7 +116,7 @@ export default function UserManagement() {
 
       if (updateError) throw updateError;
 
-      // 创建交易记录
+      // Create transaction record
       const { error: transactionError } = await supabase
         .from('credit_transactions')
         .insert({
@@ -124,7 +124,7 @@ export default function UserManagement() {
           amount: actualAmount,
           transaction_type: 'admin_adjustment',
           balance_after: newBalance,
-          description: `管理员${operation === 'add' ? '增加' : '减少'}积分: ${amount}`
+          description: `Admin ${operation === 'add' ? 'added' : 'deducted'} credits: ${amount}`
         });
 
       if (transactionError) throw transactionError;
@@ -134,19 +134,19 @@ export default function UserManagement() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users-list'] });
       queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-      toast.success(`积分${data.operation === 'add' ? '增加' : '减少'}成功！新余额: ${data.newBalance}`);
+      toast.success(`Credits ${data.operation === 'add' ? 'added' : 'deducted'} successfully! New balance: ${data.newBalance}`);
       setEditingUser(null);
       setCreditAmount("");
     },
     onError: (error: Error) => {
-      toast.error("操作失败：" + error.message);
+      toast.error("Operation failed: " + error.message);
     },
   });
 
   const handleUpdateCredits = (operation: 'add' | 'subtract') => {
     const amount = parseInt(creditAmount);
     if (!amount || amount <= 0) {
-      toast.error("请输入有效的积分数量");
+      toast.error("Please enter a valid credit amount");
       return;
     }
 
