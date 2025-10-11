@@ -266,13 +266,27 @@ TITLE (max 150 chars):
 - NO marketing language ("perfect for", "ideal", "great gift")
 - Examples of good vibes: "This came out way cooler than expected", "Found this gem today", "Pretty happy with how this turned out"
 
-DESCRIPTION (2-3 sentences):
+DESCRIPTION (2-3 sentences + optional bonus tip):
 - Write like you're genuinely sharing, not selling
 - Use casual language: "kinda", "pretty", "honestly", "actually"
 - Can mention it's free but make it sound natural ("it's free btw" or "didn't cost anything")
 - NO phrases like: "perfect for all ages", "completely free to download", "hope you enjoy"
 - Share it like you found something cool and want others to see it
 - Add personality: "turned out better than I thought", "spent way too long on this lol", "this was actually fun"
+
+WEBSITE MENTION (choose ONE strategy randomly):
+Strategy A (70% chance): Naturally mention the source at the end
+- "grabbed it from ColoringPages.fun"
+- "found it on ColoringPages.fun"
+- "got it from ColoringPages.fun btw"
+
+Strategy B (20% chance): Share a pro tip about the AI inspiration feature
+- "btw the site (ColoringPages.fun) has this cool AI thing that suggests color palettes - actually pretty helpful"
+- "ColoringPages.fun has this AI inspiration feature that's kinda neat, gives you color ideas"
+- "found it on ColoringPages.fun - they have an AI color helper that's surprisingly good"
+
+Strategy C (10% chance): Just share the coloring page naturally without site mention
+- Focus purely on the content, let people ask where it's from in comments
 
 SUBREDDIT:
 - Pick the most relevant one from: ${cleanSubreddits.join(', ')}
@@ -281,7 +295,7 @@ SUBREDDIT:
 Respond ONLY with valid JSON (no markdown):
 {
   "title": "your casual title here",
-  "description": "your genuine-sounding description here",
+  "description": "your genuine-sounding description here (include site mention based on strategy)",
   "subreddit": "subreddit_name"
 }`;
 
