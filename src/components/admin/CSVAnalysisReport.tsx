@@ -34,18 +34,52 @@ export const CSVAnalysisReport = () => {
   } | null>(null);
 
   const extractCategoryName = (keyword: string): string => {
-    // Remove common words
-    const cleaned = keyword
-      .toLowerCase()
+    const lower = keyword.toLowerCase();
+    
+    // Skip generic terms
+    if (lower === 'coloring pages' || lower === 'coloring page') {
+      return 'general';
+    }
+    
+    // Remove noise words but keep the pattern
+    let cleaned = lower
       .replace(/coloring pages?/g, '')
       .replace(/printable/g, '')
       .replace(/free/g, '')
       .replace(/cute/g, '')
+      .replace(/easy/g, '')
+      .replace(/simple/g, '')
       .trim();
     
-    // Get the main subject
-    const words = cleaned.split(' ').filter(w => w.length > 2);
-    return words[0] || keyword;
+    // Handle "for X" pattern - extract X
+    const forMatch = cleaned.match(/^for\s+(.+)/);
+    if (forMatch) {
+      cleaned = forMatch[1];
+    }
+    
+    // Handle "X for Y" pattern - extract X (the main subject)
+    const forIndex = cleaned.indexOf(' for ');
+    if (forIndex > 0) {
+      cleaned = cleaned.substring(0, forIndex);
+    }
+    
+    // Remove common prepositions and articles from the start
+    cleaned = cleaned
+      .replace(/^(the|a|an|of|in|on|at|to|with)\s+/g, '')
+      .trim();
+    
+    // Get the main subject (first 1-2 meaningful words)
+    const words = cleaned.split(' ').filter(w => w.length > 1);
+    
+    if (words.length === 0) return 'general';
+    
+    // For compound subjects, keep up to 2 words
+    // e.g., "ice cream", "solar system", "bubble guppies"
+    if (words.length >= 2 && words[0].length + words[1].length < 15) {
+      return words.slice(0, 2).join(' ');
+    }
+    
+    return words[0];
   };
 
   const analyzeCSV = async () => {
