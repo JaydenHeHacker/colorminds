@@ -175,16 +175,17 @@ async function selectBestColoringPage(
 ): Promise<ColoringPage | null> {
   console.log(`Selecting coloring page for user ${userId}`);
   
-  // 获取最近30天内已发布的涂色页ID
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  // 获取最近7天内已发布的涂色页ID（缩短窗口期以允许内容复用）
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   const { data: recentPosts } = await supabase
     .from('social_posts')
     .select('coloring_page_id')
     .eq('user_id', userId)
     .eq('platform', 'reddit')
-    .gte('posted_at', thirtyDaysAgo.toISOString());
+    .eq('status', 'published') // 只排除成功发布的，不排除失败的
+    .gte('posted_at', sevenDaysAgo.toISOString());
 
   const recentPageIds = recentPosts?.map((p: any) => p.coloring_page_id).filter(Boolean) || [];
   console.log(`Found ${recentPageIds.length} recently posted pages`);
