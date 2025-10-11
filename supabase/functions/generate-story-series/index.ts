@@ -411,23 +411,28 @@ OUTPUT: A professional black-and-white coloring page that maintains perfect char
         console.log(`Deducted ${creditsUsed} from monthly quota`);
       } else {
         // Use credits
+        const newBalance = credits.balance - creditsUsed;
+        
         await supabase
           .from('user_credits')
           .update({ 
-            balance: credits.balance - creditsUsed,
+            balance: newBalance,
             total_used: credits.total_used + creditsUsed,
           })
           .eq('user_id', user.id);
 
-        // Record credit transaction
-        for (const genId of generationIds) {
+        // Record credit transaction for each generation
+        let currentBalance = newBalance;
+        for (let i = generationIds.length - 1; i >= 0; i--) {
+          const genId = generationIds[i];
           if (genId) {
             await supabase.from('credit_transactions').insert({
               user_id: user.id,
               amount: -1,
               transaction_type: 'usage',
+              balance_after: currentBalance + (generationIds.length - 1 - i),
               generation_id: genId,
-              notes: 'Story series generation',
+              description: 'Story series generation',
             });
           }
         }
