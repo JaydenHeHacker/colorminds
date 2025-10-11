@@ -1,19 +1,7 @@
 import { Heart } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export const Footer = () => {
-  const navigate = useNavigate();
-  
-  const scrollToSection = (sectionId: string) => {
-    if (window.location.pathname !== '/') {
-      navigate(`/#${sectionId}`);
-      setTimeout(() => {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    } else {
-      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 
   return (
     <footer className="border-t border-border/40 py-12 md:py-16">
@@ -32,9 +20,9 @@ export const Footer = () => {
             <h4 className="font-semibold mb-4">Categories</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <button onClick={() => scrollToSection('categories')} className="hover:text-primary transition-smooth">
+                <Link to="/category/all" className="hover:text-primary transition-smooth">
                   All Categories
-                </button>
+                </Link>
               </li>
               <li>
                 <Link to="/series" className="hover:text-primary transition-smooth">
@@ -42,9 +30,9 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <button onClick={() => scrollToSection('popular')} className="hover:text-primary transition-smooth">
-                  Popular
-                </button>
+                <Link to="/browse" className="hover:text-primary transition-smooth">
+                  Browse All
+                </Link>
               </li>
             </ul>
           </div>
@@ -58,9 +46,9 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <button onClick={() => scrollToSection('popular')} className="hover:text-primary transition-smooth">
-                  Popular Pages
-                </button>
+                <Link to="/browse" className="hover:text-primary transition-smooth">
+                  Browse All Pages
+                </Link>
               </li>
               <li>
                 <Link to="/about-us" className="hover:text-primary transition-smooth">

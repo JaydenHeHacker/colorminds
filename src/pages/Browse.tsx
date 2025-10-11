@@ -11,6 +11,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Grid, List, SlidersHorizontal } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SocialMeta } from "@/components/SocialMeta";
+import { StructuredData } from "@/components/StructuredData";
 
 export default function Browse() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -136,6 +138,35 @@ export default function Browse() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SocialMeta
+        title="Browse All Free Printable Coloring Pages | Color Minds"
+        description={`Explore our complete collection of ${totalResults}+ free printable coloring pages for kids and adults. Filter by category, difficulty level, and more. Download and print instantly!`}
+        image={coloringPages?.[0]?.image_url}
+        type="website"
+        keywords={[
+          'free coloring pages',
+          'printable coloring pages',
+          'browse coloring pages',
+          'coloring pages for kids',
+          'adult coloring pages',
+          'download coloring pages',
+          'free printables'
+        ]}
+      />
+      
+      <StructuredData
+        type="CollectionPage"
+        data={{
+          category: selectedCategory === "all" ? "All Categories" : selectedCategory,
+          description: `Browse and download ${totalResults}+ free printable coloring pages. Filter by category, difficulty, and sort to find your perfect coloring page.`,
+          numberOfItems: totalResults,
+          items: currentItems.slice(0, 12).map((item: any) => ({
+            title: item.title || item.seriesTitle,
+            image: item.image_url || item.firstImage
+          }))
+        }}
+      />
+      
       <Header />
       
       <main className="flex-1">

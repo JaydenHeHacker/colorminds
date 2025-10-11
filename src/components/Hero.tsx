@@ -4,6 +4,7 @@ import heroBanner from "@/assets/hero-banner.jpg";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ImageOptimizer } from "@/components/ImageOptimizer";
+import { Link } from "react-router-dom";
 
 export const Hero = () => {
   const { data: stats } = useQuery({
@@ -21,13 +22,6 @@ export const Hero = () => {
     },
   });
 
-  const scrollToCategories = () => {
-    document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const scrollToPopular = () => {
-    document.getElementById('popular')?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   return (
     <section className="relative overflow-hidden py-8 sm:py-12 md:py-20 lg:py-24">
@@ -48,23 +42,25 @@ export const Hero = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-2">
-              <Button 
-                size="lg" 
-                className="gap-2 shadow-colorful w-full sm:w-auto h-12 sm:h-11 text-base sm:text-sm touch-manipulation"
-                onClick={scrollToCategories}
-              >
-                <Download className="h-5 w-5 sm:h-4 sm:w-4" />
-                Browse Collection
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="gap-2 w-full sm:w-auto h-12 sm:h-11 text-base sm:text-sm touch-manipulation"
-                onClick={scrollToPopular}
-              >
-                <Palette className="h-5 w-5 sm:h-4 sm:w-4" />
-                Popular Pages
-              </Button>
+              <Link to="/category/all" className="w-full sm:w-auto">
+                <Button 
+                  size="lg" 
+                  className="gap-2 shadow-colorful w-full h-12 sm:h-11 text-base sm:text-sm touch-manipulation"
+                >
+                  <Download className="h-5 w-5 sm:h-4 sm:w-4" />
+                  Browse Collection
+                </Button>
+              </Link>
+              <Link to="/browse" className="w-full sm:w-auto">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="gap-2 w-full h-12 sm:h-11 text-base sm:text-sm touch-manipulation"
+                >
+                  <Palette className="h-5 w-5 sm:h-4 sm:w-4" />
+                  Popular Pages
+                </Button>
+              </Link>
             </div>
 
             {/* Stats */}

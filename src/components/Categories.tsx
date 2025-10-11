@@ -130,7 +130,7 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
                           <>
                             <img 
                               src={category.icon} 
-                              alt={category.name} 
+                              alt={`Free printable ${category.name.toLowerCase()} coloring pages - ${pageCount} designs available for kids and adults to download and print`}
                               className="w-full h-full object-cover transition-all duration-700 group-hover:scale-125 group-hover:rotate-2" 
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent group-hover:from-primary/80 group-hover:via-primary/40 transition-all duration-500" />
