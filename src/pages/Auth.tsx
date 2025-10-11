@@ -37,14 +37,23 @@ export default function Auth() {
     const redirectPath = params.get('redirect');
     
     // Set up listener FIRST to catch OAuth callbacks
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth page - Auth state changed:', event, session?.user?.email);
       if (session && event === 'SIGNED_IN') {
-        console.log('Redirecting to:', redirectPath || "/");
-        // Longer delay for OAuth to ensure session is persisted
-        setTimeout(() => {
+        console.log('User logged in, verifying session persistence...');
+        
+        // For OAuth, wait and verify session is actually in localStorage
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Double-check session exists before redirecting
+        const { data: { session: verifiedSession } } = await supabase.auth.getSession();
+        if (verifiedSession) {
+          console.log('Session verified, redirecting to:', redirectPath || "/");
           navigate(redirectPath || "/");
-        }, 500);
+        } else {
+          console.error('Session not persisted, staying on auth page');
+          toast.error("Login session could not be saved. Please try again.");
+        }
       }
     });
 
