@@ -37,23 +37,13 @@ export default function Auth() {
     const redirectPath = params.get('redirect');
     
     // Set up listener FIRST to catch OAuth callbacks
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth page - Auth state changed:', event, session?.user?.email);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth page - Auth state changed:', event, session?.user?.email, 'localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('sb-')));
+      
+      // For SIGNED_IN event, simply navigate - let Supabase handle persistence
       if (session && event === 'SIGNED_IN') {
-        console.log('User logged in, verifying session persistence...');
-        
-        // For OAuth, wait and verify session is actually in localStorage
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Double-check session exists before redirecting
-        const { data: { session: verifiedSession } } = await supabase.auth.getSession();
-        if (verifiedSession) {
-          console.log('Session verified, redirecting to:', redirectPath || "/");
-          navigate(redirectPath || "/");
-        } else {
-          console.error('Session not persisted, staying on auth page');
-          toast.error("Login session could not be saved. Please try again.");
-        }
+        console.log('User signed in, navigating to:', redirectPath || "/");
+        navigate(redirectPath || "/");
       }
     });
 
