@@ -76,6 +76,11 @@ export const Footer = () => {
                   Contact Us
                 </Link>
               </li>
+              <li>
+                <Link to="/sitemap" className="hover:text-primary transition-smooth">
+                  Sitemap
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

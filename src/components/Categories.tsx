@@ -90,7 +90,7 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
       <div className="container px-4 sm:px-6">
         <div className="text-center mb-6 sm:mb-8 md:mb-12 animate-fade-in">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 md:mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            Browse by Category
+            Browse Free Coloring Pages by Category
           </h2>
           <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2 sm:px-4">
             Choose from animals, holidays, characters, educational themes, and more - All carefully organized for easy discovery!

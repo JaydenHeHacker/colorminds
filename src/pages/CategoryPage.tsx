@@ -201,6 +201,40 @@ const CategoryPage = () => {
     setCurrentPage(0);
   }, [pathSlug]);
 
+  // Add pagination meta tags for SEO
+  useEffect(() => {
+    // Remove existing pagination tags
+    const existingPrev = document.querySelector('link[rel="prev"]');
+    const existingNext = document.querySelector('link[rel="next"]');
+    existingPrev?.remove();
+    existingNext?.remove();
+
+    if (totalPages > 1 && category) {
+      const baseUrl = `${window.location.origin}/category/${pathSlug}`;
+      
+      // Add prev link
+      if (currentPage > 0) {
+        const prevLink = document.createElement('link');
+        prevLink.rel = 'prev';
+        prevLink.href = currentPage === 1 ? baseUrl : `${baseUrl}?page=${currentPage}`;
+        document.head.appendChild(prevLink);
+      }
+      
+      // Add next link
+      if (currentPage < totalPages - 1) {
+        const nextLink = document.createElement('link');
+        nextLink.rel = 'next';
+        nextLink.href = `${baseUrl}?page=${currentPage + 2}`;
+        document.head.appendChild(nextLink);
+      }
+    }
+
+    return () => {
+      document.querySelector('link[rel="prev"]')?.remove();
+      document.querySelector('link[rel="next"]')?.remove();
+    };
+  }, [currentPage, totalPages, pathSlug, category]);
+
   // Build breadcrumb items from category path
   const breadcrumbItems: Array<{ label: string; href?: string; isCurrentPage?: boolean }> = [
     { label: 'Home', href: '/', isCurrentPage: false }

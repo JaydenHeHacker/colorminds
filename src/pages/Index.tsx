@@ -309,6 +309,9 @@ const Index = () => {
         <section className="py-6 md:py-8 bg-background">
           <div className="container px-4">
             <div className="max-w-2xl mx-auto">
+              <h2 className="text-xl md:text-2xl font-semibold text-center mb-3">
+                Search Free Printable Coloring Pages
+              </h2>
               <p className="text-center text-sm md:text-base text-muted-foreground mb-3">
                 🔍 Search from 1000+ free printable coloring pages - Find your perfect design to download and print instantly!
               </p>
@@ -349,7 +352,7 @@ const Index = () => {
                   <span className="text-2xl animate-bounce" style={{ animationDelay: '0.2s' }}>🎨</span>
                 </div>
                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                  Recently Published Coloring Pages
+                  New Free Printable Coloring Pages
                 </h2>
                 <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
                   🔥 Brand new designs added in the last 7 days - Download and print the freshest coloring pages now!

@@ -41,17 +41,7 @@ export const Header = () => {
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
   };
-  
-  const scrollToSection = (sectionId: string) => {
-    if (location.pathname !== '/') {
-      navigate(`/#${sectionId}`);
-    } else {
-      document.getElementById(sectionId)?.scrollIntoView({
-        behavior: 'smooth'
-      });
-    }
-    setMobileMenuOpen(false);
-  };
+
   return <>
       <header className="sticky top-0 z-50 w-full border-b border-border/20 bg-background backdrop-blur-sm">
         <nav className="container flex h-16 items-center justify-between">
@@ -64,22 +54,21 @@ export const Header = () => {
             </a>
             
             <div className="hidden md:flex items-center gap-4">
-              <button onClick={() => scrollToSection('categories')} className="text-sm font-medium transition-smooth hover:text-primary">
+              <button onClick={() => navigate('/category/all')} className="text-sm font-medium transition-smooth hover:text-primary">
                 Categories
               </button>
               <button onClick={() => navigate('/series')} className="text-sm font-medium transition-smooth hover:text-primary">
                 Story Series
               </button>
+              <button onClick={() => navigate('/popular')} className="text-sm font-medium transition-smooth hover:text-primary">
+                Popular
+              </button>
+              <button onClick={() => navigate('/browse')} className="text-sm font-medium transition-smooth hover:text-primary">
+                Browse All
+              </button>
               <button onClick={() => navigate('/community')} className="text-sm font-medium transition-smooth hover:text-primary flex items-center gap-1">
                 <Sparkles className="h-3.5 w-3.5" />
                 AI Gallery
-              </button>
-              <button onClick={() => navigate('/gallery')} className="text-sm font-medium transition-smooth hover:text-primary flex items-center gap-1">
-                <Heart className="h-3.5 w-3.5" />
-                Color Showcase
-              </button>
-              <button onClick={() => scrollToSection('popular')} className="text-sm font-medium transition-smooth hover:text-primary">
-                Popular
               </button>
               {user && <button onClick={() => navigate('/favorites')} className="text-sm font-medium transition-smooth hover:text-primary flex items-center gap-1">
                   <Heart className="h-4 w-4" />
@@ -175,7 +164,10 @@ export const Header = () => {
                 <Sparkles className="h-5 w-5" />
                 My Creations
               </button>}
-            <button onClick={() => scrollToSection('categories')} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
+            <button onClick={() => {
+              navigate('/category/all');
+              setMobileMenuOpen(false);
+            }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
               Categories
             </button>
             <button onClick={() => {
@@ -185,21 +177,23 @@ export const Header = () => {
               Story Series
             </button>
             <button onClick={() => {
+              navigate('/popular');
+              setMobileMenuOpen(false);
+            }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
+              Popular
+            </button>
+            <button onClick={() => {
+              navigate('/browse');
+              setMobileMenuOpen(false);
+            }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
+              Browse All
+            </button>
+            <button onClick={() => {
             navigate('/community');
             setMobileMenuOpen(false);
           }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
               AI Gallery
-            </button>
-            <button onClick={() => {
-            navigate('/gallery');
-            setMobileMenuOpen(false);
-          }} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth flex items-center gap-2">
-              <Heart className="h-5 w-5" />
-              Color Showcase
-            </button>
-            <button onClick={() => scrollToSection('popular')} className="w-full text-left px-4 py-3 text-base font-medium hover:bg-muted rounded-lg transition-smooth">
-              Popular
             </button>
             {user && <button onClick={() => {
             navigate('/favorites');

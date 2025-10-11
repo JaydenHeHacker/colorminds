@@ -132,6 +132,47 @@ export default function Browse() {
     setCurrentPage(1);
   }, [searchQuery, selectedCategory, selectedDifficulty, sortBy, viewMode]);
 
+  // Add pagination meta tags for SEO
+  useEffect(() => {
+    // Remove existing pagination tags
+    const existingPrev = document.querySelector('link[rel="prev"]');
+    const existingNext = document.querySelector('link[rel="next"]');
+    existingPrev?.remove();
+    existingNext?.remove();
+
+    if (totalPages > 1) {
+      const baseUrl = `${window.location.origin}/browse`;
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('search', searchQuery);
+      if (selectedCategory !== 'all') params.set('category', selectedCategory);
+      if (selectedDifficulty !== 'all') params.set('difficulty', selectedDifficulty);
+      if (sortBy !== 'newest') params.set('sort', sortBy);
+      
+      // Add prev link
+      if (currentPage > 1) {
+        const prevLink = document.createElement('link');
+        prevLink.rel = 'prev';
+        params.set('page', String(currentPage - 1));
+        prevLink.href = `${baseUrl}?${params.toString()}`;
+        document.head.appendChild(prevLink);
+      }
+      
+      // Add next link
+      if (currentPage < totalPages) {
+        const nextLink = document.createElement('link');
+        nextLink.rel = 'next';
+        params.set('page', String(currentPage + 1));
+        nextLink.href = `${baseUrl}?${params.toString()}`;
+        document.head.appendChild(nextLink);
+      }
+    }
+
+    return () => {
+      document.querySelector('link[rel="prev"]')?.remove();
+      document.querySelector('link[rel="next"]')?.remove();
+    };
+  }, [currentPage, totalPages, searchQuery, selectedCategory, selectedDifficulty, sortBy]);
+
   const totalResults = viewMode === "series" 
     ? seriesToDisplay.length 
     : (filteredAndSortedPages?.length || 0);

@@ -24,6 +24,8 @@ import AboutUs from "./pages/AboutUs";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import ContactUs from "./pages/ContactUs";
+import Popular from "./pages/Popular";
+import Sitemap from "./pages/Sitemap";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +40,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/browse" element={<Browse />} />
+          <Route path="/popular" element={<Popular />} />
+          <Route path="/sitemap" element={<Sitemap />} />
           <Route path="/coloring-page/:slug" element={<ColoringPage />} />
           <Route path="/ai-coloring-page/:id" element={<AIColoringPage />} />
           <Route path="/my-creations" element={<MyCreations />} />
