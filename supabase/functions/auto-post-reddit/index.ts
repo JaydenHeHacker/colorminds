@@ -640,15 +640,20 @@ async function postToReddit(
     }
     
     // 获取真实的帖子 URL 和 ID
-    const realPostUrl = responseData.json?.data?.url;
+    // permalink 是帖子详情页的相对路径，url 是内容链接（如图片）
+    const permalink = responseData.json?.data?.permalink;
     const realPostId = responseData.json?.data?.name;
     
-    if (!realPostUrl || !realPostId) {
+    if (!permalink || !realPostId) {
       console.warn('Reddit did not return expected data, using fallback');
+      console.log('Response data:', JSON.stringify(responseData, null, 2));
     }
     
     const postId = realPostId || `reddit_${Date.now()}`;
-    const postUrl = realPostUrl || `https://reddit.com/r/${cleanSubreddit}`;
+    // 构建完整的帖子详情页链接
+    const postUrl = permalink 
+      ? `https://reddit.com${permalink}` 
+      : `https://reddit.com/r/${cleanSubreddit}`;
 
     console.log(`✅ Posted to Reddit successfully: ${postUrl}`);
 
