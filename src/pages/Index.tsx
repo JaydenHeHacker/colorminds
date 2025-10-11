@@ -510,7 +510,7 @@ const Index = () => {
                         📚 Discover complete story collections with multiple themed coloring pages. Each series tells a unique story through beautifully illustrated chapters.
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                        {seriesToDisplay.map((series, index) => (
+                        {seriesToDisplay.slice(0, 6).map((series, index) => (
                           <div key={series.seriesId} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
                             <SeriesCard
                               seriesId={series.seriesId}
