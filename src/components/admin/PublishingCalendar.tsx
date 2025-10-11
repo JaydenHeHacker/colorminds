@@ -56,20 +56,23 @@ export const PublishingCalendar = () => {
         return false;
       }
       
+      // 确定任务的实际开始日期（start_date 或 created_at 中较晚的）
+      const actualStartDate = new Date(job.start_date || job.created_at);
+      actualStartDate.setHours(0, 0, 0, 0);
+      
       // 检查是否在开始日期之前
-      if (job.start_date) {
-        const startDate = new Date(job.start_date);
-        startDate.setHours(0, 0, 0, 0);
-        if (date < startDate) {
-          return false;
-        }
+      const checkDate = new Date(date);
+      checkDate.setHours(0, 0, 0, 0);
+      
+      if (checkDate < actualStartDate) {
+        return false;
       }
       
       // 检查是否超过结束日期
       if (job.end_date) {
         const endDate = new Date(job.end_date);
         endDate.setHours(23, 59, 59, 999);
-        if (date > endDate) {
+        if (checkDate > endDate) {
           return false;
         }
       }
