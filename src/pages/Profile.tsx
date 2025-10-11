@@ -137,7 +137,7 @@ const Profile = () => {
                    <p className="text-muted-foreground">{user.email}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <Coins className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">积分余额: {credits}</span>
+                    <span className="text-sm font-medium">Credits Balance: {credits}</span>
                   </div>
                   {!isPremium && (
                     <Button
@@ -162,20 +162,20 @@ const Profile = () => {
               </div>
             </Card>
 
-            {/* 选项卡内容 */}
+            {/* Tabs Content */}
             <Tabs defaultValue="calendar" className="space-y-6">
               <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
                 <TabsTrigger value="calendar" className="gap-2">
                   <Calendar className="h-4 w-4" />
-                  日历
+                  Calendar
                 </TabsTrigger>
                 <TabsTrigger value="credits" className="gap-2">
                   <Coins className="h-4 w-4" />
-                  积分记录
+                  Credits History
                 </TabsTrigger>
                 <TabsTrigger value="favorites" className="gap-2">
                   <Heart className="h-4 w-4" />
-                  收藏
+                  Favorites
                 </TabsTrigger>
               </TabsList>
 
@@ -186,29 +186,29 @@ const Profile = () => {
               <TabsContent value="credits">
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold">积分变动历史</h3>
+                    <h3 className="text-xl font-semibold">Credits History</h3>
                     <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
                       <Coins className="h-5 w-5 text-primary" />
                       <span className="font-bold text-lg">{credits}</span>
-                      <span className="text-sm text-muted-foreground">积分</span>
+                      <span className="text-sm text-muted-foreground">credits</span>
                     </div>
                   </div>
                   
                   {transactions.length === 0 ? (
                     <div className="text-center py-12">
                       <Coins className="h-16 w-16 mx-auto mb-4 opacity-20" />
-                      <p className="text-muted-foreground">暂无积分变动记录</p>
+                      <p className="text-muted-foreground">No credit transactions yet</p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>时间</TableHead>
-                            <TableHead>类型</TableHead>
-                            <TableHead>变动</TableHead>
-                            <TableHead>余额</TableHead>
-                            <TableHead>说明</TableHead>
+                            <TableHead>Time</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Change</TableHead>
+                            <TableHead>Balance</TableHead>
+                            <TableHead>Description</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -227,12 +227,12 @@ const Profile = () => {
                                     ? 'bg-blue-100 text-blue-800'
                                     : 'bg-gray-100 text-gray-800'
                                 }`}>
-                                  {transaction.transaction_type === 'earned' && '获得'}
-                                  {transaction.transaction_type === 'spent' && '消耗'}
-                                  {transaction.transaction_type === 'usage' && '使用'}
-                                  {transaction.transaction_type === 'purchased' && '购买'}
-                                  {transaction.transaction_type === 'refunded' && '退款'}
-                                  {transaction.transaction_type === 'admin_adjustment' && '调整'}
+                                  {transaction.transaction_type === 'earned' && 'Earned'}
+                                  {transaction.transaction_type === 'spent' && 'Spent'}
+                                  {transaction.transaction_type === 'usage' && 'Used'}
+                                  {transaction.transaction_type === 'purchased' && 'Purchased'}
+                                  {transaction.transaction_type === 'refunded' && 'Refunded'}
+                                  {transaction.transaction_type === 'admin_adjustment' && 'Adjustment'}
                                 </span>
                               </TableCell>
                               <TableCell>
