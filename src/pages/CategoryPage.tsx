@@ -374,7 +374,7 @@ const CategoryPage = () => {
         <Breadcrumbs items={breadcrumbItems} />
 
         <div className="container px-4 py-8 md:py-12">
-          <div className="flex gap-8">
+          <div className="flex gap-8 items-start">
             {/* Mobile Filter Button */}
             <div className="lg:hidden fixed bottom-6 right-6 z-40">
               <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
