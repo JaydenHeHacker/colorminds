@@ -243,7 +243,7 @@ const Profile = () => {
                                 </span>
                               </TableCell>
                               <TableCell className="font-medium">
-                                {transaction.balance_after}
+                                {transaction.balance_after || '-'}
                               </TableCell>
                               <TableCell className="text-muted-foreground max-w-xs truncate">
                                 {transaction.description || '-'}

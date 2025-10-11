@@ -106,6 +106,8 @@ export default function UserManagement() {
         ? currentBalance + amount 
         : Math.max(0, currentBalance - amount); // 确保不会变成负数
 
+      const actualAmount = operation === 'add' ? amount : -amount;
+
       // 更新积分
       const { error: updateError } = await supabase
         .from('user_credits')
@@ -113,6 +115,19 @@ export default function UserManagement() {
         .eq('user_id', userId);
 
       if (updateError) throw updateError;
+
+      // 创建交易记录
+      const { error: transactionError } = await supabase
+        .from('credit_transactions')
+        .insert({
+          user_id: userId,
+          amount: actualAmount,
+          transaction_type: 'admin_adjustment',
+          balance_after: newBalance,
+          description: `管理员${operation === 'add' ? '增加' : '减少'}积分: ${amount}`
+        });
+
+      if (transactionError) throw transactionError;
 
       return { newBalance, operation, amount };
     },
