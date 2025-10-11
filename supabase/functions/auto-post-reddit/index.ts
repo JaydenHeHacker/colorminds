@@ -74,8 +74,8 @@ Deno.serve(async (req) => {
 
     for (const config of configs as RedditConfig[]) {
       try {
-        // 检查是否应该发布
-        if (!shouldPost(config)) {
+        // 检查是否应该发布（测试模式下跳过时间限制）
+        if (!testMode && !shouldPost(config)) {
           console.log(`User ${config.user_id}: Too soon to post`);
           results.push({ user_id: config.user_id, status: 'skipped', reason: 'too_soon' });
           continue;
