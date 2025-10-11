@@ -25,29 +25,28 @@ Deno.serve(async (req) => {
       }
     );
 
-    // 获取所有草稿状态的内容，每次发布一定数量
-    const BATCH_SIZE = 10; // 每次发布10个
+    // 获取所有到期的发布任务
+    const now = new Date().toISOString();
     
-    const { data: draftPages, error: fetchError } = await supabaseClient
-      .from('coloring_pages')
-      .select('id, title')
-      .eq('status', 'draft')
-      .order('created_at', { ascending: true }) // 先发布最早创建的
-      .limit(BATCH_SIZE);
+    const { data: dueJobs, error: fetchError } = await supabaseClient
+      .from('publishing_jobs')
+      .select('id, name, next_run_at')
+      .eq('is_active', true)
+      .lte('next_run_at', now);
 
     if (fetchError) {
-      console.error('Error fetching scheduled pages:', fetchError);
+      console.error('Error fetching due jobs:', fetchError);
       throw fetchError;
     }
 
-    console.log(`Found ${draftPages?.length || 0} draft pages to publish`);
+    console.log(`Found ${dueJobs?.length || 0} due jobs to execute`);
 
-    if (!draftPages || draftPages.length === 0) {
+    if (!dueJobs || dueJobs.length === 0) {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'No pages to publish',
-          publishedCount: 0
+          message: 'No jobs due for execution',
+          executedCount: 0
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -56,32 +55,53 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 批量更新状态为已发布
-    const pageIds = draftPages.map(p => p.id);
-    
-    const { error: updateError } = await supabaseClient
-      .from('coloring_pages')
-      .update({
-        status: 'published',
-        published_at: new Date().toISOString()
-      })
-      .in('id', pageIds);
+    // 执行每个到期的任务
+    const results = [];
+    for (const job of dueJobs) {
+      console.log(`Executing job: ${job.name} (${job.id})`);
+      
+      try {
+        const executeResponse = await supabaseClient.functions.invoke('execute-publishing-job', {
+          body: { jobId: job.id }
+        });
 
-    if (updateError) {
-      console.error('Error updating pages:', updateError);
-      throw updateError;
+        if (executeResponse.error) {
+          console.error(`Error executing job ${job.id}:`, executeResponse.error);
+          results.push({ 
+            jobId: job.id, 
+            jobName: job.name, 
+            success: false, 
+            error: executeResponse.error.message 
+          });
+        } else {
+          console.log(`Successfully executed job ${job.id}:`, executeResponse.data);
+          results.push({ 
+            jobId: job.id, 
+            jobName: job.name, 
+            success: true, 
+            ...executeResponse.data 
+          });
+        }
+      } catch (error) {
+        console.error(`Exception executing job ${job.id}:`, error);
+        results.push({ 
+          jobId: job.id, 
+          jobName: job.name, 
+          success: false, 
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
     }
 
-    console.log(`Successfully published ${draftPages.length} pages:`, 
-      draftPages.map(p => `${p.title} (${p.id})`).join(', ')
-    );
+    const successCount = results.filter(r => r.success).length;
+    console.log(`Executed ${successCount}/${dueJobs.length} jobs successfully`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Successfully published ${draftPages.length} pages`,
-        publishedCount: draftPages.length,
-        publishedPages: draftPages.map(p => ({ id: p.id, title: p.title }))
+        message: `Executed ${successCount}/${dueJobs.length} jobs`,
+        executedCount: successCount,
+        results
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
