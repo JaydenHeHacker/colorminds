@@ -42,11 +42,23 @@ export const Header = () => {
   const handleLogout = async () => {
     try {
       setUser(null); // Immediately update UI
-      await supabase.auth.signOut();
+      
+      // Sign out with scope 'local' to clear local storage
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      
+      if (error) {
+        console.error("Logout error:", error);
+        toast.error("Failed to log out: " + error.message);
+        return;
+      }
+      
+      // Extra safety: manually clear any remaining auth data
+      localStorage.removeItem('supabase.auth.token');
+      
       toast.success("Logged out successfully");
       navigate("/");
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch (error: any) {
+      console.error("Logout exception:", error);
       toast.error("Failed to log out");
     }
   };
