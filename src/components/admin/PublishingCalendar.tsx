@@ -12,10 +12,12 @@ import { zhCN } from "date-fns/locale";
 interface PublishingJob {
   id: string;
   name: string;
+  category_id: string | null;
   schedule_time: string;
   schedule_days: number[];
   publish_count: number;
   is_active: boolean;
+  created_at: string;
   end_date?: string | null;
   categories?: { name: string };
 }
@@ -51,6 +53,15 @@ export const PublishingCalendar = () => {
       // 检查是否在执行日期范围内
       if (!job.schedule_days.includes(dayOfWeek)) {
         return false;
+      }
+      
+      // 检查是否在任务创建之前（不应该显示任务创建前的计划）
+      if (job.created_at) {
+        const createdDate = new Date(job.created_at);
+        createdDate.setHours(0, 0, 0, 0); // 设置为当天开始时间
+        if (date < createdDate) {
+          return false;
+        }
       }
       
       // 检查是否超过结束日期
