@@ -17,7 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Heart, BookOpen, Palette } from "lucide-react";
+import { Search, Heart, BookOpen, Palette, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import { trackSearch, trackCategoryView } from "@/utils/analytics";
@@ -525,6 +525,19 @@ const Index = () => {
                           </div>
                         ))}
                       </div>
+                      {seriesToDisplay.length > 4 && (
+                        <div className="mt-8 text-center">
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => window.location.href = '/series'}
+                            className="gap-2"
+                          >
+                            View All {seriesToDisplay.length} Story Series
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </section>
                 )}
