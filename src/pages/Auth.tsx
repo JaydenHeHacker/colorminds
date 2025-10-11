@@ -36,24 +36,37 @@ export default function Auth() {
     const params = new URLSearchParams(window.location.search);
     const redirectPath = params.get('redirect');
     
+    // Check if this is an OAuth callback (has access_token in URL hash)
+    const isOAuthCallback = window.location.hash.includes('access_token');
+    
+    console.log('Auth page mounted:', { isOAuthCallback, hash: window.location.hash });
+    
     // Set up listener FIRST to catch OAuth callbacks
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth page - Auth state changed:', event, session?.user?.email, 'localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('sb-')));
       
-      // For SIGNED_IN event, simply navigate - let Supabase handle persistence
-      if (session && event === 'SIGNED_IN') {
-        console.log('User signed in, navigating to:', redirectPath || "/");
-        navigate(redirectPath || "/");
+      // Only navigate after TOKEN_REFRESHED for OAuth, or SIGNED_IN for email
+      if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+        console.log('User authenticated via', event, ', navigating to:', redirectPath || "/");
+        
+        // Extra safety: wait a bit to ensure session is fully persisted
+        setTimeout(() => {
+          navigate(redirectPath || "/");
+        }, 100);
       }
     });
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Auth page - Initial session check:', session?.user?.email);
-      if (session) {
-        navigate(redirectPath || "/");
-      }
-    });
+    // For OAuth callbacks, don't check initial session - let the auth state change handle it
+    if (!isOAuthCallback) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        console.log('Auth page - Initial session check:', session?.user?.email);
+        if (session) {
+          navigate(redirectPath || "/");
+        }
+      });
+    } else {
+      console.log('OAuth callback detected, waiting for auth state change...');
+    }
 
     return () => subscription.unsubscribe();
   }, [navigate]);
