@@ -221,7 +221,7 @@ const Profile = () => {
                                 <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                                   transaction.transaction_type === 'earned' 
                                     ? 'bg-green-100 text-green-800'
-                                    : transaction.transaction_type === 'spent'
+                                    : transaction.transaction_type === 'spent' || transaction.transaction_type === 'usage'
                                     ? 'bg-red-100 text-red-800'
                                     : transaction.transaction_type === 'purchased'
                                     ? 'bg-blue-100 text-blue-800'
@@ -229,6 +229,7 @@ const Profile = () => {
                                 }`}>
                                   {transaction.transaction_type === 'earned' && '获得'}
                                   {transaction.transaction_type === 'spent' && '消耗'}
+                                  {transaction.transaction_type === 'usage' && '使用'}
                                   {transaction.transaction_type === 'purchased' && '购买'}
                                   {transaction.transaction_type === 'refunded' && '退款'}
                                   {transaction.transaction_type === 'admin_adjustment' && '调整'}
