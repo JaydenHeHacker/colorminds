@@ -23,23 +23,58 @@ export const Header = () => {
   } = useUserRole(user);
   
   useEffect(() => {
+    // Clean up any corrupted session data on mount
+    const cleanupCorruptedSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        // If we have an error getting session, clear everything
+        if (error) {
+          console.log('Session error detected, cleaning up:', error.message);
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb-') || key.includes('supabase')) {
+              localStorage.removeItem(key);
+            }
+          });
+          await supabase.auth.signOut();
+          return null;
+        }
+        
+        return session;
+      } catch (err) {
+        console.error('Error checking session:', err);
+        return null;
+      }
+    };
+
     // Set up listener FIRST
     const {
       data: {
         subscription
       }
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
+      
+      if (event === 'SIGNED_IN' && session) {
+        // Force reload on successful sign in to ensure clean state
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Small delay to ensure state is updated before reload
+        setTimeout(() => {
+          window.location.reload();
+        }, 300);
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setUser(null);
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
     });
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({
-      data: {
-        session
-      }
-    }) => {
+    // THEN check for existing session with cleanup
+    cleanupCorruptedSession().then((session) => {
       console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
