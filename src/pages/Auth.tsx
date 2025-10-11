@@ -41,10 +41,10 @@ export default function Auth() {
       console.log('Auth page - Auth state changed:', event, session?.user?.email);
       if (session && event === 'SIGNED_IN') {
         console.log('Redirecting to:', redirectPath || "/");
-        // Small delay to ensure session is fully established
+        // Longer delay for OAuth to ensure session is persisted
         setTimeout(() => {
           navigate(redirectPath || "/");
-        }, 100);
+        }, 500);
       }
     });
 
