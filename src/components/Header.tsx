@@ -41,6 +41,7 @@ export const Header = () => {
 
   const handleLogout = async () => {
     try {
+      console.log('Starting logout process...');
       setUser(null); // Immediately update UI
       
       // Sign out with scope 'local' to clear local storage
@@ -52,11 +53,25 @@ export const Header = () => {
         return;
       }
       
-      // Extra safety: manually clear any remaining auth data
-      localStorage.removeItem('supabase.auth.token');
+      // Manually clear ALL Supabase auth data from localStorage
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-')) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      console.log('Clearing localStorage keys:', keysToRemove);
+      keysToRemove.forEach(key => localStorage.removeItem(key));
       
       toast.success("Logged out successfully");
-      navigate("/");
+      
+      // Force a small delay before navigation to ensure cleanup completes
+      setTimeout(() => {
+        navigate("/");
+        window.location.reload(); // Force reload to clear any cached state
+      }, 100);
     } catch (error: any) {
       console.error("Logout exception:", error);
       toast.error("Failed to log out");
