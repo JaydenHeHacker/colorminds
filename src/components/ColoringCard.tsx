@@ -123,8 +123,24 @@ export const ColoringCard = ({
       } else {
         // 添加到打印篮前检查限制
         // 先检查是否是Premium用户
-        const { data: subData } = await supabase.functions.invoke('check-subscription');
-        const isPremium = subData?.subscribed || false;
+        let isPremium = false;
+        try {
+          console.log('[PrintBasket] Checking subscription status...');
+          const { data: subData, error: subError } = await supabase.functions.invoke('check-subscription');
+          
+          if (subError) {
+            console.error('[PrintBasket] Subscription check error:', subError);
+          } else {
+            console.log('[PrintBasket] Subscription data:', subData);
+            isPremium = subData?.subscribed || false;
+          }
+        } catch (error) {
+          console.error('[PrintBasket] Failed to check subscription:', error);
+          // 如果检查失败，从localStorage尝试获取缓存的状态
+          const cachedStatus = localStorage.getItem('isPremium');
+          isPremium = cachedStatus === 'true';
+          console.log('[PrintBasket] Using cached premium status:', isPremium);
+        }
         
         if (!isPremium) {
           // Free用户，检查数量限制
@@ -136,9 +152,12 @@ export const ColoringCard = ({
           if (countError) throw countError;
           
           const FREE_USER_LIMIT = 3;
+          console.log(`[PrintBasket] Current basket count: ${basketItems?.length || 0}/${FREE_USER_LIMIT}`);
           if (basketItems && basketItems.length >= FREE_USER_LIMIT) {
             throw new Error(`FREE_LIMIT:Free users can only add up to ${FREE_USER_LIMIT} items. Upgrade to Premium for unlimited items!`);
           }
+        } else {
+          console.log('[PrintBasket] Premium user - no limit');
         }
 
         const { error } = await supabase
