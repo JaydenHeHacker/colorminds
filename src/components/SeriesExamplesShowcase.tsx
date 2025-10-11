@@ -59,7 +59,7 @@ export const SeriesExamplesShowcase = () => {
         }
       });
 
-      return Array.from(seriesMap.values()).slice(0, 6); // Show top 6 series
+      return Array.from(seriesMap.values()).slice(0, 4); // Show top 4 series
     },
   });
 
