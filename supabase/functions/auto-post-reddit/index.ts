@@ -111,17 +111,25 @@ Deno.serve(async (req) => {
 
         console.log(`Selected coloring page: ${coloringPage.title}`);
 
+        // 如果是系列内容，获取所有章节图片
+        let seriesPages: SeriesPage[] | null = null;
+        if (coloringPage.series) {
+          seriesPages = await getSeriesPages(supabase, coloringPage.series.id);
+          console.log(`Found ${seriesPages?.length || 0} pages in series`);
+        }
+
         // 使用 AI 生成标题和选择 subreddit
         const aiContent = await generateAIContent(
           lovableApiKey, 
           coloringPage, 
           testMode ? ['test'] : config.allowed_subreddits,
-          forcedStrategy
+          forcedStrategy,
+          seriesPages
         );
         
         console.log(`AI generated content for subreddit: r/${aiContent.subreddit}`);
 
-        // 发布到 Reddit
+        // 发布到 Reddit（支持单图或画廊）
         const postResult = await postToReddit(
           supabase,
           connection.id,
@@ -132,7 +140,8 @@ Deno.serve(async (req) => {
           aiContent.description,
           coloringPage.image_url,
           config.user_id,
-          coloringPage.id
+          coloringPage.id,
+          seriesPages
         );
 
         // 更新配置的最后发布时间
@@ -195,6 +204,13 @@ interface SeriesInfo {
   id: string;
   title: string;
   total_chapters: number;
+}
+
+interface SeriesPage {
+  id: string;
+  image_url: string;
+  title: string;
+  chapter_number?: number;
 }
 
 async function selectBestColoringPage(
@@ -290,11 +306,36 @@ async function selectBestColoringPage(
   return pageWithSeries;
 }
 
+async function getSeriesPages(
+  supabase: any,
+  seriesId: string
+): Promise<SeriesPage[] | null> {
+  try {
+    const { data: pages, error } = await supabase
+      .from('coloring_pages')
+      .select('id, image_url, title, chapter_number')
+      .eq('series_id', seriesId)
+      .eq('status', 'published')
+      .order('chapter_number', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching series pages:', error);
+      return null;
+    }
+    
+    return pages || null;
+  } catch (error) {
+    console.error('Error in getSeriesPages:', error);
+    return null;
+  }
+}
+
 async function generateAIContent(
   apiKey: string,
   page: ColoringPage & { series?: SeriesInfo },
   allowedSubreddits: string[],
-  forcedStrategy?: 'series_a' | 'series_b' | 'series_c' | 'single_a' | 'single_b' | 'single_c' | null
+  forcedStrategy?: 'series_a' | 'series_b' | 'series_c' | 'single_a' | 'single_b' | 'single_c' | null,
+  seriesPages?: SeriesPage[] | null
 ): Promise<{ title: string; description: string; subreddit: string }> {
   // 清理 subreddit 名称，移除 r/ 前缀
   const cleanSubreddits = allowedSubreddits.map(s => s.replace(/^r\//, ''));
@@ -363,10 +404,13 @@ Strategy C (10% chance): Just share the coloring page naturally without site men
 - Focus purely on the content, let people ask where it's from in comments`;
   }
 
+  const hasGallery = seriesPages && seriesPages.length > 1;
+  
   const seriesInfo = page.series ? `
 IMPORTANT SERIES INFO: This coloring page is part of a story series!
 Series: "${page.series.title}"
 Total chapters: ${page.series.total_chapters}
+${hasGallery ? `🎨 GALLERY POST: We will post ALL ${seriesPages.length} chapters as a gallery! Users can swipe through the entire story.` : ''}
 This makes it MORE INTERESTING - people love story series!
 ` : '';
 
@@ -384,7 +428,7 @@ TITLE (max 150 chars):
 - Use Reddit slang occasionally (ngl, tbh, lol, etc.)
 - Can include emojis but don't overdo it
 - NO marketing language ("perfect for", "ideal", "great gift")
-${page.series ? `- IF IT'S A SERIES: Mention it naturally! "Found this ${page.series.total_chapters}-part story series" or "This is part X of a ${page.series.total_chapters}-chapter adventure"` : ''}
+${page.series && hasGallery ? `- GALLERY POST: Mention the complete series! "All ${seriesPages.length} chapters of ${page.series.title}" or "${seriesPages.length}-image story series - swipe to see the whole adventure"` : page.series ? `- IF IT'S A SERIES: Mention it naturally! "Found this ${page.series.total_chapters}-part story series" or "This is part X of a ${page.series.total_chapters}-chapter adventure"` : ''}
 - Examples of good vibes: "This came out way cooler than expected", "Found this gem today", "Pretty happy with how this turned out"
 
 DESCRIPTION (2-3 sentences + optional bonus tip):
@@ -394,7 +438,7 @@ DESCRIPTION (2-3 sentences + optional bonus tip):
 - NO phrases like: "perfect for all ages", "completely free to download", "hope you enjoy"
 - Share it like you found something cool and want others to see it
 - Add personality: "turned out better than I thought", "spent way too long on this lol", "this was actually fun"
-${page.series ? `- SERIES BONUS: If mentioning the site, add "they have all ${page.series.total_chapters} chapters" or "full series is there"` : ''}
+${page.series && hasGallery ? `- GALLERY EXCITEMENT: Mention the swipeable gallery! "Swipe through to see the whole adventure" or "All ${seriesPages.length} pages in order - it tells a complete story"` : page.series ? `- SERIES BONUS: If mentioning the site, add "they have all ${page.series.total_chapters} chapters" or "full series is there"` : ''}
 
 ${strategyInstruction}
 
@@ -519,15 +563,23 @@ async function postToReddit(
   text: string,
   imageUrl: string,
   userId: string,
-  coloringPageId: string
+  coloringPageId: string,
+  seriesPages?: SeriesPage[] | null
 ): Promise<{ postUrl: string; postId: string }> {
   // 确保 subreddit 不带 r/ 前缀
   const cleanSubreddit = subreddit.replace(/^r\//, '');
   
-  console.log(`Posting to Reddit - subreddit: ${cleanSubreddit}, title: ${title}`);
+  const isGallery = seriesPages && seriesPages.length > 1;
+  console.log(`Posting to Reddit - subreddit: ${cleanSubreddit}, title: ${title}, type: ${isGallery ? 'gallery' : 'link'}`);
   
   // 尝试发布的函数
   const attemptPost = async (accessToken: string) => {
+    // 如果是画廊帖子，使用 gallery API
+    if (isGallery) {
+      return await attemptGalleryPost(accessToken, cleanSubreddit, title, text, seriesPages);
+    }
+    
+    // 单图帖子
     const uploadResponse = await fetch('https://oauth.reddit.com/api/submit', {
       method: 'POST',
       headers: {
@@ -645,6 +697,113 @@ async function postToReddit(
         posted_at: new Date().toISOString()
       });
     
+    throw error;
+  }
+}
+
+async function attemptGalleryPost(
+  accessToken: string,
+  subreddit: string,
+  title: string,
+  text: string,
+  seriesPages: SeriesPage[]
+): Promise<{ expired: boolean; data: any; ok?: boolean }> {
+  try {
+    // Step 1: 上传每张图片获取 media_id
+    const mediaIds: string[] = [];
+    
+    for (const page of seriesPages) {
+      try {
+        // 使用 Reddit media upload API
+        const uploadResponse = await fetch('https://oauth.reddit.com/api/media/asset.json', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'ColorMinds/1.0'
+          },
+          body: new URLSearchParams({
+            filepath: page.image_url,
+            mimetype: 'image/png'
+          })
+        });
+        
+        const contentType = uploadResponse.headers.get('content-type');
+        if (contentType?.includes('text/html')) {
+          return { expired: true, data: null };
+        }
+        
+        const uploadData = await uploadResponse.json();
+        
+        // 上传图片到 Reddit 的 S3
+        if (uploadData.args?.action && uploadData.args?.fields) {
+          const formData = new FormData();
+          Object.entries(uploadData.args.fields).forEach(([key, value]) => {
+            formData.append(key, value as string);
+          });
+          
+          // 下载图片并上传
+          const imageResponse = await fetch(page.image_url);
+          const imageBlob = await imageResponse.blob();
+          formData.append('file', imageBlob);
+          
+          await fetch(uploadData.args.action, {
+            method: 'POST',
+            body: formData
+          });
+          
+          // 使用 media_id
+          const mediaId = uploadData.asset?.asset_id;
+          if (mediaId) {
+            mediaIds.push(mediaId);
+            console.log(`Uploaded image ${mediaIds.length}/${seriesPages.length}: ${page.title}`);
+          }
+        }
+      } catch (error) {
+        console.error(`Error uploading image ${page.title}:`, error);
+      }
+    }
+    
+    if (mediaIds.length === 0) {
+      throw new Error('Failed to upload any images');
+    }
+    
+    console.log(`Successfully uploaded ${mediaIds.length} images, creating gallery post...`);
+    
+    // Step 2: 创建 gallery post
+    const galleryItems = mediaIds.map((mediaId, index) => ({
+      caption: seriesPages[index]?.title || `Chapter ${index + 1}`,
+      media_id: mediaId
+    }));
+    
+    const submitResponse = await fetch('https://oauth.reddit.com/api/submit', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'ColorMinds/1.0'
+      },
+      body: JSON.stringify({
+        sr: subreddit,
+        kind: 'gallery',
+        title: title,
+        text: text,
+        items: galleryItems,
+        sendreplies: false
+      })
+    });
+    
+    const submitContentType = submitResponse.headers.get('content-type');
+    if (submitContentType?.includes('text/html')) {
+      return { expired: true, data: null };
+    }
+    
+    const responseData = await submitResponse.json();
+    console.log('Gallery post response:', JSON.stringify(responseData, null, 2));
+    
+    return { expired: false, data: responseData, ok: submitResponse.ok };
+  } catch (error) {
+    console.error('Error in attemptGalleryPost:', error);
     throw error;
   }
 }
