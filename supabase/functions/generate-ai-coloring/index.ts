@@ -396,10 +396,12 @@ OUTPUT: A clean, professional coloring page ready for printing.`;
         .update({ used_quota: subscription.used_quota + 1 })
         .eq('user_id', user.id);
     } else {
+      const newBalance = credits.balance - 1;
+      
       await supabase
         .from('user_credits')
         .update({ 
-          balance: credits.balance - 1,
+          balance: newBalance,
           total_used: credits.total_used + 1,
         })
         .eq('user_id', user.id);
@@ -409,8 +411,9 @@ OUTPUT: A clean, professional coloring page ready for printing.`;
         user_id: user.id,
         amount: -1,
         transaction_type: 'usage',
+        balance_after: newBalance,
         generation_id: generation.id,
-        notes: 'AI generation',
+        description: 'AI coloring page generation',
       });
     }
 
