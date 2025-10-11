@@ -29,7 +29,8 @@ export const Header = () => {
         subscription
       }
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
+      console.log('Header - Auth state changed:', event, session?.user?.email, 'provider:', session?.user?.app_metadata?.provider);
+      console.log('Header - localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('sb-')));
       setSession(session);
       setUser(session?.user ?? null);
     });
@@ -40,7 +41,7 @@ export const Header = () => {
         session
       }
     }) => {
-      console.log('Initial session check:', session?.user?.email);
+      console.log('Header - Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
     });
@@ -48,19 +49,14 @@ export const Header = () => {
     return () => subscription.unsubscribe();
   }, []);
   const handleLogout = async () => {
+    console.log('Header - handleLogout called');
     try {
-      // Clear all Supabase-related localStorage keys
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('sb-') || key.includes('supabase')) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      // Sign out with global scope to clear all sessions
+      // Sign out with global scope - this will clear localStorage automatically
       await supabase.auth.signOut({ scope: 'global' });
       
       // Clear user state immediately
       setUser(null);
+      setSession(null);
       
       toast.success("Logged out successfully");
       
