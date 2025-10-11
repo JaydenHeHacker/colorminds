@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, TrendingUp, Send, Calendar, CheckSquare } from "lucide-react";
+import { FileText, TrendingUp, Send, Calendar, CheckSquare, ArrowUpDown } from "lucide-react";
 import { Pagination } from "@/components/Pagination";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -20,16 +20,21 @@ import { zhCN } from "date-fns/locale";
 
 type PublishStatus = 'draft' | 'published';
 
+type SortField = 'created_at' | 'published_at' | 'updated_at' | 'title';
+type SortOrder = 'asc' | 'desc';
+
 export default function PublishingSchedule() {
   const queryClient = useQueryClient();
   const [selectedStatus, setSelectedStatus] = useState<PublishStatus | 'all'>('all');
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(0);
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const itemsPerPage = 10;
 
   // 获取总数
   const { data: totalCount } = useQuery({
-    queryKey: ['publishing-schedule-count', selectedStatus],
+    queryKey: ['publishing-schedule-count', selectedStatus, sortField, sortOrder],
     queryFn: async () => {
       let query = supabase
         .from('coloring_pages')
@@ -47,7 +52,7 @@ export default function PublishingSchedule() {
 
   // 获取分页数据
   const { data: pages, isLoading } = useQuery({
-    queryKey: ['publishing-schedule', selectedStatus, currentPage],
+    queryKey: ['publishing-schedule', selectedStatus, currentPage, sortField, sortOrder],
     queryFn: async () => {
       let query = supabase
         .from('coloring_pages')
@@ -59,7 +64,7 @@ export default function PublishingSchedule() {
             slug
           )
         `)
-        .order('created_at', { ascending: false })
+        .order(sortField, { ascending: sortOrder === 'asc', nullsFirst: false })
         .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
 
       if (selectedStatus !== 'all') {
@@ -310,21 +315,57 @@ export default function PublishingSchedule() {
       {/* 筛选器和批量操作 */}
       <Card className="p-4">
         <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Label>状态筛选：</Label>
-            <Select 
-              value={selectedStatus} 
-              onValueChange={(v) => setSelectedStatus(v as PublishStatus | 'all')}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部</SelectItem>
-                <SelectItem value="draft">草稿</SelectItem>
-                <SelectItem value="published">已发布</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label>状态筛选：</Label>
+              <Select 
+                value={selectedStatus} 
+                onValueChange={(v) => setSelectedStatus(v as PublishStatus | 'all')}
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部</SelectItem>
+                  <SelectItem value="draft">草稿</SelectItem>
+                  <SelectItem value="published">已发布</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label>排序字段：</Label>
+              <Select 
+                value={sortField} 
+                onValueChange={(v) => setSortField(v as SortField)}
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created_at">创建时间</SelectItem>
+                  <SelectItem value="published_at">发布时间</SelectItem>
+                  <SelectItem value="updated_at">更新时间</SelectItem>
+                  <SelectItem value="title">标题</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label>排序方向：</Label>
+              <Select 
+                value={sortOrder} 
+                onValueChange={(v) => setSortOrder(v as SortOrder)}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">降序</SelectItem>
+                  <SelectItem value="asc">升序</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <Button
               variant="outline"
