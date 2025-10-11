@@ -53,7 +53,7 @@ export default function ManageColoringPages() {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('level', 1)  // 只获取顶级分类
+        .eq('level', 2)  // 获取level 2的实际内容分类
         .order('name');
       if (error) throw error;
       return data;
