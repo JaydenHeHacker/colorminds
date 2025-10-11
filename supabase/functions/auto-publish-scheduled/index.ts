@@ -25,23 +25,24 @@ Deno.serve(async (req) => {
       }
     );
 
-    // 获取所有应该发布的定时内容（scheduled_publish_at <= 现在）
-    const now = new Date().toISOString();
+    // 获取所有草稿状态的内容，每次发布一定数量
+    const BATCH_SIZE = 10; // 每次发布10个
     
-    const { data: scheduledPages, error: fetchError } = await supabaseClient
+    const { data: draftPages, error: fetchError } = await supabaseClient
       .from('coloring_pages')
-      .select('id, title, scheduled_publish_at')
-      .eq('status', 'scheduled')
-      .lte('scheduled_publish_at', now);
+      .select('id, title')
+      .eq('status', 'draft')
+      .order('created_at', { ascending: true }) // 先发布最早创建的
+      .limit(BATCH_SIZE);
 
     if (fetchError) {
       console.error('Error fetching scheduled pages:', fetchError);
       throw fetchError;
     }
 
-    console.log(`Found ${scheduledPages?.length || 0} pages to publish`);
+    console.log(`Found ${draftPages?.length || 0} draft pages to publish`);
 
-    if (!scheduledPages || scheduledPages.length === 0) {
+    if (!draftPages || draftPages.length === 0) {
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -56,14 +57,13 @@ Deno.serve(async (req) => {
     }
 
     // 批量更新状态为已发布
-    const pageIds = scheduledPages.map(p => p.id);
+    const pageIds = draftPages.map(p => p.id);
     
     const { error: updateError } = await supabaseClient
       .from('coloring_pages')
       .update({
         status: 'published',
-        published_at: new Date().toISOString(),
-        scheduled_publish_at: null
+        published_at: new Date().toISOString()
       })
       .in('id', pageIds);
 
@@ -72,16 +72,16 @@ Deno.serve(async (req) => {
       throw updateError;
     }
 
-    console.log(`Successfully published ${scheduledPages.length} pages:`, 
-      scheduledPages.map(p => `${p.title} (${p.id})`).join(', ')
+    console.log(`Successfully published ${draftPages.length} pages:`, 
+      draftPages.map(p => `${p.title} (${p.id})`).join(', ')
     );
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Successfully published ${scheduledPages.length} pages`,
-        publishedCount: scheduledPages.length,
-        publishedPages: scheduledPages.map(p => ({ id: p.id, title: p.title }))
+        message: `Successfully published ${draftPages.length} pages`,
+        publishedCount: draftPages.length,
+        publishedPages: draftPages.map(p => ({ id: p.id, title: p.title }))
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
