@@ -97,15 +97,21 @@ export default function PublishingSchedule() {
   const { data: stats } = useQuery({
     queryKey: ['publishing-stats'],
     queryFn: async () => {
-      const { data: allPages, error } = await supabase
+      // 使用 count 获取精确统计
+      const { count: draftCount } = await supabase
         .from('coloring_pages')
-        .select('status, created_at, published_at');
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'draft');
 
-      if (error) throw error;
+      const { count: scheduledCount } = await supabase
+        .from('coloring_pages')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'scheduled');
 
-      const draft = allPages?.filter(p => p.status === 'draft').length || 0;
-      const scheduled = allPages?.filter(p => p.status === 'scheduled').length || 0;
-      const published = allPages?.filter(p => p.status === 'published').length || 0;
+      const { count: publishedCount } = await supabase
+        .from('coloring_pages')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'published');
 
       // 计算本周和本月发布数量
       const now = new Date();
@@ -114,19 +120,27 @@ export default function PublishingSchedule() {
       const monthStart = startOfMonth(now);
       const monthEnd = endOfMonth(now);
 
-      const thisWeek = allPages?.filter(p => {
-        if (!p.published_at) return false;
-        const pubDate = new Date(p.published_at);
-        return pubDate >= weekStart && pubDate <= weekEnd;
-      }).length || 0;
+      const { count: thisWeekCount } = await supabase
+        .from('coloring_pages')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'published')
+        .gte('published_at', weekStart.toISOString())
+        .lte('published_at', weekEnd.toISOString());
 
-      const thisMonth = allPages?.filter(p => {
-        if (!p.published_at) return false;
-        const pubDate = new Date(p.published_at);
-        return pubDate >= monthStart && pubDate <= monthEnd;
-      }).length || 0;
+      const { count: thisMonthCount } = await supabase
+        .from('coloring_pages')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'published')
+        .gte('published_at', monthStart.toISOString())
+        .lte('published_at', monthEnd.toISOString());
 
-      return { draft, scheduled, published, thisWeek, thisMonth };
+      return {
+        draft: draftCount || 0,
+        scheduled: scheduledCount || 0,
+        published: publishedCount || 0,
+        thisWeek: thisWeekCount || 0,
+        thisMonth: thisMonthCount || 0,
+      };
     },
   });
 
