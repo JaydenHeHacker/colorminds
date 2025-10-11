@@ -339,12 +339,12 @@ export default function CreditsStore() {
               </div>
               
               <Button
-                onClick={() => handlePurchasePackage("price_1SEAptPtWzrgBXKbpdl2S4pC")}
-                disabled={purchasingPackage === "price_1SEAptPtWzrgBXKbpdl2S4pC"}
+                onClick={() => handlePurchasePackage("price_1SGy14LkcihUnhzIQ6XcqOCg")}
+                disabled={purchasingPackage === "price_1SGy14LkcihUnhzIQ6XcqOCg"}
                 className="w-full"
                 variant="outline"
               >
-                {purchasingPackage === "price_1SEAptPtWzrgBXKbpdl2S4pC" ? (
+                {purchasingPackage === "price_1SGy14LkcihUnhzIQ6XcqOCg" ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processing...
@@ -384,11 +384,11 @@ export default function CreditsStore() {
               </div>
               
               <Button
-                onClick={() => handlePurchasePackage("price_1SEApzPtWzrgBXKbzeqvik80")}
-                disabled={purchasingPackage === "price_1SEApzPtWzrgBXKbzeqvik80"}
+                onClick={() => handlePurchasePackage("price_1SGy15LkcihUnhzIzDezAD6A")}
+                disabled={purchasingPackage === "price_1SGy15LkcihUnhzIzDezAD6A"}
                 className="w-full"
               >
-                {purchasingPackage === "price_1SEApzPtWzrgBXKbzeqvik80" ? (
+                {purchasingPackage === "price_1SGy15LkcihUnhzIzDezAD6A" ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processing...
@@ -424,12 +424,12 @@ export default function CreditsStore() {
               </div>
               
               <Button
-                onClick={() => handlePurchasePackage("price_1SEAq0PtWzrgBXKbu45Aoc30")}
-                disabled={purchasingPackage === "price_1SEAq0PtWzrgBXKbu45Aoc30"}
+                onClick={() => handlePurchasePackage("price_1SGy16LkcihUnhzI7jFo4cXC")}
+                disabled={purchasingPackage === "price_1SGy16LkcihUnhzI7jFo4cXC"}
                 className="w-full"
                 variant="outline"
               >
-                {purchasingPackage === "price_1SEAq0PtWzrgBXKbu45Aoc30" ? (
+                {purchasingPackage === "price_1SGy16LkcihUnhzI7jFo4cXC" ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processing...
