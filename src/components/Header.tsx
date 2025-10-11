@@ -21,24 +21,27 @@ export const Header = () => {
     isAdmin
   } = useUserRole(user);
   useEffect(() => {
-    supabase.auth.getSession().then(({
-      data: {
-        session
-      }
-    }) => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
-    const {
-      data: {
-        subscription
-      }
-    } = supabase.auth.onAuthStateChange((event, session) => {
+
+    // Listen to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Header: Auth state changed:', event);
       setUser(session?.user ?? null);
+      
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
     });
+
     return () => subscription.unsubscribe();
   }, []);
+
   const handleLogout = async () => {
     try {
+      setUser(null); // Immediately update UI
       await supabase.auth.signOut();
       toast.success("Logged out successfully");
       navigate("/");
