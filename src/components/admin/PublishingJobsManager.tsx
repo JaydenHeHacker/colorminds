@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Play, Pause } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Category {
   id: string;
@@ -356,30 +357,55 @@ export const PublishingJobsManager = () => {
                     {job.next_run_at ? new Date(job.next_run_at).toLocaleString("zh-CN") : "-"}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleToggleActive(job.id, job.is_active)}
-                      >
-                        {job.is_active ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleExecuteNow(job.id)}
-                        disabled={isLoading}
-                      >
-                        <Play className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteJob(job.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <TooltipProvider>
+                      <div className="flex gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleToggleActive(job.id, job.is_active)}
+                            >
+                              {job.is_active ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{job.is_active ? "暂停任务" : "激活任务"}</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleExecuteNow(job.id)}
+                              disabled={isLoading}
+                            >
+                              <Play className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>立即执行一次</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteJob(job.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>删除任务</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TooltipProvider>
                   </TableCell>
                 </TableRow>
               ))}
