@@ -16,6 +16,7 @@ interface PublishingJob {
   schedule_days: number[];
   publish_count: number;
   is_active: boolean;
+  end_date?: string | null;
   categories?: { name: string };
 }
 
@@ -46,7 +47,23 @@ export const PublishingCalendar = () => {
 
   const getJobsForDay = (date: Date) => {
     const dayOfWeek = date.getDay();
-    return jobs.filter(job => job.schedule_days.includes(dayOfWeek));
+    return jobs.filter(job => {
+      // 检查是否在执行日期范围内
+      if (!job.schedule_days.includes(dayOfWeek)) {
+        return false;
+      }
+      
+      // 检查是否超过结束日期
+      if (job.end_date) {
+        const endDate = new Date(job.end_date);
+        endDate.setHours(23, 59, 59, 999); // 设置为当天结束时间
+        if (date > endDate) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
   };
 
   const getDaysToShow = () => {
