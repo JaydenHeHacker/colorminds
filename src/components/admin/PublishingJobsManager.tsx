@@ -136,7 +136,12 @@ export const PublishingJobsManager = () => {
 
     const { error } = await supabase.from("publishing_jobs").insert({
       ...formData,
-      next_run_at: calculateNextRun(formData.schedule_time, formData.schedule_days, formData.is_recurring)
+      next_run_at: calculateNextRun(
+        formData.schedule_time, 
+        formData.schedule_days, 
+        formData.is_recurring,
+        formData.start_date
+      )
     });
 
     setIsLoading(false);
@@ -161,15 +166,25 @@ export const PublishingJobsManager = () => {
     loadJobs();
   };
 
-  const calculateNextRun = (time: string, days: number[], isRecurring: boolean): string | null => {
-    if (!isRecurring) return null;
+  const calculateNextRun = (
+    time: string, 
+    days: number[], 
+    isRecurring: boolean, 
+    startDate?: string | null
+  ): string | null => {
+    if (!isRecurring || !days || days.length === 0) return null;
 
     const now = new Date();
     const [hours, minutes] = time.split(":").map(Number);
     
-    // Find next occurrence
-    for (let i = 0; i < 7; i++) {
-      const testDate = new Date(now);
+    // Use start date if provided and it's in the future
+    const searchStart = startDate && new Date(startDate) > now 
+      ? new Date(startDate) 
+      : now;
+    
+    // Search for next occurrence within 14 days
+    for (let i = 0; i < 14; i++) {
+      const testDate = new Date(searchStart);
       testDate.setDate(testDate.getDate() + i);
       testDate.setHours(hours, minutes, 0, 0);
       
@@ -245,7 +260,8 @@ export const PublishingJobsManager = () => {
         next_run_at: calculateNextRun(
           editFormData.schedule_time,
           editFormData.schedule_days,
-          editFormData.is_recurring
+          editFormData.is_recurring,
+          editFormData.start_date
         )
       })
       .eq("id", editingJob.id);
@@ -269,6 +285,45 @@ export const PublishingJobsManager = () => {
         ? prev.schedule_days.filter(d => d !== day)
         : [...prev.schedule_days, day]
     }));
+  };
+
+  const handleFixAllNextRuns = async () => {
+    if (!confirm("确定要重新计算所有循环任务的下次执行时间吗？")) return;
+    
+    setIsLoading(true);
+    
+    // Get all recurring jobs
+    const { data: recurringJobs, error: fetchError } = await supabase
+      .from("publishing_jobs")
+      .select("*")
+      .eq("is_recurring", true);
+    
+    if (fetchError) {
+      toast({ title: "获取任务失败", description: fetchError.message, variant: "destructive" });
+      setIsLoading(false);
+      return;
+    }
+    
+    // Update each job's next_run_at
+    const updates = recurringJobs.map(job => {
+      const nextRun = calculateNextRun(
+        job.schedule_time,
+        job.schedule_days,
+        job.is_recurring,
+        job.start_date
+      );
+      
+      return supabase
+        .from("publishing_jobs")
+        .update({ next_run_at: nextRun })
+        .eq("id", job.id);
+    });
+    
+    await Promise.all(updates);
+    
+    setIsLoading(false);
+    toast({ title: "已重新计算所有任务的执行时间" });
+    loadJobs();
   };
 
   const handleExecuteNow = async (jobId: string) => {
@@ -314,7 +369,14 @@ export const PublishingJobsManager = () => {
           <CardDescription>创建和管理自动发布任务，系统会根据设置自动发布草稿内容</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-4 gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleFixAllNextRuns}
+              disabled={isLoading}
+            >
+              修复执行时间
+            </Button>
             <Button onClick={() => setIsCreating(!isCreating)}>
               <Plus className="w-4 h-4 mr-2" />
               {isCreating ? "取消" : "创建新任务"}
