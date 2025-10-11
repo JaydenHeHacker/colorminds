@@ -45,8 +45,8 @@ serve(async (req) => {
 
     const settings = lineSettings[difficulty] || lineSettings.medium;
 
-    // Build structured prompt
-    const prompt = `Generate a black-and-white line art coloring page with the following specifications:
+    // Build structured prompt - explicitly request image generation
+    const prompt = `GENERATE AN IMAGE: Create a black-and-white line art coloring page image with the following specifications:
 
 SUBJECT & THEME:
 - Main theme: ${theme}
@@ -74,12 +74,11 @@ TECHNICAL SPECS:
 - Safe margins: 10% border space around the main subject
 - Printable and suitable for coloring books
 
-TITLE & DESCRIPTION (MUST BE IN ENGLISH):
-- Generate a clear, descriptive English title (e.g., "Happy Elephant Playing in the Garden")
-- Create an engaging 1-2 sentence description for US/UK parents and children
-- Format as:
-  Title: [Your Title Here]
-  Description: [Your Description Here]
+IMPORTANT: You must generate the actual coloring page IMAGE, not just text descriptions.
+
+After generating the image, also provide:
+- A clear, descriptive English title (e.g., "Happy Elephant Playing in the Garden")
+- An engaging 1-2 sentence description for US/UK parents and children
 
 NEGATIVE PROMPTS (DO NOT INCLUDE):
 - No colors, shading, gradients, or gray tones
