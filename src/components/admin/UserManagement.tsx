@@ -3,12 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Users, UserCheck, Calendar, Heart } from "lucide-react";
+import { Users, UserCheck, Calendar, Heart, Coins } from "lucide-react";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 
 export default function UserManagement() {
-  // 获取用户列表及其角色
+  // 获取用户列表及其角色和积分
   const { data: users, isLoading: loadingUsers } = useQuery({
     queryKey: ["users-list"],
     queryFn: async () => {
@@ -26,12 +26,21 @@ export default function UserManagement() {
       
       if (rolesError) throw rolesError;
 
-      // 合并用户数据和角色
+      // 获取用户积分
+      const { data: userCredits, error: creditsError } = await supabase
+        .from("user_credits")
+        .select("*");
+      
+      if (creditsError) throw creditsError;
+
+      // 合并用户数据、角色和积分
       const usersWithRoles = profiles.map(profile => {
         const userRoles = roles.filter(role => role.user_id === profile.id);
+        const credits = userCredits.find(c => c.user_id === profile.id);
         return {
           ...profile,
-          roles: userRoles.map(r => r.role)
+          roles: userRoles.map(r => r.role),
+          credits: credits?.balance || 0
         };
       });
 
@@ -56,10 +65,16 @@ export default function UserManagement() {
         return acc;
       }, {});
 
+      // 计算总积分
+      const totalCredits = users?.reduce((sum, user) => sum + (user.credits || 0), 0) || 0;
+      const avgCredits = users?.length ? Math.round(totalCredits / users.length) : 0;
+
       return {
         totalUsers: users?.length || 0,
         adminUsers: users?.filter(u => u.roles?.includes('admin')).length || 0,
         activeUsers: users?.filter(u => favoritesByUser[u.id] > 0).length || 0,
+        totalCredits,
+        avgCredits,
         favoritesByUser
       };
     },
@@ -82,7 +97,7 @@ export default function UserManagement() {
   return (
     <div className="space-y-6">
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">总用户数</CardTitle>
@@ -118,6 +133,32 @@ export default function UserManagement() {
             <div className="text-2xl font-bold">{userStats?.activeUsers || 0}</div>
             <p className="text-xs text-muted-foreground">
               有收藏记录的用户
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">总积分</CardTitle>
+            <Coins className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userStats?.totalCredits || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              所有用户积分总和
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">平均积分</CardTitle>
+            <Coins className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userStats?.avgCredits || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              每用户平均积分
             </p>
           </CardContent>
         </Card>
@@ -169,12 +210,18 @@ export default function UserManagement() {
                       <Calendar className="h-4 w-4" />
                       {user.created_at ? format(new Date(user.created_at), 'PPP', { locale: zhCN }) : '未知'}
                     </div>
-                    {userStats?.favoritesByUser[user.id] && (
-                      <div className="flex items-center gap-1 text-sm">
-                        <Heart className="h-4 w-4 text-pink-500" />
-                        <span>{userStats.favoritesByUser[user.id]} 个收藏</span>
+                    <div className="flex items-center gap-4">
+                      {userStats?.favoritesByUser[user.id] && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Heart className="h-4 w-4 text-pink-500" />
+                          <span>{userStats.favoritesByUser[user.id]} 个收藏</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 text-sm font-medium">
+                        <Coins className="h-4 w-4 text-amber-500" />
+                        <span>{user.credits || 0} 积分</span>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               ))
