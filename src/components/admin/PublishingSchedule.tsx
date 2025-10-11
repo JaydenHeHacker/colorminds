@@ -27,7 +27,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import { BatchSchedulePublishing } from "./BatchSchedulePublishing";
 
 type PublishStatus = 'draft' | 'published';
 
@@ -372,9 +371,6 @@ export default function PublishingSchedule() {
 
   return (
     <div className="space-y-6">
-      {/* 智能批量发布计划 */}
-      <BatchSchedulePublishing />
-
       {/* 统计卡片 */}
       <div className="grid gap-4 md:grid-cols-6">
         <Card className="p-4">
