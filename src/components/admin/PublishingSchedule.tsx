@@ -29,11 +29,11 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMo
 import { zhCN } from "date-fns/locale";
 import { BatchSchedulePublishing } from "./BatchSchedulePublishing";
 
-type PublishStatus = 'draft' | 'scheduled' | 'published';
+type PublishStatus = 'draft' | 'published';
 
 export default function PublishingSchedule() {
   const queryClient = useQueryClient();
-  const [selectedStatus, setSelectedStatus] = useState<PublishStatus | 'all'>('all');
+  const [selectedStatus, setSelectedStatus] = useState<PublishStatus | 'all' | 'scheduled_draft'>('all');
   const [editingPage, setEditingPage] = useState<any>(null);
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("09:00");
@@ -54,8 +54,15 @@ export default function PublishingSchedule() {
         .from('coloring_pages')
         .select('*', { count: 'exact', head: true });
 
-      if (selectedStatus !== 'all') {
+      if (selectedStatus === 'scheduled_draft') {
+        // 定时发布：draft 状态且有 scheduled_publish_at
+        query = query.eq('status', 'draft').not('scheduled_publish_at', 'is', null);
+      } else if (selectedStatus !== 'all') {
         query = query.eq('status', selectedStatus);
+        // 如果是 draft，只显示未定时的
+        if (selectedStatus === 'draft') {
+          query = query.is('scheduled_publish_at', null);
+        }
       }
 
       const { count, error } = await query;
@@ -81,8 +88,15 @@ export default function PublishingSchedule() {
         .order('created_at', { ascending: false })
         .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
 
-      if (selectedStatus !== 'all') {
+      if (selectedStatus === 'scheduled_draft') {
+        // 定时发布：draft 状态且有 scheduled_publish_at
+        query = query.eq('status', 'draft').not('scheduled_publish_at', 'is', null);
+      } else if (selectedStatus !== 'all') {
         query = query.eq('status', selectedStatus);
+        // 如果是 draft，只显示未定时的
+        if (selectedStatus === 'draft') {
+          query = query.is('scheduled_publish_at', null);
+        }
       }
 
       const { data, error } = await query;
@@ -102,12 +116,14 @@ export default function PublishingSchedule() {
       const { count: draftCount } = await supabase
         .from('coloring_pages')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'draft');
+        .eq('status', 'draft')
+        .is('scheduled_publish_at', null); // 只统计未定时的草稿
 
       const { count: scheduledCount } = await supabase
         .from('coloring_pages')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'scheduled');
+        .eq('status', 'draft')
+        .not('scheduled_publish_at', 'is', null); // 已定时的草稿
 
       const { count: publishedCount } = await supabase
         .from('coloring_pages')
@@ -158,12 +174,16 @@ export default function PublishingSchedule() {
     }) => {
       const updates: any = { status };
       
-      if (status === 'scheduled' && scheduledAt) {
+      // 设置定时发布：保持 draft 状态，设置 scheduled_publish_at
+      if (scheduledAt) {
         updates.scheduled_publish_at = scheduledAt;
+        updates.status = 'draft'; // 定时发布时保持草稿状态
       } else if (status === 'published') {
+        // 立即发布
         updates.published_at = new Date().toISOString();
         updates.scheduled_publish_at = null;
       } else if (status === 'draft') {
+        // 改回草稿
         updates.scheduled_publish_at = null;
         updates.published_at = null;
       }
@@ -199,7 +219,7 @@ export default function PublishingSchedule() {
     
     updateStatusMutation.mutate({
       id: editingPage.id,
-      status: 'scheduled',
+      status: 'draft', // 定时发布保持草稿状态
       scheduledAt: scheduledDateTime,
     });
   };
@@ -262,7 +282,7 @@ export default function PublishingSchedule() {
       Array.from(selectedPages).map(id =>
         updateStatusMutation.mutateAsync({
           id,
-          status: 'scheduled',
+          status: 'draft', // 定时发布保持草稿状态
           scheduledAt: scheduledDateTime,
         })
       )
@@ -340,14 +360,13 @@ export default function PublishingSchedule() {
   // 获取某一天的定时发布内容
   const getScheduledForDate = (date: Date) => {
     return pages?.filter(page => {
-      if (page.status !== 'scheduled' || !page.scheduled_publish_at) return false;
+      if (page.status !== 'draft' || !page.scheduled_publish_at) return false;
       return isSameDay(new Date(page.scheduled_publish_at), date);
     }) || [];
   };
 
   const statusConfig = {
     draft: { label: "草稿", color: "text-gray-500", bgColor: "bg-gray-100" },
-    scheduled: { label: "定时发布", color: "text-blue-500", bgColor: "bg-blue-100" },
     published: { label: "已发布", color: "text-green-500", bgColor: "bg-green-100" },
   };
 
@@ -455,15 +474,15 @@ export default function PublishingSchedule() {
                 <Label>状态筛选：</Label>
                 <Select 
                   value={selectedStatus} 
-                  onValueChange={(v) => setSelectedStatus(v as PublishStatus | 'all')}
+                  onValueChange={(v) => setSelectedStatus(v as PublishStatus | 'all' | 'scheduled_draft')}
                 >
                   <SelectTrigger className="w-[200px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部</SelectItem>
-                    <SelectItem value="draft">草稿</SelectItem>
-                    <SelectItem value="scheduled">定时发布</SelectItem>
+                    <SelectItem value="draft">草稿（未定时）</SelectItem>
+                    <SelectItem value="scheduled_draft">定时发布</SelectItem>
                     <SelectItem value="published">已发布</SelectItem>
                   </SelectContent>
                 </Select>
@@ -558,7 +577,7 @@ export default function PublishingSchedule() {
                                 发布时间：{format(new Date(page.published_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
                               </p>
                             )}
-                            {page.scheduled_publish_at && page.status === 'scheduled' && (
+                            {page.scheduled_publish_at && page.status === 'draft' && (
                               <p className="text-xs text-blue-600">
                                 定时发布：{format(new Date(page.scheduled_publish_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
                               </p>
@@ -567,8 +586,14 @@ export default function PublishingSchedule() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span className={`px-3 py-1 rounded-full text-sm ${statusConfig[page.status as PublishStatus]?.bgColor} ${statusConfig[page.status as PublishStatus]?.color}`}>
-                            {statusConfig[page.status as PublishStatus]?.label}
+                          <span className={`px-3 py-1 rounded-full text-sm ${
+                            page.status === 'draft' && page.scheduled_publish_at
+                              ? 'bg-blue-100 text-blue-500'
+                              : statusConfig[page.status as PublishStatus]?.bgColor + ' ' + statusConfig[page.status as PublishStatus]?.color
+                          }`}>
+                            {page.status === 'draft' && page.scheduled_publish_at
+                              ? '定时发布'
+                              : statusConfig[page.status as PublishStatus]?.label}
                           </span>
 
                           {page.status === 'draft' && (
@@ -592,7 +617,7 @@ export default function PublishingSchedule() {
                             </>
                           )}
 
-                          {page.status === 'scheduled' && (
+                          {page.status === 'draft' && page.scheduled_publish_at && (
                             <>
                               <Button
                                 variant="ghost"
