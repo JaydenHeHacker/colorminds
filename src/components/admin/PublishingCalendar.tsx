@@ -197,22 +197,43 @@ export const PublishingCalendar = () => {
                 </div>
               ))}
               {days.map((day) => {
+                const dayJobs = getJobsForDay(day);
                 const totalPages = getTotalPagesForDay(day);
                 const isToday = isSameDay(day, today);
 
                 return (
                   <div
                     key={day.toISOString()}
-                    className={`border rounded p-2 min-h-[80px] ${
+                    className={`border rounded p-2 min-h-[100px] ${
                       isToday ? "border-primary bg-primary/5" : ""
                     }`}
                   >
-                    <div className="text-sm font-semibold">{format(day, "dd")}</div>
-                    {totalPages > 0 && (
-                      <Badge variant="secondary" className="text-xs mt-1">
-                        {totalPages}篇
-                      </Badge>
-                    )}
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-sm font-semibold">{format(day, "dd")}</div>
+                      {totalPages > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {totalPages}篇
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      {dayJobs.map((job) => (
+                        <div
+                          key={job.id}
+                          className="text-xs bg-muted/50 rounded p-1 border-l-2 border-primary"
+                        >
+                          <div className="font-medium truncate text-[10px]">
+                            {job.schedule_time.substring(0, 5)}
+                          </div>
+                          <div className="text-muted-foreground truncate text-[10px]">
+                            {job.categories?.name || "全类目"}
+                          </div>
+                          <div className="text-muted-foreground text-[10px]">
+                            {job.publish_count}篇
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 );
               })}
