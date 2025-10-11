@@ -60,9 +60,9 @@ export default function ManageColoringPages() {
     },
   });
 
-  // 简化分类标签显示
+  // 简化分类标签显示，不展示图标
   const getCategoryLabel = (cat: any) => {
-    return `${cat.icon} ${cat.name}`;
+    return cat.name;
   };
 
   const { data: coloringPages, isLoading } = useQuery({
