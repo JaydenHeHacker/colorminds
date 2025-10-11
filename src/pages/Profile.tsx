@@ -4,15 +4,19 @@ import { ColoringCalendar } from "@/components/ColoringCalendar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Calendar, Heart, LogOut, Crown, ArrowLeft } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { User, Calendar, Heart, LogOut, Crown, ArrowLeft, Coins } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 const Profile = () => {
   const [user, setUser] = useState<any>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [credits, setCredits] = useState(0);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,6 +40,8 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       checkPremiumStatus();
+      fetchCredits();
+      fetchTransactions();
     }
   }, [user]);
 
@@ -45,6 +51,37 @@ const Profile = () => {
       setIsPremium(data?.subscribed || false);
     } catch (error) {
       console.error('Error checking premium:', error);
+    }
+  };
+
+  const fetchCredits = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_credits')
+        .select('balance')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      setCredits(data?.balance || 0);
+    } catch (error) {
+      console.error('Error fetching credits:', error);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('credit_transactions')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      setTransactions(data || []);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
     }
   };
 
@@ -97,7 +134,11 @@ const Profile = () => {
                       </div>
                     )}
                   </div>
-                  <p className="text-muted-foreground">{user.email}</p>
+                   <p className="text-muted-foreground">{user.email}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Coins className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">积分余额: {credits}</span>
+                  </div>
                   {!isPremium && (
                     <Button
                       size="sm"
@@ -123,19 +164,96 @@ const Profile = () => {
 
             {/* 选项卡内容 */}
             <Tabs defaultValue="calendar" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+              <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
                 <TabsTrigger value="calendar" className="gap-2">
                   <Calendar className="h-4 w-4" />
-                  Coloring Calendar
+                  日历
+                </TabsTrigger>
+                <TabsTrigger value="credits" className="gap-2">
+                  <Coins className="h-4 w-4" />
+                  积分记录
                 </TabsTrigger>
                 <TabsTrigger value="favorites" className="gap-2">
                   <Heart className="h-4 w-4" />
-                  My Favorites
+                  收藏
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="calendar" className="space-y-6">
                 <ColoringCalendar userId={user.id} />
+              </TabsContent>
+
+              <TabsContent value="credits">
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold">积分变动历史</h3>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
+                      <Coins className="h-5 w-5 text-primary" />
+                      <span className="font-bold text-lg">{credits}</span>
+                      <span className="text-sm text-muted-foreground">积分</span>
+                    </div>
+                  </div>
+                  
+                  {transactions.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Coins className="h-16 w-16 mx-auto mb-4 opacity-20" />
+                      <p className="text-muted-foreground">暂无积分变动记录</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>时间</TableHead>
+                            <TableHead>类型</TableHead>
+                            <TableHead>变动</TableHead>
+                            <TableHead>余额</TableHead>
+                            <TableHead>说明</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {transactions.map((transaction) => (
+                            <TableRow key={transaction.id}>
+                              <TableCell className="whitespace-nowrap">
+                                {format(new Date(transaction.created_at), 'yyyy-MM-dd HH:mm')}
+                              </TableCell>
+                              <TableCell>
+                                <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                                  transaction.transaction_type === 'earned' 
+                                    ? 'bg-green-100 text-green-800'
+                                    : transaction.transaction_type === 'spent'
+                                    ? 'bg-red-100 text-red-800'
+                                    : transaction.transaction_type === 'purchased'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {transaction.transaction_type === 'earned' && '获得'}
+                                  {transaction.transaction_type === 'spent' && '消耗'}
+                                  {transaction.transaction_type === 'purchased' && '购买'}
+                                  {transaction.transaction_type === 'refunded' && '退款'}
+                                  {transaction.transaction_type === 'admin_adjustment' && '调整'}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`font-semibold ${
+                                  transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                  {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                                </span>
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {transaction.balance_after}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground max-w-xs truncate">
+                                {transaction.description || '-'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </Card>
               </TabsContent>
 
               <TabsContent value="favorites">
