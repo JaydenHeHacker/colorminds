@@ -102,7 +102,9 @@ Deno.serve(async (req) => {
         // 发布到 Reddit
         const postResult = await postToReddit(
           supabase,
+          connection.id,
           connection.access_token,
+          connection.refresh_token,
           aiContent.subreddit,
           aiContent.title,
           aiContent.description,
@@ -338,9 +340,55 @@ Respond ONLY with valid JSON (no markdown):
   };
 }
 
+async function refreshRedditToken(
+  supabase: any,
+  connectionId: string,
+  refreshToken: string
+): Promise<string | null> {
+  const redditClientId = Deno.env.get('REDDIT_CLIENT_ID')!;
+  const redditClientSecret = Deno.env.get('REDDIT_CLIENT_SECRET')!;
+
+  try {
+    const response = await fetch('https://www.reddit.com/api/v1/access_token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${btoa(`${redditClientId}:${redditClientSecret}`)}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'ColorMinds/1.0'
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken
+      })
+    });
+
+    if (!response.ok) {
+      console.error('Failed to refresh Reddit token:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    const newAccessToken = data.access_token;
+
+    // 更新数据库中的 access token
+    await supabase
+      .from('social_media_connections')
+      .update({ access_token: newAccessToken })
+      .eq('id', connectionId);
+
+    console.log('Successfully refreshed Reddit token');
+    return newAccessToken;
+  } catch (error) {
+    console.error('Error refreshing Reddit token:', error);
+    return null;
+  }
+}
+
 async function postToReddit(
   supabase: any,
+  connectionId: string,
   redditAccessToken: string,
+  refreshToken: string,
   subreddit: string,
   title: string,
   text: string,
@@ -353,12 +401,12 @@ async function postToReddit(
   
   console.log(`Posting to Reddit - subreddit: ${cleanSubreddit}, title: ${title}`);
   
-  // 使用 Reddit API 直接发布
-  try {
+  // 尝试发布的函数
+  const attemptPost = async (accessToken: string) => {
     const uploadResponse = await fetch('https://oauth.reddit.com/api/submit', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${redditAccessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': 'ColorMinds/1.0'
       },
@@ -372,12 +420,42 @@ async function postToReddit(
       })
     });
 
+    const contentType = uploadResponse.headers.get('content-type');
+    
+    // 检查是否返回了 HTML（表示 token 过期）
+    if (contentType?.includes('text/html')) {
+      console.log('Reddit returned HTML, token likely expired');
+      return { expired: true, data: null };
+    }
+
     const responseData = await uploadResponse.json();
     console.log('Reddit API response:', JSON.stringify(responseData, null, 2));
     
-    if (!uploadResponse.ok) {
-      throw new Error(`Reddit API error: ${JSON.stringify(responseData)}`);
+    return { expired: false, data: responseData, ok: uploadResponse.ok };
+  };
+
+  // 使用 Reddit API 直接发布
+  try {
+    let result = await attemptPost(redditAccessToken);
+    
+    // 如果 token 过期，尝试刷新
+    if (result.expired) {
+      console.log('Attempting to refresh Reddit token...');
+      const newToken = await refreshRedditToken(supabase, connectionId, refreshToken);
+      
+      if (!newToken) {
+        throw new Error('Failed to refresh Reddit access token');
+      }
+      
+      // 用新 token 重试
+      result = await attemptPost(newToken);
     }
+    
+    if (!result.ok) {
+      throw new Error(`Reddit API error: ${JSON.stringify(result.data)}`);
+    }
+    
+    const responseData = result.data;
     
     // 检查 Reddit API 响应中的错误
     if (responseData.json?.errors?.length > 0) {
