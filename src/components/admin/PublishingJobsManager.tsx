@@ -54,7 +54,8 @@ export const PublishingJobsManager = () => {
     category_id: "",
     publish_count: 1,
     schedule_time: "09:00",
-    schedule_days: [] as number[]
+    schedule_days: [] as number[],
+    end_date: ""
   });
 
   useEffect(() => {
@@ -122,7 +123,8 @@ export const PublishingJobsManager = () => {
       category_id: "",
       publish_count: 1,
       schedule_time: "09:00",
-      schedule_days: []
+      schedule_days: [],
+      end_date: ""
     });
     setIsCreating(false);
     loadJobs();
@@ -280,21 +282,37 @@ export const PublishingJobsManager = () => {
                 </div>
 
                 {formData.is_recurring && (
-                  <div>
-                    <Label>选择执行日期</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {WEEKDAYS.map(day => (
-                        <Badge
-                          key={day.value}
-                          variant={formData.schedule_days.includes(day.value) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => toggleDay(day.value)}
-                        >
-                          {day.label}
-                        </Badge>
-                      ))}
+                  <>
+                    <div>
+                      <Label>选择执行日期</Label>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {WEEKDAYS.map(day => (
+                          <Badge
+                            key={day.value}
+                            variant={formData.schedule_days.includes(day.value) ? "default" : "outline"}
+                            className="cursor-pointer"
+                            onClick={() => toggleDay(day.value)}
+                          >
+                            {day.label}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+
+                    <div>
+                      <Label htmlFor="end_date">结束日期（可选）</Label>
+                      <Input
+                        id="end_date"
+                        type="date"
+                        value={formData.end_date}
+                        onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                        placeholder="不设置则永久执行"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        留空则任务会一直循环执行
+                      </p>
+                    </div>
+                  </>
                 )}
 
                 <Button onClick={handleCreateJob} disabled={isLoading} className="w-full">

@@ -106,6 +106,8 @@ Deno.serve(async (req) => {
 
     // Calculate next run time for recurring jobs
     let nextRunAt = null;
+    let shouldDeactivate = false;
+    
     if (job.is_recurring && job.schedule_days && job.schedule_days.length > 0) {
       const now = new Date();
       const [hours, minutes] = job.schedule_time.split(':').map(Number);
@@ -116,10 +118,26 @@ Deno.serve(async (req) => {
         testDate.setDate(testDate.getDate() + i);
         testDate.setHours(hours, minutes, 0, 0);
         
+        // Check if next run is after end_date
+        if (job.end_date) {
+          const endDate = new Date(job.end_date);
+          endDate.setHours(23, 59, 59, 999);
+          
+          if (testDate > endDate) {
+            shouldDeactivate = true;
+            break;
+          }
+        }
+        
         if (job.schedule_days.includes(testDate.getDay())) {
           nextRunAt = testDate.toISOString();
           break;
         }
+      }
+      
+      // If no valid next run found and has end_date, deactivate
+      if (!nextRunAt && job.end_date) {
+        shouldDeactivate = true;
       }
     }
 
@@ -130,6 +148,10 @@ Deno.serve(async (req) => {
 
     if (job.is_recurring) {
       updateData.next_run_at = nextRunAt;
+      // Deactivate if reached end date or no more runs
+      if (shouldDeactivate) {
+        updateData.is_active = false;
+      }
     } else {
       // Deactivate one-time jobs after execution
       updateData.is_active = false;

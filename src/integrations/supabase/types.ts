@@ -609,6 +609,7 @@ export type Database = {
         Row: {
           category_id: string | null
           created_at: string
+          end_date: string | null
           id: string
           is_active: boolean
           is_recurring: boolean
@@ -623,6 +624,7 @@ export type Database = {
         Insert: {
           category_id?: string | null
           created_at?: string
+          end_date?: string | null
           id?: string
           is_active?: boolean
           is_recurring?: boolean
@@ -637,6 +639,7 @@ export type Database = {
         Update: {
           category_id?: string | null
           created_at?: string
+          end_date?: string | null
           id?: string
           is_active?: boolean
           is_recurring?: boolean
