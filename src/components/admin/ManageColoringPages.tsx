@@ -59,8 +59,9 @@ export default function ManageColoringPages() {
 
   // 组织分类树结构用于显示
   const getCategoryLabel = (cat: any) => {
-    const indent = '  '.repeat(cat.level - 1);
-    const levelPrefix = cat.level === 1 ? '' : '└─ ';
+    const level = cat.level || 1;
+    const indent = '  '.repeat(Math.max(0, level - 1));
+    const levelPrefix = level === 1 ? '' : '└─ ';
     return `${indent}${levelPrefix}${cat.icon} ${cat.name}`;
   };
 
