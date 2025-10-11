@@ -647,14 +647,14 @@ export const PublishingJobsManager = () => {
             <div>
               <Label htmlFor="edit-category">类目（可选）</Label>
               <Select
-                value={editFormData.category_id}
-                onValueChange={(value) => setEditFormData({ ...editFormData, category_id: value })}
+                value={editFormData.category_id || "all"}
+                onValueChange={(value) => setEditFormData({ ...editFormData, category_id: value === "all" ? "" : value })}
               >
                 <SelectTrigger id="edit-category">
                   <SelectValue placeholder="全部类目" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部类目</SelectItem>
+                  <SelectItem value="all">全部类目</SelectItem>
                   {categories.map(cat => (
                     <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                   ))}
