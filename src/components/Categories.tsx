@@ -46,19 +46,39 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
   const { data: categoryCounts } = useQuery({
     queryKey: ['category-counts'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get all categories with their paths
+      const { data: allCategories, error: catError } = await supabase
+        .from('categories')
+        .select('id, parent_id');
+      
+      if (catError) throw catError;
+      
+      // Build a map of category IDs to their descendants
+      const getDescendants = (categoryId: string): string[] => {
+        const descendants = [categoryId];
+        const children = allCategories?.filter(c => c.parent_id === categoryId) || [];
+        children.forEach(child => {
+          descendants.push(...getDescendants(child.id));
+        });
+        return descendants;
+      };
+      
+      // Get all published pages
+      const { data: pages, error: pagesError } = await supabase
         .from('coloring_pages')
         .select('category_id')
         .eq('status', 'published');
       
-      if (error) throw error;
+      if (pagesError) throw pagesError;
       
-      // Count pages per category
+      // Count pages for each category (including descendants)
       const counts: Record<string, number> = {};
-      data.forEach(page => {
-        if (page.category_id) {
-          counts[page.category_id] = (counts[page.category_id] || 0) + 1;
-        }
+      
+      allCategories?.forEach(category => {
+        const categoryAndDescendants = getDescendants(category.id);
+        counts[category.id] = pages?.filter(page => 
+          page.category_id && categoryAndDescendants.includes(page.category_id)
+        ).length || 0;
       });
       
       return counts;
