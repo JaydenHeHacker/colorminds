@@ -450,35 +450,111 @@ const CategoryPage = () => {
                 <>
                   {/* SEO Content Block - Only for important categories */}
                   {category.description && (allColoringPages?.length || 0) > 10 && (
-                    <div className="mb-8 p-6 rounded-lg bg-gradient-to-br from-primary/5 to-secondary/5 border">
-                      <h2 className="text-xl md:text-2xl font-semibold mb-4">
-                        About {category.name} Coloring Pages
-                      </h2>
-                      <div className="prose prose-sm md:prose max-w-none text-muted-foreground">
-                        <p className="mb-3">
-                          {category.description}
-                        </p>
-                        <p className="mb-3">
-                          Our collection features <strong>{allColoringPages?.length || 0}+ free printable {category.name.toLowerCase()} coloring pages</strong>, 
-                          carefully designed for various skill levels. Whether you're looking for simple designs for young children or intricate patterns 
-                          for adults, you'll find the perfect coloring page here.
-                        </p>
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-start gap-2">
-                            <span className="text-primary font-medium">✓</span>
-                            <span>100% free to download and print</span>
+                    <div className="mb-8 space-y-6">
+                      <div className="p-6 rounded-lg bg-gradient-to-br from-primary/5 to-secondary/5 border">
+                        <h2 className="text-xl md:text-2xl font-semibold mb-4">
+                          About {category.name} Coloring Pages
+                        </h2>
+                        <div className="prose prose-sm md:prose max-w-none text-muted-foreground space-y-4">
+                          <p className="mb-3">
+                            {category.description}
+                          </p>
+                          <p className="mb-3">
+                            Our collection features <strong>{allColoringPages?.length || 0}+ free printable {category.name.toLowerCase()} coloring pages</strong>, 
+                            carefully designed for various skill levels. Whether you're looking for simple designs for young children or intricate patterns 
+                            for adults, you'll find the perfect coloring page here.
+                          </p>
+                          <p className="mb-3">
+                            Each <strong>{category.name.toLowerCase()} coloring page</strong> is professionally illustrated and optimized for printing on standard 
+                            letter (8.5x11") or A4 paper. Simply download, print, and start coloring with your favorite crayons, colored pencils, or markers!
+                          </p>
+                          
+                          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="p-4 rounded-lg bg-background border">
+                              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                                👶 Perfect for Kids
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                Our {category.name.toLowerCase()} coloring pages help develop fine motor skills, color recognition, 
+                                and creativity in children ages 3-12.
+                              </p>
+                            </div>
+                            <div className="p-4 rounded-lg bg-background border">
+                              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                                🎨 Great for Adults
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                Adult colorists will appreciate the detailed designs that provide hours of relaxing, 
+                                meditative coloring experiences.
+                              </p>
+                            </div>
+                            <div className="p-4 rounded-lg bg-background border">
+                              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                                🏫 Educational Use
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                Teachers and homeschoolers can use these {category.name.toLowerCase()} pages for classroom activities, 
+                                art projects, and educational lessons.
+                              </p>
+                            </div>
+                            <div className="p-4 rounded-lg bg-background border">
+                              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                                🎉 Special Occasions
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                Perfect for parties, rainy day activities, travel entertainment, 
+                                and quiet time at home or in waiting rooms.
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex items-start gap-2">
-                            <span className="text-primary font-medium">✓</span>
-                            <span>High-quality printable designs</span>
+
+                          <div className="mt-6 p-4 rounded-lg bg-accent/10 border-2 border-accent/30">
+                            <h3 className="font-semibold mb-2">💡 Tips for Coloring {category.name} Pages</h3>
+                            <ul className="space-y-2 text-sm">
+                              <li className="flex items-start gap-2">
+                                <span className="text-accent font-bold">•</span>
+                                <span>Start with lighter colors and gradually add darker shades for depth and dimension</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="text-accent font-bold">•</span>
+                                <span>Use colored pencils for detailed areas and markers or crayons for larger sections</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="text-accent font-bold">•</span>
+                                <span>Print multiple copies to experiment with different color schemes</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="text-accent font-bold">•</span>
+                                <span>Frame your finished masterpieces or create a personalized coloring book</span>
+                              </li>
+                            </ul>
                           </div>
-                          <div className="flex items-start gap-2">
-                            <span className="text-primary font-medium">✓</span>
-                            <span>Perfect for home and classroom use</span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <span className="text-primary font-medium">✓</span>
-                            <span>New pages added regularly</span>
+
+                          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm not-prose">
+                            <div className="flex items-start gap-2">
+                              <span className="text-primary font-medium">✓</span>
+                              <span>100% free to download and print</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-primary font-medium">✓</span>
+                              <span>High-quality, print-ready designs</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-primary font-medium">✓</span>
+                              <span>No signup or registration required</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-primary font-medium">✓</span>
+                              <span>Multiple difficulty levels available</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-primary font-medium">✓</span>
+                              <span>New pages added regularly</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-primary font-medium">✓</span>
+                              <span>Print unlimited copies</span>
+                            </div>
                           </div>
                         </div>
                       </div>

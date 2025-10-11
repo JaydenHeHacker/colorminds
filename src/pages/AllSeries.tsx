@@ -175,6 +175,18 @@ const AllSeries = () => {
                     />
                   ))}
                 </div>
+
+                {/* SEO Content Section */}
+                <div className="mt-16 max-w-4xl mx-auto space-y-8">
+                  <div className="prose prose-lg max-w-none">
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                      What Are Story Series Coloring Pages?
+                    </h2>
+                    <p className="text-muted-foreground mb-4">
+                      Story series coloring pages are sequential collections of <strong>free printable coloring pages</strong> that tell a complete narrative through connected illustrations.
+                    </p>
+                  </div>
+                </div>
               </>
             ) : (
               <div className="text-center py-16">
