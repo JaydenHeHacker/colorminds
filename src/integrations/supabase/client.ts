@@ -5,6 +5,24 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Monitor localStorage changes for debugging
+const originalSetItem = localStorage.setItem.bind(localStorage);
+const originalRemoveItem = localStorage.removeItem.bind(localStorage);
+
+localStorage.setItem = function(key: string, value: string) {
+  if (key.includes('auth-token')) {
+    console.log('🟢 localStorage.setItem:', key, 'stack:', new Error().stack?.split('\n')[2]);
+  }
+  return originalSetItem(key, value);
+};
+
+localStorage.removeItem = function(key: string) {
+  if (key.includes('auth-token')) {
+    console.log('🔴 localStorage.removeItem:', key, 'stack:', new Error().stack?.split('\n')[2]);
+  }
+  return originalRemoveItem(key);
+};
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
