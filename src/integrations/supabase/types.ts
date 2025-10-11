@@ -605,6 +605,59 @@ export type Database = {
         }
         Relationships: []
       }
+      publishing_jobs: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          is_recurring: boolean
+          last_run_at: string | null
+          name: string
+          next_run_at: string | null
+          publish_count: number
+          schedule_days: number[] | null
+          schedule_time: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_recurring?: boolean
+          last_run_at?: string | null
+          name: string
+          next_run_at?: string | null
+          publish_count?: number
+          schedule_days?: number[] | null
+          schedule_time: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_recurring?: boolean
+          last_run_at?: string | null
+          name?: string
+          next_run_at?: string | null
+          publish_count?: number
+          schedule_days?: number[] | null
+          schedule_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publishing_jobs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reddit_auto_config: {
         Row: {
           allowed_subreddits: string[] | null

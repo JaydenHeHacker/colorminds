@@ -14,6 +14,7 @@ import DashboardStats from "@/components/admin/DashboardStats";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import UserManagement from "@/components/admin/UserManagement";
 import PublishingSchedule from "@/components/admin/PublishingSchedule";
+import { PublishingJobsManager } from "@/components/admin/PublishingJobsManager";
 import { AutoGenerateControl } from "@/components/admin/AutoGenerateControl";
 import ManageArtwork from "@/components/admin/ManageArtwork";
 import ManageContactMessages from "@/components/admin/ManageContactMessages";
@@ -238,7 +239,7 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="publishing">
-            <PublishingSchedule />
+            <PublishingJobsManager />
           </TabsContent>
 
           <TabsContent value="auto-generate">
