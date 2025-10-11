@@ -7,11 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Play, Pause } from "lucide-react";
+import { Plus, Trash2, Play, Pause, Edit } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PublishingJobExecutions } from "./PublishingJobExecutions";
 import { PublishingCalendar } from "./PublishingCalendar";
 
@@ -60,6 +61,7 @@ export const PublishingJobsManager = () => {
   const [jobs, setJobs] = useState<PublishingJob[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingJob, setEditingJob] = useState<PublishingJob | null>(null);
   const { toast } = useToast();
 
   // Form state
@@ -70,6 +72,19 @@ export const PublishingJobsManager = () => {
     publish_count: 1,
     schedule_time: "09:00",
     schedule_days: [] as number[],
+    start_date: "",
+    end_date: ""
+  });
+
+  // Edit form state
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    is_recurring: false,
+    category_id: "",
+    publish_count: 1,
+    schedule_time: "09:00",
+    schedule_days: [] as number[],
+    start_date: "",
     end_date: ""
   });
 
@@ -139,6 +154,7 @@ export const PublishingJobsManager = () => {
       publish_count: 1,
       schedule_time: "09:00",
       schedule_days: [],
+      start_date: "",
       end_date: ""
     });
     setIsCreating(false);
@@ -195,6 +211,64 @@ export const PublishingJobsManager = () => {
 
     toast({ title: "任务已删除" });
     loadJobs();
+  };
+
+  const handleEditJob = (job: PublishingJob) => {
+    setEditingJob(job);
+    setEditFormData({
+      name: job.name,
+      is_recurring: job.is_recurring,
+      category_id: job.category_id || "",
+      publish_count: job.publish_count,
+      schedule_time: job.schedule_time.substring(0, 5),
+      schedule_days: job.schedule_days,
+      start_date: job.start_date || "",
+      end_date: job.end_date || ""
+    });
+  };
+
+  const handleUpdateJob = async () => {
+    if (!editingJob) return;
+    
+    setIsLoading(true);
+    const { error } = await supabase
+      .from("publishing_jobs")
+      .update({
+        name: editFormData.name,
+        is_recurring: editFormData.is_recurring,
+        category_id: editFormData.category_id || null,
+        publish_count: editFormData.publish_count,
+        schedule_time: editFormData.schedule_time,
+        schedule_days: editFormData.schedule_days,
+        start_date: editFormData.start_date || null,
+        end_date: editFormData.end_date || null,
+        next_run_at: calculateNextRun(
+          editFormData.schedule_time,
+          editFormData.schedule_days,
+          editFormData.is_recurring
+        )
+      })
+      .eq("id", editingJob.id);
+
+    setIsLoading(false);
+
+    if (error) {
+      toast({ title: "更新失败", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "任务已更新" });
+    setEditingJob(null);
+    loadJobs();
+  };
+
+  const toggleEditDay = (day: number) => {
+    setEditFormData(prev => ({
+      ...prev,
+      schedule_days: prev.schedule_days.includes(day)
+        ? prev.schedule_days.filter(d => d !== day)
+        : [...prev.schedule_days, day]
+    }));
   };
 
   const handleExecuteNow = async (jobId: string) => {
@@ -445,6 +519,21 @@ export const PublishingJobsManager = () => {
                             <Button
                               size="sm"
                               variant="ghost"
+                              onClick={() => handleEditJob(job)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>编辑任务</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
                               onClick={() => handleDeleteJob(job.id)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -473,6 +562,135 @@ export const PublishingJobsManager = () => {
           <PublishingJobExecutions />
         </TabsContent>
       </Tabs>
+      
+      {/* 编辑任务对话框 */}
+      <Dialog open={!!editingJob} onOpenChange={(open) => !open && setEditingJob(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>编辑任务</DialogTitle>
+            <DialogDescription>修改发布任务的设置</DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-name">任务名称</Label>
+              <Input
+                id="edit-name"
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                placeholder="例如：圣诞节主题内容发布"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-category">类目（可选）</Label>
+              <Select
+                value={editFormData.category_id}
+                onValueChange={(value) => setEditFormData({ ...editFormData, category_id: value })}
+              >
+                <SelectTrigger id="edit-category">
+                  <SelectValue placeholder="全部类目" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">全部类目</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-count">每次发布数量</Label>
+                <Input
+                  id="edit-count"
+                  type="number"
+                  min="1"
+                  value={editFormData.publish_count}
+                  onChange={(e) => setEditFormData({ ...editFormData, publish_count: parseInt(e.target.value) })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-time">发布时间</Label>
+                <Input
+                  id="edit-time"
+                  type="time"
+                  value={editFormData.schedule_time}
+                  onChange={(e) => setEditFormData({ ...editFormData, schedule_time: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="edit-recurring"
+                checked={editFormData.is_recurring}
+                onCheckedChange={(checked) => 
+                  setEditFormData({ ...editFormData, is_recurring: checked as boolean })
+                }
+              />
+              <Label htmlFor="edit-recurring">循环执行</Label>
+            </div>
+
+            {editFormData.is_recurring && (
+              <>
+                <div>
+                  <Label>执行日期</Label>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {WEEKDAYS.map((day) => (
+                      <div key={day.value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`edit-day-${day.value}`}
+                          checked={editFormData.schedule_days.includes(day.value)}
+                          onCheckedChange={() => toggleEditDay(day.value)}
+                        />
+                        <Label htmlFor={`edit-day-${day.value}`} className="text-sm">
+                          {day.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-start-date">开始日期（可选）</Label>
+                    <Input
+                      id="edit-start-date"
+                      type="date"
+                      value={editFormData.start_date}
+                      onChange={(e) => setEditFormData({ ...editFormData, start_date: e.target.value })}
+                      placeholder="不设置则立即开始"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-end-date">结束日期（可选）</Label>
+                    <Input
+                      id="edit-end-date"
+                      type="date"
+                      value={editFormData.end_date}
+                      onChange={(e) => setEditFormData({ ...editFormData, end_date: e.target.value })}
+                      placeholder="不设置则永久执行"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => setEditingJob(null)}>
+                取消
+              </Button>
+              <Button onClick={handleUpdateJob} disabled={isLoading}>
+                保存更改
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
