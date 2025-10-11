@@ -171,6 +171,8 @@ async function selectBestColoringPage(
   supabase: any,
   userId: string
 ): Promise<ColoringPage | null> {
+  console.log(`Selecting coloring page for user ${userId}`);
+  
   // 获取最近30天内已发布的涂色页ID
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -183,28 +185,58 @@ async function selectBestColoringPage(
     .gte('posted_at', thirtyDaysAgo.toISOString());
 
   const recentPageIds = recentPosts?.map((p: any) => p.coloring_page_id).filter(Boolean) || [];
+  console.log(`Found ${recentPageIds.length} recently posted pages`);
 
   // 查询高质量、未重复的涂色页
   let query = supabase
     .from('coloring_pages')
-    .select('id, title, image_url, category_id, description')
-    .eq('status', 'published')
-    .order('download_count', { ascending: false })
-    .limit(10);
+    .select('id, title, image_url, category_id, description, download_count')
+    .eq('status', 'published');
 
+  // 使用正确的Supabase语法排除最近发布的页面
   if (recentPageIds.length > 0) {
     query = query.not('id', 'in', `(${recentPageIds.join(',')})`);
   }
 
-  const { data: pages, error } = await query;
+  // 按下载次数排序，如果没有download_count字段则按created_at排序
+  const { data: pages, error } = await query
+    .order('download_count', { ascending: false, nullsFirst: false })
+    .limit(20);
 
-  if (error || !pages || pages.length === 0) {
+  console.log(`Query result: ${pages?.length || 0} pages found, error:`, error);
+
+  if (error) {
+    console.error('Error querying coloring pages:', error);
+    
+    // 尝试更简单的查询（不排除最近的，不按download_count排序）
+    const { data: fallbackPages, error: fallbackError } = await supabase
+      .from('coloring_pages')
+      .select('id, title, image_url, category_id, description')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    
+    console.log(`Fallback query: ${fallbackPages?.length || 0} pages, error:`, fallbackError);
+    
+    if (fallbackError || !fallbackPages || fallbackPages.length === 0) {
+      return null;
+    }
+    
+    // 从fallback结果中随机选择
+    return fallbackPages[Math.floor(Math.random() * fallbackPages.length)];
+  }
+
+  if (!pages || pages.length === 0) {
+    console.log('No published pages found in database');
     return null;
   }
 
-  // 随机选择一个（从前5个中选）
-  const topPages = pages.slice(0, Math.min(5, pages.length));
-  return topPages[Math.floor(Math.random() * topPages.length)];
+  // 随机选择一个（从前10个中选）
+  const topPages = pages.slice(0, Math.min(10, pages.length));
+  const selected = topPages[Math.floor(Math.random() * topPages.length)];
+  console.log(`Selected page: ${selected.title} (ID: ${selected.id})`);
+  
+  return selected;
 }
 
 async function generateAIContent(
