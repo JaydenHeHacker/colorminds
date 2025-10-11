@@ -38,8 +38,30 @@ export const Header = () => {
     return () => subscription.unsubscribe();
   }, []);
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logged out successfully");
+    try {
+      // Clear all Supabase-related localStorage keys
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-') || key.includes('supabase')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Sign out with global scope to clear all sessions
+      await supabase.auth.signOut({ scope: 'global' });
+      
+      // Clear user state immediately
+      setUser(null);
+      
+      toast.success("Logged out successfully");
+      
+      // Force reload to clear all cached state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error("Failed to logout");
+    }
   };
 
   return <>
