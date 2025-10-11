@@ -44,6 +44,15 @@ const WEEKDAYS = [
   { value: 0, label: "周日" }
 ];
 
+const getWeekdayLabels = (days: number[]) => {
+  if (!days || days.length === 0) return "-";
+  if (days.length === 7) return "每天";
+  return days
+    .sort((a, b) => a - b)
+    .map(day => WEEKDAYS.find(wd => wd.value === day)?.label || "")
+    .join("、");
+};
+
 export const PublishingJobsManager = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [jobs, setJobs] = useState<PublishingJob[]>([]);
@@ -337,14 +346,15 @@ export const PublishingJobsManager = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>任务名称</TableHead>
-                <TableHead>类目</TableHead>
-                <TableHead>发布数量</TableHead>
-                <TableHead>执行时间</TableHead>
-                <TableHead>类型</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>下次执行</TableHead>
-                <TableHead>操作</TableHead>
+              <TableHead>任务名称</TableHead>
+              <TableHead>类目</TableHead>
+              <TableHead>发布数量</TableHead>
+              <TableHead>执行时间</TableHead>
+              <TableHead>执行日期</TableHead>
+              <TableHead>类型</TableHead>
+              <TableHead>状态</TableHead>
+              <TableHead>下次执行</TableHead>
+              <TableHead>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -353,7 +363,14 @@ export const PublishingJobsManager = () => {
                   <TableCell>{job.name}</TableCell>
                   <TableCell>{job.categories?.name || "所有类目"}</TableCell>
                   <TableCell>{job.publish_count} 篇</TableCell>
-                  <TableCell>{job.schedule_time}</TableCell>
+                  <TableCell className="font-mono font-semibold text-primary">
+                    {job.schedule_time.substring(0, 5)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {getWeekdayLabels(job.schedule_days)}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={job.is_recurring ? "default" : "secondary"}>
                       {job.is_recurring ? "循环" : "一次性"}
