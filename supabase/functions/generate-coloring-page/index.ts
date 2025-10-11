@@ -45,8 +45,17 @@ serve(async (req) => {
 
     const settings = lineSettings[difficulty] || lineSettings.medium;
 
-    // Build structured prompt - explicitly request image generation
-    const prompt = `GENERATE AN IMAGE: Create a black-and-white line art coloring page image with the following specifications:
+    // Build structured prompt - explicitly request BLACK AND WHITE LINE ART ONLY
+    const prompt = `CRITICAL: Generate a COLORING BOOK LINE ART image - PURE BLACK OUTLINES ONLY, NO COLOR, NO SHADING!
+
+This must be a traditional coloring book page with ONLY black lines on white background.
+
+🎨 COLORING BOOK FORMAT (MANDATORY):
+- ONLY pure black (#000000) outlines on pure white (#FFFFFF) background
+- ZERO colors - no red, blue, yellow, green, or ANY color at all
+- ZERO shading - no gray tones, no gradients, no shadows
+- Think: "traditional coloring book page that children will color in"
+- The image should look EXACTLY like an uncolored coloring book page
 
 SUBJECT & THEME:
 - Main theme: ${theme}
@@ -59,37 +68,29 @@ LINE ART SPECIFICATIONS:
 - Line quality: Clean, continuous, no breaks or gaps
 - Detail level: ${settings.detail_level}
 - All shapes must be closed (no open paths) for easy coloring
-
-STYLE REQUIREMENTS (CRITICAL):
-- Pure black lines (#000000) on white background (#FFFFFF)
-- Absolutely NO gradients, shading, or gray tones
-- NO colors - only black outlines
-- High contrast for clear printing
-- Large clear spaces suitable for coloring
-- Age-appropriate and child-friendly content
+- Style: Simple line drawing, like a traditional coloring book
 
 TECHNICAL SPECS:
 - Square aspect ratio (1:1)
 - High resolution for printing (300 DPI equivalent)
 - Safe margins: 10% border space around the main subject
-- Printable and suitable for coloring books
+- Age-appropriate and child-friendly content
 
-IMPORTANT: You must generate the actual coloring page IMAGE, not just text descriptions.
-
-After generating the image, also provide:
+After generating the image, provide:
 - A clear, descriptive English title (e.g., "Happy Elephant Playing in the Garden")
 - An engaging 1-2 sentence description for US/UK parents and children
 
-NEGATIVE PROMPTS (DO NOT INCLUDE):
-- No colors, shading, gradients, or gray tones
-- No blurry, broken, or disconnected lines
-- No photorealistic textures or details
-- No small complex details that are hard to color
-- No violent, scary, or inappropriate content
-- No text, logos, or brand names within the image
-- Avoid complexity beyond the ${settings.age_group} skill level
+❌ ABSOLUTELY FORBIDDEN (WILL BE REJECTED):
+- ANY colors (red, blue, yellow, green, etc.) - ONLY BLACK LINES ALLOWED
+- Gray tones, shading, gradients, or shadows
+- Filled/colored areas - all areas must be WHITE for coloring
+- Photorealistic textures or 3D effects
+- Blurry, broken, or disconnected lines
+- Text, logos, or brand names within the image
+- Violent, scary, or inappropriate content
+- Complexity beyond the ${settings.age_group} skill level
 
-OUTPUT: A clean, professional coloring page ready for printing and use in a coloring book.`;
+REMEMBER: This is a COLORING BOOK page - children will add the colors later. Generate ONLY the black outlines!`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
