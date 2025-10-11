@@ -284,7 +284,7 @@ export function SocialMediaManager() {
     }
   };
 
-  const testAutoPost = async () => {
+  const testAutoPost = async (strategy?: 'series_a' | 'series_b' | 'series_c' | 'single_a' | 'single_b' | 'single_c') => {
     try {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -294,13 +294,19 @@ export function SocialMediaManager() {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
+        body: {
+          testMode: true,
+          strategy: strategy || null
+        }
       });
 
       if (error) throw error;
 
       toast({
         title: "测试完成",
-        description: data.message || "查看控制台了解详情",
+        description: strategy 
+          ? `已使用 ${strategy} 策略发布到 r/test` 
+          : data.message || "已发布到 r/test",
       });
 
       console.log('Auto-post test result:', data);
@@ -935,15 +941,86 @@ export function SocialMediaManager() {
             </div>
 
             {/* 测试按钮 */}
-            <div className="flex gap-2">
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">🧪 策略测试（仅发到 r/test）</Label>
+              
+              {/* 系列策略 */}
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">系列故事策略：</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    onClick={() => testAutoPost('series_a')}
+                    disabled={loading || !connections.find(c => c.platform === 'reddit' && c.is_active)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                    系列推荐 (50%)
+                  </Button>
+                  <Button
+                    onClick={() => testAutoPost('series_b')}
+                    disabled={loading || !connections.find(c => c.platform === 'reddit' && c.is_active)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                    系列+AI (30%)
+                  </Button>
+                  <Button
+                    onClick={() => testAutoPost('series_c')}
+                    disabled={loading || !connections.find(c => c.platform === 'reddit' && c.is_active)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                    纯分享 (20%)
+                  </Button>
+                </div>
+              </div>
+
+              {/* 单页策略 */}
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">单页内容策略：</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    onClick={() => testAutoPost('single_a')}
+                    disabled={loading || !connections.find(c => c.platform === 'reddit' && c.is_active)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                    来源提及 (70%)
+                  </Button>
+                  <Button
+                    onClick={() => testAutoPost('single_b')}
+                    disabled={loading || !connections.find(c => c.platform === 'reddit' && c.is_active)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                    AI 功能 (20%)
+                  </Button>
+                  <Button
+                    onClick={() => testAutoPost('single_c')}
+                    disabled={loading || !connections.find(c => c.platform === 'reddit' && c.is_active)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                    纯内容 (10%)
+                  </Button>
+                </div>
+              </div>
+
+              {/* 随机测试 */}
               <Button
-                onClick={testAutoPost}
+                onClick={() => testAutoPost()}
                 disabled={loading || !connections.find(c => c.platform === 'reddit' && c.is_active)}
-                variant="outline"
-                className="flex-1"
+                variant="default"
+                className="w-full"
               >
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                🧪 测试运行一次
+                🎲 随机策略测试
               </Button>
             </div>
 

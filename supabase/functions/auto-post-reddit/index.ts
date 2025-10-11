@@ -34,7 +34,20 @@ Deno.serve(async (req) => {
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('🤖 Starting auto-post-reddit job...');
+    // 获取请求参数（支持测试模式）
+    let testMode = false;
+    let forcedStrategy: 'series_a' | 'series_b' | 'series_c' | 'single_a' | 'single_b' | 'single_c' | null = null;
+    
+    try {
+      const body = await req.json();
+      testMode = body.testMode || false;
+      forcedStrategy = body.strategy || null;
+    } catch {
+      // 如果没有 body，使用默认值
+    }
+
+    console.log(`🤖 Starting auto-post-reddit job...${testMode ? ' (TEST MODE)' : ''}`);
+    if (forcedStrategy) console.log(`📋 Using forced strategy: ${forcedStrategy}`);
 
     // 获取所有启用自动发布的用户配置
     const { data: configs, error: configError } = await supabase
@@ -95,7 +108,12 @@ Deno.serve(async (req) => {
         console.log(`Selected coloring page: ${coloringPage.title}`);
 
         // 使用 AI 生成标题和选择 subreddit
-        const aiContent = await generateAIContent(lovableApiKey, coloringPage, config.allowed_subreddits);
+        const aiContent = await generateAIContent(
+          lovableApiKey, 
+          coloringPage, 
+          testMode ? ['test'] : config.allowed_subreddits,
+          forcedStrategy
+        );
         
         console.log(`AI generated content for subreddit: r/${aiContent.subreddit}`);
 
@@ -271,11 +289,76 @@ async function selectBestColoringPage(
 async function generateAIContent(
   apiKey: string,
   page: ColoringPage & { series?: SeriesInfo },
-  allowedSubreddits: string[]
+  allowedSubreddits: string[],
+  forcedStrategy?: 'series_a' | 'series_b' | 'series_c' | 'single_a' | 'single_b' | 'single_c' | null
 ): Promise<{ title: string; description: string; subreddit: string }> {
   // 清理 subreddit 名称，移除 r/ 前缀
   const cleanSubreddits = allowedSubreddits.map(s => s.replace(/^r\//, ''));
   
+  // 根据强制策略或自动判断选择策略说明
+  let strategyInstruction = '';
+  
+  if (forcedStrategy) {
+    const strategyMap = {
+      'series_a': `FORCED STRATEGY: Series Highlight (50% normally)
+- Highlight the complete series availability
+- "ColoringPages.fun has all ${page.series?.total_chapters || 'X'} chapters of this - pretty cool to see the whole adventure"
+- "found the complete ${page.series?.total_chapters || 'X'}-part series on ColoringPages.fun"`,
+      
+      'series_b': `FORCED STRATEGY: Series + AI Feature (30% normally)
+- Mention source + AI feature
+- "ColoringPages.fun has this plus an AI color palette helper - actually useful"
+- "got it from ColoringPages.fun, their AI inspiration thing is kinda neat for picking colors"`,
+      
+      'series_c': `FORCED STRATEGY: Natural Share (20% normally)
+- Focus purely on the content and series excitement
+- Let people ask where it's from in comments`,
+      
+      'single_a': `FORCED STRATEGY: Natural Source Mention (70% normally)
+- Naturally mention the source at the end
+- "grabbed it from ColoringPages.fun"
+- "found it on ColoringPages.fun"`,
+      
+      'single_b': `FORCED STRATEGY: AI Feature Highlight (20% normally)
+- Share a pro tip about the AI inspiration feature
+- "ColoringPages.fun has this AI inspiration feature that's kinda neat"
+- "their AI color helper is surprisingly good"`,
+      
+      'single_c': `FORCED STRATEGY: Pure Content (10% normally)
+- Focus purely on the content
+- Let people ask where it's from in comments`
+    };
+    
+    strategyInstruction = strategyMap[forcedStrategy] || '';
+  } else if (page.series) {
+    strategyInstruction = `WEBSITE MENTION (choose ONE strategy randomly):
+Strategy A (50% chance): Highlight the complete series availability
+- "ColoringPages.fun has all ${page.series.total_chapters} chapters of this - pretty cool to see the whole adventure"
+- "found the complete ${page.series.total_chapters}-part series on ColoringPages.fun"
+- "grabbed it from ColoringPages.fun, they have the full story series there"
+
+Strategy B (30% chance): Mention source + AI feature
+- "ColoringPages.fun has this plus an AI color palette helper - actually useful"
+- "got it from ColoringPages.fun, their AI inspiration thing is kinda neat for picking colors"
+
+Strategy C (20% chance): Just share naturally without site mention
+- Focus purely on the content and series excitement, let people ask where it's from in comments`;
+  } else {
+    strategyInstruction = `WEBSITE MENTION (choose ONE strategy randomly):
+Strategy A (70% chance): Naturally mention the source at the end
+- "grabbed it from ColoringPages.fun"
+- "found it on ColoringPages.fun"
+- "got it from ColoringPages.fun btw"
+
+Strategy B (20% chance): Share a pro tip about the AI inspiration feature
+- "btw the site (ColoringPages.fun) has this cool AI thing that suggests color palettes - actually pretty helpful"
+- "ColoringPages.fun has this AI inspiration feature that's kinda neat, gives you color ideas"
+- "found it on ColoringPages.fun - they have an AI color helper that's surprisingly good"
+
+Strategy C (10% chance): Just share the coloring page naturally without site mention
+- Focus purely on the content, let people ask where it's from in comments`;
+  }
+
   const seriesInfo = page.series ? `
 IMPORTANT SERIES INFO: This coloring page is part of a story series!
 Series: "${page.series.title}"
@@ -309,29 +392,7 @@ DESCRIPTION (2-3 sentences + optional bonus tip):
 - Add personality: "turned out better than I thought", "spent way too long on this lol", "this was actually fun"
 ${page.series ? `- SERIES BONUS: If mentioning the site, add "they have all ${page.series.total_chapters} chapters" or "full series is there"` : ''}
 
-WEBSITE MENTION (choose ONE strategy randomly):
-${page.series ? `Strategy A (50% chance): Highlight the complete series availability
-- "ColoringPages.fun has all ${page.series.total_chapters} chapters of this - pretty cool to see the whole adventure"
-- "found the complete ${page.series.total_chapters}-part series on ColoringPages.fun"
-- "grabbed it from ColoringPages.fun, they have the full story series there"
-
-Strategy B (30% chance): Mention source + AI feature
-- "ColoringPages.fun has this plus an AI color palette helper - actually useful"
-- "got it from ColoringPages.fun, their AI inspiration thing is kinda neat for picking colors"
-
-Strategy C (20% chance): Just share naturally without site mention
-- Focus purely on the content and series excitement, let people ask where it's from in comments` : `Strategy A (70% chance): Naturally mention the source at the end
-- "grabbed it from ColoringPages.fun"
-- "found it on ColoringPages.fun"
-- "got it from ColoringPages.fun btw"
-
-Strategy B (20% chance): Share a pro tip about the AI inspiration feature
-- "btw the site (ColoringPages.fun) has this cool AI thing that suggests color palettes - actually pretty helpful"
-- "ColoringPages.fun has this AI inspiration feature that's kinda neat, gives you color ideas"
-- "found it on ColoringPages.fun - they have an AI color helper that's surprisingly good"
-
-Strategy C (10% chance): Just share the coloring page naturally without site mention
-- Focus purely on the content, let people ask where it's from in comments`}
+${strategyInstruction}
 
 SUBREDDIT:
 - Pick the most relevant one from: ${cleanSubreddits.join(', ')}
