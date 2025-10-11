@@ -34,6 +34,7 @@ export default function ManageColoringPages() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [editingPage, setEditingPage] = useState<any>(null);
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
@@ -216,8 +217,9 @@ export default function ManageColoringPages() {
     
     const matchesCategory = !selectedCategory || page.category_id === selectedCategory;
     const matchesDifficulty = !selectedDifficulty || page.difficulty === selectedDifficulty;
+    const matchesStatus = !selectedStatus || page.status === selectedStatus;
     
-    return matchesSearch && matchesCategory && matchesDifficulty;
+    return matchesSearch && matchesCategory && matchesDifficulty && matchesStatus;
   });
 
   const handleToggleSelect = (pageId: string) => {
@@ -318,7 +320,7 @@ export default function ManageColoringPages() {
     <div className="space-y-6">
       {/* Filters and Search */}
       <Card className="p-6">
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <div className="md:col-span-2">
             <Label>搜索</Label>
             <div className="relative">
@@ -335,10 +337,10 @@ export default function ManageColoringPages() {
           <div>
             <Label>分类</Label>
             <Select value={selectedCategory || "all"} onValueChange={(v) => setSelectedCategory(v === "all" ? null : v)}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-background">
                 <SelectValue placeholder="全部分类" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover z-50">
                 <SelectItem value="all">全部分类</SelectItem>
                 {categories?.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
@@ -352,14 +354,28 @@ export default function ManageColoringPages() {
           <div>
             <Label>难度</Label>
             <Select value={selectedDifficulty || "all"} onValueChange={(v) => setSelectedDifficulty(v === "all" ? null : v)}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-background">
                 <SelectValue placeholder="全部难度" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover z-50">
                 <SelectItem value="all">全部难度</SelectItem>
                 <SelectItem value="easy">🟢 简单</SelectItem>
                 <SelectItem value="medium">🟡 中等</SelectItem>
                 <SelectItem value="hard">🔴 困难</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label>状态</Label>
+            <Select value={selectedStatus || "all"} onValueChange={(v) => setSelectedStatus(v === "all" ? null : v)}>
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="全部状态" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="all">全部状态</SelectItem>
+                <SelectItem value="draft">📝 草稿</SelectItem>
+                <SelectItem value="published">✅ 已发布</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -506,6 +522,13 @@ export default function ManageColoringPages() {
                   </div>
                   
                   <div className="flex flex-wrap gap-2 text-xs">
+                    <span className={`px-2 py-1 rounded-full ${
+                      page.status === 'draft' 
+                        ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' 
+                        : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                    }`}>
+                      {page.status === 'draft' ? '📝 草稿' : '✅ 已发布'}
+                    </span>
                     <span className="px-2 py-1 rounded-full bg-primary/10 text-primary">
                       {page.categories?.name || '未分类'}
                     </span>
@@ -516,7 +539,7 @@ export default function ManageColoringPages() {
                       </span>
                     )}
                     {page.series_title && (
-                      <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                      <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
                         📚 {page.series_title} ({page.series_order}/{page.series_total})
                       </span>
                     )}
