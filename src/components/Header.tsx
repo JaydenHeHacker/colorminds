@@ -24,24 +24,13 @@ export const Header = () => {
   
   useEffect(() => {
     // Set up listener FIRST
-    const {
-      data: {
-        subscription
-      }
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Header - Auth state changed:', event, session?.user?.email, 'provider:', session?.user?.app_metadata?.provider);
-      console.log('Header - localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('sb-')));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
     });
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({
-      data: {
-        session
-      }
-    }) => {
-      console.log('Header - Initial session check:', session?.user?.email);
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
     });
@@ -49,7 +38,6 @@ export const Header = () => {
     return () => subscription.unsubscribe();
   }, []);
   const handleLogout = async () => {
-    console.log('Header - handleLogout called');
     try {
       // Sign out with global scope - this will clear localStorage automatically
       await supabase.auth.signOut({ scope: 'global' });
