@@ -36,6 +36,8 @@ export default function ManageColoringPages() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
   const [editingPage, setEditingPage] = useState<any>(null);
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -51,19 +53,16 @@ export default function ManageColoringPages() {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .order('level', { ascending: true })
+        .eq('level', 1)  // 只获取顶级分类
         .order('name');
       if (error) throw error;
       return data;
     },
   });
 
-  // 组织分类树结构用于显示
+  // 简化分类标签显示
   const getCategoryLabel = (cat: any) => {
-    const level = cat.level || 1;
-    const indent = '  '.repeat(Math.max(0, level - 1));
-    const levelPrefix = level === 1 ? '' : '└─ ';
-    return `${indent}${levelPrefix}${cat.icon} ${cat.name}`;
+    return `${cat.icon} ${cat.name}`;
   };
 
   const { data: coloringPages, isLoading } = useQuery({
@@ -222,6 +221,15 @@ export default function ManageColoringPages() {
     return matchesSearch && matchesCategory && matchesDifficulty && matchesStatus;
   });
 
+  // 分页逻辑
+  const totalPages = Math.ceil((filteredPages?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedPages = filteredPages?.slice(startIndex, endIndex);
+
+  // 当筛选条件改变时重置页码
+  const resetPagination = () => setCurrentPage(1);
+
   const handleToggleSelect = (pageId: string) => {
     const newSelected = new Set(selectedPages);
     if (newSelected.has(pageId)) {
@@ -233,10 +241,10 @@ export default function ManageColoringPages() {
   };
 
   const handleSelectAll = () => {
-    if (selectedPages.size === filteredPages?.length) {
+    if (selectedPages.size === paginatedPages?.length) {
       setSelectedPages(new Set());
     } else {
-      setSelectedPages(new Set(filteredPages?.map(p => p.id) || []));
+      setSelectedPages(new Set(paginatedPages?.map(p => p.id) || []));
     }
   };
 
@@ -328,7 +336,10 @@ export default function ManageColoringPages() {
               <Input
                 placeholder="搜索标题、描述或系列..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  resetPagination();
+                }}
                 className="pl-9"
               />
             </div>
@@ -336,11 +347,17 @@ export default function ManageColoringPages() {
           
           <div>
             <Label>分类</Label>
-            <Select value={selectedCategory || "all"} onValueChange={(v) => setSelectedCategory(v === "all" ? null : v)}>
+            <Select 
+              value={selectedCategory || "all"} 
+              onValueChange={(v) => {
+                setSelectedCategory(v === "all" ? null : v);
+                resetPagination();
+              }}
+            >
               <SelectTrigger className="bg-background">
                 <SelectValue placeholder="全部分类" />
               </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
+              <SelectContent className="bg-popover z-50 max-h-[300px]">
                 <SelectItem value="all">全部分类</SelectItem>
                 {categories?.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
@@ -353,7 +370,13 @@ export default function ManageColoringPages() {
           
           <div>
             <Label>难度</Label>
-            <Select value={selectedDifficulty || "all"} onValueChange={(v) => setSelectedDifficulty(v === "all" ? null : v)}>
+            <Select 
+              value={selectedDifficulty || "all"} 
+              onValueChange={(v) => {
+                setSelectedDifficulty(v === "all" ? null : v);
+                resetPagination();
+              }}
+            >
               <SelectTrigger className="bg-background">
                 <SelectValue placeholder="全部难度" />
               </SelectTrigger>
@@ -368,7 +391,13 @@ export default function ManageColoringPages() {
           
           <div>
             <Label>状态</Label>
-            <Select value={selectedStatus || "all"} onValueChange={(v) => setSelectedStatus(v === "all" ? null : v)}>
+            <Select 
+              value={selectedStatus || "all"} 
+              onValueChange={(v) => {
+                setSelectedStatus(v === "all" ? null : v);
+                resetPagination();
+              }}
+            >
               <SelectTrigger className="bg-background">
                 <SelectValue placeholder="全部状态" />
               </SelectTrigger>
@@ -441,14 +470,14 @@ export default function ManageColoringPages() {
       {/* Results Info */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          共 {filteredPages?.length || 0} 个涂色页
+          共 {filteredPages?.length || 0} 个涂色页，当前第 {currentPage}/{totalPages} 页
         </p>
         <Button
           variant="outline"
           size="sm"
           onClick={handleSelectAll}
         >
-          {selectedPages.size === filteredPages?.length ? "取消全选" : "全选"}
+          {selectedPages.size === paginatedPages?.length ? "取消全选" : "全选当前页"}
         </Button>
       </div>
 
@@ -457,9 +486,10 @@ export default function ManageColoringPages() {
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      ) : filteredPages && filteredPages.length > 0 ? (
-        <div className="grid gap-4">
-          {filteredPages.map((page) => (
+      ) : paginatedPages && paginatedPages.length > 0 ? (
+        <>
+          <div className="grid gap-4">
+            {paginatedPages.map((page) => (
             <Card key={page.id} className="p-4">
               <div className="flex gap-4">
                 <div className="flex items-center">
@@ -552,6 +582,57 @@ export default function ManageColoringPages() {
             </Card>
           ))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              上一页
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 7) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 4) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 3) {
+                  pageNum = totalPages - 6 + i;
+                } else {
+                  pageNum = currentPage - 3 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className="w-10"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              下一页
+            </Button>
+          </div>
+        )}
+      </>
       ) : (
         <Card className="p-12">
           <p className="text-center text-muted-foreground">
