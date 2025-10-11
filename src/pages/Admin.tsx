@@ -20,6 +20,7 @@ import ManageArtwork from "@/components/admin/ManageArtwork";
 import ManageContactMessages from "@/components/admin/ManageContactMessages";
 import { SocialMediaManager } from "@/components/admin/SocialMediaManager";
 import { KeywordVolumeAnalyzer } from "@/components/admin/KeywordVolumeAnalyzer";
+import { CSVAnalysisReport } from "@/components/admin/CSVAnalysisReport";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -269,7 +270,7 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="keywords">
-            <KeywordVolumeAnalyzer />
+            <CSVAnalysisReport />
           </TabsContent>
         </Tabs>
       </div>
