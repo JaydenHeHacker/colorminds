@@ -35,29 +35,16 @@ export default function Auth() {
     // Get redirect parameter from URL
     const params = new URLSearchParams(window.location.search);
     const redirectPath = params.get('redirect');
-    const error = params.get('error');
-    const errorDescription = params.get('error_description');
-    
-    // Handle OAuth errors
-    if (error) {
-      toast.error(errorDescription || 'Authentication failed');
-      setIsGoogleLoading(false);
-    }
     
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        toast.error('Failed to restore session');
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        toast.success('Welcome back!');
         navigate(redirectPath || "/");
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        toast.success('Successfully signed in!');
+      if (session) {
         navigate(redirectPath || "/");
       }
     });

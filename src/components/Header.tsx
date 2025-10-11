@@ -21,61 +21,25 @@ export const Header = () => {
     isAdmin
   } = useUserRole(user);
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    // Listen to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Header: Auth state changed:', event);
-      setUser(session?.user ?? null);
-      
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
+    supabase.auth.getSession().then(({
+      data: {
+        session
       }
+    }) => {
+      setUser(session?.user ?? null);
     });
-
+    const {
+      data: {
+        subscription
+      }
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
     return () => subscription.unsubscribe();
   }, []);
-
   const handleLogout = async () => {
-    try {
-      console.log('Starting logout process...');
-      setUser(null); // Immediately update UI
-      
-      // Sign out with scope 'local' to clear local storage
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
-      
-      if (error) {
-        console.error("Logout error:", error);
-        toast.error("Failed to log out: " + error.message);
-        return;
-      }
-      
-      // Manually clear ALL Supabase auth data from localStorage
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('sb-')) {
-          keysToRemove.push(key);
-        }
-      }
-      
-      console.log('Clearing localStorage keys:', keysToRemove);
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-      
-      toast.success("Logged out successfully");
-      
-      // Force a small delay before navigation to ensure cleanup completes
-      setTimeout(() => {
-        navigate("/");
-        window.location.reload(); // Force reload to clear any cached state
-      }, 100);
-    } catch (error: any) {
-      console.error("Logout exception:", error);
-      toast.error("Failed to log out");
-    }
+    await supabase.auth.signOut();
+    toast.success("Logged out successfully");
   };
 
   return <>
