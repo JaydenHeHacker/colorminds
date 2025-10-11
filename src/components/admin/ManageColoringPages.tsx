@@ -65,10 +65,41 @@ export default function ManageColoringPages() {
     return cat.name;
   };
 
-  const { data: coloringPages, isLoading } = useQuery({
-    queryKey: ['admin-coloring-pages'],
+  // 查询总数
+  const { data: totalCount } = useQuery({
+    queryKey: ['admin-coloring-pages-count', searchQuery, selectedCategory, selectedDifficulty, selectedStatus],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
+        .from('coloring_pages')
+        .select('*', { count: 'exact', head: true });
+
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,series_title.ilike.%${searchQuery}%`);
+      }
+      if (selectedCategory) {
+        query = query.eq('category_id', selectedCategory);
+      }
+      if (selectedDifficulty) {
+        query = query.eq('difficulty', selectedDifficulty as 'easy' | 'medium' | 'hard');
+      }
+      if (selectedStatus) {
+        query = query.eq('status', selectedStatus);
+      }
+
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  // 分页查询数据
+  const { data: coloringPages, isLoading } = useQuery({
+    queryKey: ['admin-coloring-pages', currentPage, searchQuery, selectedCategory, selectedDifficulty, selectedStatus],
+    queryFn: async () => {
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      let query = supabase
         .from('coloring_pages')
         .select(`
           *,
@@ -79,8 +110,22 @@ export default function ManageColoringPages() {
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(10000);  // 增加查询限制以获取所有数据
-      
+        .range(from, to);
+
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,series_title.ilike.%${searchQuery}%`);
+      }
+      if (selectedCategory) {
+        query = query.eq('category_id', selectedCategory);
+      }
+      if (selectedDifficulty) {
+        query = query.eq('difficulty', selectedDifficulty as 'easy' | 'medium' | 'hard');
+      }
+      if (selectedStatus) {
+        query = query.eq('status', selectedStatus);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -209,24 +254,9 @@ export default function ManageColoringPages() {
     },
   });
 
-  const filteredPages = coloringPages?.filter(page => {
-    const matchesSearch = !searchQuery || 
-      page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      page.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      page.series_title?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = !selectedCategory || page.category_id === selectedCategory;
-    const matchesDifficulty = !selectedDifficulty || page.difficulty === selectedDifficulty;
-    const matchesStatus = !selectedStatus || page.status === selectedStatus;
-    
-    return matchesSearch && matchesCategory && matchesDifficulty && matchesStatus;
-  });
-
-  // 分页逻辑
-  const totalPages = Math.ceil((filteredPages?.length || 0) / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedPages = filteredPages?.slice(startIndex, endIndex);
+  // 服务端分页，直接使用查询结果
+  const totalPages = Math.ceil((totalCount || 0) / itemsPerPage);
+  const paginatedPages = coloringPages;
 
   // 当筛选条件改变时重置页码
   const resetPagination = () => setCurrentPage(1);
@@ -471,7 +501,7 @@ export default function ManageColoringPages() {
       {/* Results Info */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          共 {filteredPages?.length || 0} 个涂色页，当前第 {currentPage}/{totalPages} 页
+          共 {totalCount || 0} 个涂色页，当前第 {currentPage}/{totalPages} 页
         </p>
         <Button
           variant="outline"
