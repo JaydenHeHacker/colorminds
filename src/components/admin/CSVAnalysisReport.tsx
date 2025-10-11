@@ -109,14 +109,15 @@ export const CSVAnalysisReport = () => {
           cat.keywords.reduce((sum, kw) => sum + kw.kd, 0) / cat.keywords.length
         );
         
-        // Priority score: (total volume / 1000) - (avg KD * 10)
-        cat.priority = Math.round((cat.volume / 1000) - (cat.avgKD * 10));
+        // Priority score: volume - (avg KD * 100)
+        // This ensures high-volume categories get high priority, with KD penalty
+        cat.priority = Math.round(cat.volume - (cat.avgKD * 100));
         
         return cat;
       });
 
-      // Sort by priority
-      categories.sort((a, b) => b.priority - a.volume);
+      // Sort by priority (highest first)
+      categories.sort((a, b) => b.priority - a.priority);
 
       // Find opportunities (low KD, high volume)
       const opportunities = allKeywords
@@ -155,9 +156,9 @@ export const CSVAnalysisReport = () => {
         avgKD: report.avgKD,
         categories: report.categories.length
       },
-      phase1: report.categories.filter(c => c.priority > 2000).slice(0, 30),
-      phase2: report.categories.filter(c => c.priority > 500 && c.priority <= 2000).slice(0, 70),
-      phase3: report.categories.filter(c => c.priority <= 500).slice(0, 100),
+      phase1: report.categories.filter(c => c.priority > 10000).slice(0, 30),
+      phase2: report.categories.filter(c => c.priority > 3000 && c.priority <= 10000).slice(0, 70),
+      phase3: report.categories.filter(c => c.priority <= 3000).slice(0, 100),
       opportunities: report.opportunities
     };
 
@@ -259,13 +260,13 @@ export const CSVAnalysisReport = () => {
                 <CardHeader>
                   <CardTitle>第一阶段：核心类目（优先级最高）</CardTitle>
                   <CardDescription>
-                    优先级分数 &gt; 2000，预计1-2周完成
+                    优先级分数 &gt; 10,000，预计1-2周完成，前30个类目
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {report.categories
-                      .filter(c => c.priority > 2000)
+                      .filter(c => c.priority > 10000)
                       .slice(0, 30)
                       .map((cat, idx) => (
                         <div key={idx} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
@@ -303,13 +304,13 @@ export const CSVAnalysisReport = () => {
                 <CardHeader>
                   <CardTitle>第二阶段：扩展类目（高优先级）</CardTitle>
                   <CardDescription>
-                    优先级分数 500-2000，预计2-4周完成
+                    优先级分数 3,000-10,000，预计2-4周完成，前70个类目
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {report.categories
-                      .filter(c => c.priority > 500 && c.priority <= 2000)
+                      .filter(c => c.priority > 3000 && c.priority <= 10000)
                       .slice(0, 70)
                       .map((cat, idx) => (
                         <div key={idx} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
@@ -333,15 +334,15 @@ export const CSVAnalysisReport = () => {
             <TabsContent value="phase3" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>第三阶段:长尾类目（持续优化）</CardTitle>
+                  <CardTitle>第三阶段：长尾类目（持续优化）</CardTitle>
                   <CardDescription>
-                    优先级分数 &lt; 500，持续添加
+                    优先级分数 &lt; 3,000，持续添加，前100个类目
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {report.categories
-                      .filter(c => c.priority <= 500)
+                      .filter(c => c.priority <= 3000)
                       .slice(0, 100)
                       .map((cat, idx) => (
                         <div key={idx} className="flex items-center justify-between p-2 border rounded hover:bg-muted/50">
