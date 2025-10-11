@@ -118,11 +118,23 @@ OUTPUT: A clean, professional coloring page ready for printing and use in a colo
 
     const data = await response.json();
     console.log('AI response received');
+    
+    // Debug: Log the response structure
+    console.log('AI response structure:', JSON.stringify({
+      hasChoices: !!data.choices,
+      choicesLength: data.choices?.length,
+      hasMessage: !!data.choices?.[0]?.message,
+      hasImages: !!data.choices?.[0]?.message?.images,
+      imagesLength: data.choices?.[0]?.message?.images?.length,
+      hasImageUrl: !!data.choices?.[0]?.message?.images?.[0]?.image_url,
+      fullResponse: data
+    }, null, 2));
 
     const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!imageUrl) {
-      throw new Error('No image generated');
+      console.error('No image in AI response. Full response:', JSON.stringify(data));
+      throw new Error('No image generated - AI response missing image data');
     }
 
     // Extract English title from AI response
