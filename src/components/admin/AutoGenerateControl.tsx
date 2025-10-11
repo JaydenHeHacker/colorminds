@@ -96,6 +96,12 @@ export function AutoGenerateControl() {
         throw error;
       }
       
+      // Check if auto-generate is disabled
+      if (data.message === "Auto-generate is disabled") {
+        addLog('info', '⚠️ 自动生成功能已禁用');
+        throw new Error('自动生成功能已禁用，请先在系统设置中启用');
+      }
+      
       if (!data.success) {
         addLog('error', `❌ 生成失败: ${data.error || '未知错误'}`);
         console.error('生成失败:', data.error);
