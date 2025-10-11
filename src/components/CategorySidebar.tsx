@@ -33,7 +33,7 @@ export const CategorySidebar = ({ category, subCategories, totalCount }: Categor
 
   return (
     <aside className="w-full lg:w-64 flex-shrink-0">
-      <div className="sticky top-24">
+      <div className="lg:mt-[280px] sticky top-24">
         <div className="bg-card rounded-lg border p-4 shadow-sm">
           <h3 className="font-semibold text-lg mb-4">Categories</h3>
           
