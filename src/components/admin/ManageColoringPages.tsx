@@ -586,7 +586,16 @@ export default function ManageColoringPages() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
+          <div className="flex items-center justify-center gap-4 mt-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+            >
+              首页
+            </Button>
+            
             <Button
               variant="outline"
               size="sm"
@@ -596,31 +605,22 @@ export default function ManageColoringPages() {
               上一页
             </Button>
             
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 7) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 4) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 3) {
-                  pageNum = totalPages - 6 + i;
-                } else {
-                  pageNum = currentPage - 3 + i;
-                }
-                
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(pageNum)}
-                    className="w-10"
-                  >
-                    {pageNum}
-                  </Button>
-                );
-              })}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">第</span>
+              <Input
+                type="number"
+                min="1"
+                max={totalPages}
+                value={currentPage}
+                onChange={(e) => {
+                  const page = parseInt(e.target.value);
+                  if (page >= 1 && page <= totalPages) {
+                    setCurrentPage(page);
+                  }
+                }}
+                className="w-20 text-center"
+              />
+              <span className="text-sm text-muted-foreground">/ {totalPages} 页</span>
             </div>
 
             <Button
@@ -630,6 +630,15 @@ export default function ManageColoringPages() {
               disabled={currentPage === totalPages}
             >
               下一页
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+            >
+              末页
             </Button>
           </div>
         )}
