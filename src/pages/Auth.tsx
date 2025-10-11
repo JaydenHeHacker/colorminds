@@ -36,14 +36,21 @@ export default function Auth() {
     const params = new URLSearchParams(window.location.search);
     const redirectPath = params.get('redirect');
     
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate(redirectPath || "/");
+    // Set up listener FIRST to catch OAuth callbacks
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth page - Auth state changed:', event, session?.user?.email);
+      if (session && event === 'SIGNED_IN') {
+        console.log('Redirecting to:', redirectPath || "/");
+        // Small delay to ensure session is fully established
+        setTimeout(() => {
+          navigate(redirectPath || "/");
+        }, 100);
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Auth page - Initial session check:', session?.user?.email);
       if (session) {
         navigate(redirectPath || "/");
       }

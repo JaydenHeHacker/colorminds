@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
-import { User as SupabaseUser } from "@supabase/supabase-js";
+import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { toast } from "sonner";
@@ -16,25 +16,35 @@ export const Header = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const {
     isAdmin
   } = useUserRole(user);
+  
   useEffect(() => {
-    supabase.auth.getSession().then(({
-      data: {
-        session
-      }
-    }) => {
-      setUser(session?.user ?? null);
-    });
+    // Set up listener FIRST
     const {
       data: {
         subscription
       }
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
+      setSession(session);
       setUser(session?.user ?? null);
     });
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
+      console.log('Initial session check:', session?.user?.email);
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
     return () => subscription.unsubscribe();
   }, []);
   const handleLogout = async () => {
