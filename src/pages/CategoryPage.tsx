@@ -40,6 +40,51 @@ const CategoryPage = () => {
     enabled: !!pathSlug,
   });
 
+  // Query parent category if current category has a parent_id
+  const { data: parentCategory } = useQuery({
+    queryKey: ['parent-category', category?.parent_id],
+    queryFn: async () => {
+      if (!category?.parent_id) return null;
+      
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('id', category.parent_id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!category?.parent_id,
+  });
+
+  // Build full category hierarchy for breadcrumbs
+  const { data: categoryHierarchy } = useQuery({
+    queryKey: ['category-hierarchy', category?.id],
+    queryFn: async () => {
+      if (!category?.id) return [];
+      
+      const hierarchy: any[] = [category];
+      let currentCat = category;
+      
+      // Recursively get parent categories
+      while (currentCat.parent_id) {
+        const { data: parent, error } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('id', currentCat.parent_id)
+          .maybeSingle();
+        
+        if (error || !parent) break;
+        hierarchy.unshift(parent);
+        currentCat = parent;
+      }
+      
+      return hierarchy;
+    },
+    enabled: !!category?.id,
+  });
+
   // Special handling for "all" category - show top-level categories
   const isAllCategory = category?.slug === 'all' || category?.path === 'all';
 
@@ -205,17 +250,17 @@ const CategoryPage = () => {
     };
   }, [currentPage, totalPages, pathSlug, category]);
 
-  // Build breadcrumb items from category path
+  // Build breadcrumb items from category hierarchy
   const breadcrumbItems: Array<{ label: string; href?: string; isCurrentPage?: boolean }> = [
     { label: 'Home', href: '/', isCurrentPage: false }
   ];
-  if (category?.path) {
-    const pathParts = category.path.split('/');
-    pathParts.forEach((part, index) => {
-      const isLast = index === pathParts.length - 1;
+  
+  if (categoryHierarchy && categoryHierarchy.length > 0) {
+    categoryHierarchy.forEach((cat, index) => {
+      const isLast = index === categoryHierarchy.length - 1;
       breadcrumbItems.push({
-        label: part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, ' '),
-        href: isLast ? undefined : `/category/${pathParts.slice(0, index + 1).join('/')}`,
+        label: cat.name,
+        href: isLast ? undefined : `/category/${cat.path}`,
         isCurrentPage: isLast,
       });
     });
