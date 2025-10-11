@@ -28,6 +28,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Edit, Trash2, Star, StarOff, Loader2, FolderTree, Gauge, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
 
 type SortField = 'created_at' | 'published_at' | 'updated_at' | 'title' | 'download_count';
 type SortOrder = 'asc' | 'desc';
@@ -642,31 +644,48 @@ export default function ManageColoringPages() {
                     </div>
                   </div>
                   
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    <span className={`px-2 py-1 rounded-full ${
-                      page.status === 'draft' 
-                        ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' 
-                        : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                    }`}>
-                      {page.status === 'draft' ? '📝 草稿' : '✅ 已发布'}
-                    </span>
-                    <span className="px-2 py-1 rounded-full bg-primary/10 text-primary">
-                      {page.categories?.name || '未分类'}
-                    </span>
-                    {page.difficulty && (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className={`px-2 py-1 rounded-full ${
+                        page.status === 'draft' 
+                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' 
+                          : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                      }`}>
+                        {page.status === 'draft' ? '📝 草稿' : '✅ 已发布'}
+                      </span>
+                      <span className="px-2 py-1 rounded-full bg-primary/10 text-primary">
+                        {page.categories?.name || '未分类'}
+                      </span>
+                      {page.difficulty && (
+                        <span className="px-2 py-1 rounded-full bg-muted">
+                          {difficultyConfig[page.difficulty as keyof typeof difficultyConfig]?.icon}{' '}
+                          {difficultyConfig[page.difficulty as keyof typeof difficultyConfig]?.label}
+                        </span>
+                      )}
+                      {page.series_title && (
+                        <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                          📚 {page.series_title} ({page.series_order}/{page.series_total})
+                        </span>
+                      )}
                       <span className="px-2 py-1 rounded-full bg-muted">
-                        {difficultyConfig[page.difficulty as keyof typeof difficultyConfig]?.icon}{' '}
-                        {difficultyConfig[page.difficulty as keyof typeof difficultyConfig]?.label}
+                        下载: {page.download_count}
                       </span>
-                    )}
-                    {page.series_title && (
-                      <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
-                        📚 {page.series_title} ({page.series_order}/{page.series_total})
+                    </div>
+                    <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                      <span>
+                        创建：{format(new Date(page.created_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
                       </span>
-                    )}
-                    <span className="px-2 py-1 rounded-full bg-muted">
-                      下载: {page.download_count}
-                    </span>
+                      {page.published_at && (
+                        <span className="text-green-600 dark:text-green-400">
+                          发布：{format(new Date(page.published_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                        </span>
+                      )}
+                      {page.updated_at && page.updated_at !== page.created_at && (
+                        <span>
+                          更新：{format(new Date(page.updated_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
