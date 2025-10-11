@@ -50,6 +50,46 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Check if current date is within the job's date range
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    if (job.start_date) {
+      const startDate = new Date(job.start_date);
+      if (today < startDate) {
+        console.log(`Job not yet started. Start date: ${job.start_date}, Today: ${today.toISOString().split('T')[0]}`);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            message: 'Job has not reached start date yet',
+            startDate: job.start_date
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    
+    if (job.end_date) {
+      const endDate = new Date(job.end_date);
+      if (today > endDate) {
+        console.log(`Job has ended. End date: ${job.end_date}, Today: ${today.toISOString().split('T')[0]}`);
+        // Deactivate job if it has passed end date
+        await supabaseClient
+          .from('publishing_jobs')
+          .update({ is_active: false })
+          .eq('id', jobId);
+          
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            message: 'Job has passed end date and has been deactivated',
+            endDate: job.end_date
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // Build query to find draft pages
     let query = supabaseClient
       .from('coloring_pages')

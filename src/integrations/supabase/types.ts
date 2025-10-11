@@ -663,6 +663,7 @@ export type Database = {
           publish_count: number
           schedule_days: number[] | null
           schedule_time: string
+          start_date: string | null
           updated_at: string
         }
         Insert: {
@@ -678,6 +679,7 @@ export type Database = {
           publish_count?: number
           schedule_days?: number[] | null
           schedule_time: string
+          start_date?: string | null
           updated_at?: string
         }
         Update: {
@@ -693,6 +695,7 @@ export type Database = {
           publish_count?: number
           schedule_days?: number[] | null
           schedule_time?: string
+          start_date?: string | null
           updated_at?: string
         }
         Relationships: [

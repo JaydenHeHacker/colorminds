@@ -18,6 +18,7 @@ interface PublishingJob {
   publish_count: number;
   is_active: boolean;
   created_at: string;
+  start_date?: string | null;
   end_date?: string | null;
   categories?: { name: string };
 }
@@ -55,11 +56,11 @@ export const PublishingCalendar = () => {
         return false;
       }
       
-      // 检查是否在任务创建之前（不应该显示任务创建前的计划）
-      if (job.created_at) {
-        const createdDate = new Date(job.created_at);
-        createdDate.setHours(0, 0, 0, 0); // 设置为当天开始时间
-        if (date < createdDate) {
+      // 检查是否在开始日期之前
+      if (job.start_date) {
+        const startDate = new Date(job.start_date);
+        startDate.setHours(0, 0, 0, 0);
+        if (date < startDate) {
           return false;
         }
       }
@@ -67,7 +68,7 @@ export const PublishingCalendar = () => {
       // 检查是否超过结束日期
       if (job.end_date) {
         const endDate = new Date(job.end_date);
-        endDate.setHours(23, 59, 59, 999); // 设置为当天结束时间
+        endDate.setHours(23, 59, 59, 999);
         if (date > endDate) {
           return false;
         }
