@@ -164,6 +164,17 @@ Deno.serve(async (req) => {
 
     console.log(`Successfully published ${drafts.length} pages`);
 
+    // Record execution history
+    await supabaseClient
+      .from('publishing_job_executions')
+      .insert({
+        job_id: jobId,
+        status: 'success',
+        pages_published: drafts.length,
+        pages_attempted: drafts.length,
+        published_page_ids: draftIds
+      });
+
     return new Response(
       JSON.stringify({
         success: true,

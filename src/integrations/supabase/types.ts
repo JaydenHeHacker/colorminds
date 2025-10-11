@@ -605,6 +605,50 @@ export type Database = {
         }
         Relationships: []
       }
+      publishing_job_executions: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          executed_at: string
+          id: string
+          job_id: string
+          pages_attempted: number
+          pages_published: number
+          published_page_ids: string[] | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          job_id: string
+          pages_attempted?: number
+          pages_published?: number
+          published_page_ids?: string[] | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          job_id?: string
+          pages_attempted?: number
+          pages_published?: number
+          published_page_ids?: string[] | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publishing_job_executions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "publishing_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       publishing_jobs: {
         Row: {
           category_id: string | null

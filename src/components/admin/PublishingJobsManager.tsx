@@ -11,6 +11,9 @@ import { Plus, Trash2, Play, Pause } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PublishingJobExecutions } from "./PublishingJobExecutions";
+import { PublishingCalendar } from "./PublishingCalendar";
 
 interface Category {
   id: string;
@@ -212,7 +215,15 @@ export const PublishingJobsManager = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Tabs defaultValue="jobs" className="w-full">
+        <TabsList>
+          <TabsTrigger value="jobs">任务管理</TabsTrigger>
+          <TabsTrigger value="calendar">发布日历</TabsTrigger>
+          <TabsTrigger value="history">执行历史</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="jobs" className="mt-6">
+          <Card>
         <CardHeader>
           <CardTitle>定时发布任务管理</CardTitle>
           <CardDescription>创建和管理自动发布任务，系统会根据设置自动发布草稿内容</CardDescription>
@@ -413,6 +424,16 @@ export const PublishingJobsManager = () => {
           </Table>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="mt-6">
+          <PublishingCalendar />
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-6">
+          <PublishingJobExecutions />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
