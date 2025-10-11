@@ -31,10 +31,15 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
+    console.log(`[check-subscription] Checking for user: ${user.email}`);
+    
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
+    console.log(`[check-subscription] Found ${customers.data.length} Stripe customers`);
+    
     if (customers.data.length === 0) {
+      console.log(`[check-subscription] No Stripe customer found for ${user.email}`);
       // Update user_subscriptions to free tier
       await supabaseClient
         .from("user_subscriptions")
@@ -55,11 +60,15 @@ serve(async (req) => {
     }
 
     const customerId = customers.data[0].id;
+    console.log(`[check-subscription] Stripe customer ID: ${customerId}`);
+    
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
       limit: 1,
     });
+    
+    console.log(`[check-subscription] Found ${subscriptions.data.length} active subscriptions`);
     
     const hasActiveSub = subscriptions.data.length > 0;
     let productId = null;
