@@ -21,46 +21,76 @@ serve(async (req) => {
 
     console.log('Generating coloring page:', { category, theme, difficulty });
 
-    // Difficulty-based prompt adjustments
-    const difficultyPrompts = {
-      easy: `Simple, bold outlines with large areas to color. Perfect for young children aged 3-5.
-- Very thick lines (5-8px)
-- Large, clear shapes
-- Minimal details
-- Big spaces for easy coloring
-- Simple subjects`,
-      medium: `Moderate detail level suitable for children aged 6-8.
-- Medium line weight (3-4px)
-- Balanced detail and simplicity
-- Some decorative elements
-- Mix of large and small areas`,
-      hard: `Detailed and intricate design for older children (9+) and adults.
-- Fine lines (1-2px)
-- Complex patterns and textures
-- Many small details
-- Intricate backgrounds
-- Suitable for advanced coloring`
+    // Structured prompt template with difficulty-based settings
+    const lineSettings: Record<string, any> = {
+      easy: {
+        weight: 'very thick (5-8px), bold outlines',
+        complexity: '3-5 main shapes with large areas',
+        age_group: '3-5 years old',
+        detail_level: 'minimal details, simple clear shapes'
+      },
+      medium: {
+        weight: 'medium (3-4px), balanced detail',
+        complexity: '5-8 main shapes with moderate detail',
+        age_group: '6-8 years old',
+        detail_level: 'moderate complexity with clear sections'
+      },
+      hard: {
+        weight: 'fine (1-2px), intricate patterns',
+        complexity: '8+ shapes with fine details',
+        age_group: '9+ years old',
+        detail_level: 'detailed and intricate with complex patterns'
+      }
     };
 
-    // Create detailed prompt for coloring page (MUST generate in English)
-    const prompt = `Create a black and white line art coloring page suitable for children. 
-Theme: ${theme}
-Category: ${category}
-Difficulty: ${difficulty}
+    const settings = lineSettings[difficulty] || lineSettings.medium;
 
-${difficultyPrompts[difficulty as keyof typeof difficultyPrompts]}
+    // Build structured prompt
+    const prompt = `Generate a black-and-white line art coloring page with the following specifications:
 
-Requirements:
-- Black lines on white background
-- No shading or gradients
-- High contrast for easy coloring
-- Fun and engaging subject matter
+SUBJECT & THEME:
+- Main theme: ${theme}
+- Category: ${category}
+- Target age: ${settings.age_group}
+- Composition: Centered, single focal point with ${settings.complexity}
 
-IMPORTANT: Generate an English title and description for this coloring page that will be used in a US/UK market.
-- Title should be clear and descriptive (e.g., "Cute Cat Playing with Yarn")
-- Description should be engaging for parents/children (1-2 sentences)
+LINE ART SPECIFICATIONS:
+- Line weight: ${settings.weight}
+- Line quality: Clean, continuous, no breaks or gaps
+- Detail level: ${settings.detail_level}
+- All shapes must be closed (no open paths) for easy coloring
 
-Make it a ${difficulty} level line drawing perfect for printing and coloring.`;
+STYLE REQUIREMENTS (CRITICAL):
+- Pure black lines (#000000) on white background (#FFFFFF)
+- Absolutely NO gradients, shading, or gray tones
+- NO colors - only black outlines
+- High contrast for clear printing
+- Large clear spaces suitable for coloring
+- Age-appropriate and child-friendly content
+
+TECHNICAL SPECS:
+- Square aspect ratio (1:1)
+- High resolution for printing (300 DPI equivalent)
+- Safe margins: 10% border space around the main subject
+- Printable and suitable for coloring books
+
+TITLE & DESCRIPTION (MUST BE IN ENGLISH):
+- Generate a clear, descriptive English title (e.g., "Happy Elephant Playing in the Garden")
+- Create an engaging 1-2 sentence description for US/UK parents and children
+- Format as:
+  Title: [Your Title Here]
+  Description: [Your Description Here]
+
+NEGATIVE PROMPTS (DO NOT INCLUDE):
+- No colors, shading, gradients, or gray tones
+- No blurry, broken, or disconnected lines
+- No photorealistic textures or details
+- No small complex details that are hard to color
+- No violent, scary, or inappropriate content
+- No text, logos, or brand names within the image
+- Avoid complexity beyond the ${settings.age_group} skill level
+
+OUTPUT: A clean, professional coloring page ready for printing and use in a coloring book.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

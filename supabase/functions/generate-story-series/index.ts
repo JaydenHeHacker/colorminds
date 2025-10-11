@@ -98,28 +98,59 @@ serve(async (req) => {
       }
     }
 
-    // Step 1: Generate story outline (MUST be in English)
-    const outlinePrompt = `Create a ${seriesLength}-page story outline for a children's coloring book.
+    // Step 1: Generate story outline with character consistency (MUST be in English)
+    const outlinePrompt = `Create a ${seriesLength}-page story outline for a children's coloring book with CHARACTER CONSISTENCY.
 
+STORY REQUIREMENTS:
 Theme: ${theme}
 Category: ${category}
 Number of pages: ${seriesLength}
+Target Market: US/UK children (English language)
 
-IMPORTANT: All content must be in English for a US/UK market.
+CHARACTER DESIGN (CRITICAL - Define Once, Use Throughout):
+If the story features characters (animals, people, creatures):
+1. Define their EXACT appearance in Scene 1:
+   - Physical features (size, shape, distinguishing marks)
+   - Clothing/accessories (if any)
+   - Color descriptions (for reference, though final is black & white)
+   - Personality traits that affect appearance
 
-Generate a coherent story with ${seriesLength} scenes. Each scene should:
-- Be suitable for children
-- Progress the story naturally
-- Be visually interesting for a coloring page
-- Connect to the previous and next scenes
-- Have a clear English description
+2. MAINTAIN these exact characteristics in ALL subsequent scenes:
+   - Same facial features and expressions style
+   - Same body proportions
+   - Same clothing/accessories (unless story requires change)
+   - Consistent artistic style
 
-Return ONLY a JSON array of ${seriesLength} scene descriptions in English. Format:
+STORY STRUCTURE:
+- Create a coherent narrative arc with beginning, middle, and end
+- Each scene should:
+  * Progress the story naturally
+  * Be visually interesting for a coloring page
+  * Connect clearly to previous and next scenes
+  * Be suitable for children
+  * Have clear English descriptions
+  * Maintain character consistency if applicable
+
+SCENE DESCRIPTIONS FORMAT:
+Return ONLY a JSON array of ${seriesLength} detailed scene descriptions in English.
+Each description should specify:
+- What happens in the scene (story progression)
+- Character details (maintaining consistency)
+- Setting/background elements
+- Composition notes
+
+Example format:
 [
-  "Scene 1 description...",
-  "Scene 2 description...",
+  "Scene 1: [Main character introduction with DETAILED appearance] doing [action] in [setting]",
+  "Scene 2: [SAME character with consistent features] now [action] while [situation]",
   ...
-]`;
+]
+
+IMPORTANT: 
+- All content must be in English
+- First scene establishes character design
+- All subsequent scenes reference the SAME character design
+- Maintain visual continuity throughout the series`;
 
     const outlineResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -130,6 +161,10 @@ Return ONLY a JSON array of ${seriesLength} scene descriptions in English. Forma
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
+          {
+            role: 'system',
+            content: 'You are a children\'s book author and character designer. Create consistent, engaging stories with characters that maintain their exact appearance across all scenes.'
+          },
           {
             role: 'user',
             content: outlinePrompt
@@ -223,25 +258,67 @@ Return ONLY a JSON array of ${seriesLength} scene descriptions in English. Forma
         }
       }
       
-      const scenePrompt = `Create a black and white line art coloring page for a children's story.
+      const scenePrompt = `Create a black and white line art coloring page for Scene ${i + 1} of ${seriesLength} in a children's story.
 
-Story Scene ${i + 1} of ${seriesLength}: ${scenes[i]}
-Category: ${category}
-Difficulty: ${difficulty}
+STORY CONTEXT:
+- Full Series: ${theme}
+- Category: ${category}
+- Current Scene: ${scenes[i]}
+- Scene Position: ${i + 1} of ${seriesLength}
+- Difficulty: ${difficulty}
 
+CHARACTER CONSISTENCY (CRITICAL):
+${i === 0 ? `
+This is SCENE 1 - ESTABLISH the character design:
+- Define the main character(s) with specific, memorable features
+- Clear, distinctive characteristics that can be replicated
+- Simple but unique design elements
+- Document the character design in the image itself
+` : `
+This is SCENE ${i + 1} - MAINTAIN character consistency:
+- Use the EXACT SAME character design from Scene 1
+- Keep all facial features, body proportions, and distinctive marks IDENTICAL
+- Same clothing/accessories unless the story specifically requires changes
+- The character should be instantly recognizable from previous scenes
+- Reference the established design, do not create variations
+`}
+
+LINE ART SPECIFICATIONS:
 ${difficultyPrompts[difficulty as keyof typeof difficultyPrompts]}
 
-Requirements:
-- Black lines on white background
-- No shading or gradients
-- High contrast for easy coloring
-- Fun and engaging
-- This is part ${i + 1} of ${seriesLength} in a story sequence
+COMPOSITION & STORYTELLING:
+- Show the specific story moment from this scene clearly
+- Maintain consistent artistic style with previous scenes
+- Clear focal point on main character/action
+- Background supports but doesn't overwhelm the story
+- Suitable for ${i + 1 === 1 ? 'introducing' : 'continuing'} the narrative
 
-IMPORTANT: Generate an English title for this scene suitable for US/UK market.
-- Title should describe this specific scene clearly
+STYLE REQUIREMENTS (CRITICAL):
+- Pure black lines (#000000) on white background (#FFFFFF)
+- NO gradients, shading, or gray tones
+- High contrast for printing
+- Age-appropriate content
+- Professional children's book quality
+- Consistent line weight and style with previous scenes in the series
 
-Make it a ${difficulty} level line drawing perfect for printing and coloring.`;
+TECHNICAL SPECS:
+- Square format suitable for coloring book
+- Clean, printable line art
+- Closed shapes for easy coloring
+- Safe margins around edges
+
+SERIES CONTINUITY CHECKLIST:
+✓ Characters look identical to previous scenes
+✓ Artistic style matches previous scenes  
+✓ Line weight consistent with series
+✓ Visual storytelling flows from previous scene
+
+IMPORTANT: 
+- If this is NOT Scene 1, the characters MUST look exactly like they did in Scene 1
+- Maintain the same proportions, features, and style throughout
+- This scene is part of a continuous story, ensure visual coherence
+
+OUTPUT: A professional black-and-white coloring page that maintains perfect character and style consistency across the series.`;
 
       const imageResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',

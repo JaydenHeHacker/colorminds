@@ -57,14 +57,146 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Define style prompts for different color themes
+    // Structured prompt templates for color inspiration
+    // These generate COLORED reference images (not coloring pages)
     const stylePrompts: Record<string, string> = {
-      rainbow: "Color this coloring page with vibrant rainbow colors - use red, orange, yellow, green, blue, indigo, and violet in a bright, cheerful way",
-      pastel: "Color this coloring page with soft pastel colors - pale pink, baby blue, mint green, lavender, peach, and cream tones",
-      warm: "Color this coloring page with warm sunset colors - vibrant oranges, reds, yellows, and golden tones",
-      cool: "Color this coloring page with cool ocean colors - various shades of blue, green, teal, and purple",
-      earth: "Color this coloring page with natural earth tones - browns, tans, olive greens, terracotta, and warm neutrals",
-      neon: "Color this coloring page with bold neon colors - bright fluorescent pink, electric blue, lime green, and hot orange"
+      rainbow: `Transform this coloring page into a vibrant colored illustration with the following specifications:
+
+COLOR PALETTE (CRITICAL - Rainbow Theme):
+- Use full rainbow spectrum: red, orange, yellow, green, blue, indigo, violet
+- Bright, highly saturated colors with maximum vibrancy
+- Distribute rainbow colors across major elements
+- Each significant part should use different spectrum colors
+- Cheerful, joyful color harmonies
+
+ARTISTIC RENDERING:
+- Style: Bright cartoon/children's book illustration
+- Shading: Soft cel-shading with gentle gradients
+- Lighting: Even, cheerful lighting with soft highlights
+- Quality: Professional, polished digital art
+
+COMPOSITION:
+- Maintain original line art composition and structure
+- Fill all white areas with appropriate colors
+- Create visual interest through rainbow color distribution
+- Age-appropriate and appealing to children
+
+OUTPUT: A fully colored rainbow-themed reference image.`,
+
+      pastel: `Transform this coloring page into a soft pastel colored illustration with the following specifications:
+
+COLOR PALETTE (CRITICAL - Pastel Theme):
+- Gentle tones: light pink, baby blue, mint green, lavender, peach, cream
+- Low saturation, high brightness colors (pastel range)
+- Harmonious, soothing color combinations
+- Soft color transitions and gentle blending
+- Dreamy, calming atmosphere
+
+ARTISTIC RENDERING:
+- Style: Soft watercolor or gentle digital painting effect
+- Shading: Minimal, subtle gradients maintaining softness
+- Lighting: Diffused, gentle daylight creating calm mood
+- Quality: Elegant, refined nursery art style
+
+COMPOSITION:
+- Maintain original structure with soft color fills
+- Create peaceful, harmonious visual balance
+- All elements should feel gentle and soothing
+- Perfect for young children and nurseries
+
+OUTPUT: A fully colored pastel reference image.`,
+
+      warm: `Transform this coloring page into a warm sunset colored illustration with the following specifications:
+
+COLOR PALETTE (CRITICAL - Warm Sunset Theme):
+- Sunset colors: vibrant oranges, reds, yellows, golden tones
+- Warm temperature palette throughout
+- Rich, glowing warm hues with depth
+- Gradient transitions between warm tones
+- Cozy, inviting atmosphere
+
+ARTISTIC RENDERING:
+- Style: Warm digital illustration with glowing quality
+- Shading: Warm-toned shadows and golden highlights
+- Lighting: Golden hour/sunset lighting creating warmth
+- Quality: Professional sunset photography-inspired art
+
+COMPOSITION:
+- Maintain original structure with warm color emphasis
+- Create cozy, inviting visual mood
+- All elements should feel warm and welcoming
+- Evoke feelings of comfort and happiness
+
+OUTPUT: A fully colored warm sunset reference image.`,
+
+      cool: `Transform this coloring page into a cool ocean colored illustration with the following specifications:
+
+COLOR PALETTE (CRITICAL - Cool Ocean Theme):
+- Ocean colors: various shades of blue, green, teal, aqua, purple
+- Cool temperature palette throughout
+- Refreshing, calming blue-green harmonies
+- Depth through tonal variations of cool colors
+- Peaceful, serene atmosphere
+
+ARTISTIC RENDERING:
+- Style: Cool digital illustration with aquatic quality
+- Shading: Cool-toned shadows with cyan highlights
+- Lighting: Underwater or cool daylight creating calm
+- Quality: Professional ocean/nature photography-inspired
+
+COMPOSITION:
+- Maintain original structure with cool color emphasis
+- Create refreshing, peaceful visual mood
+- All elements should feel cool and calming
+- Evoke feelings of tranquility and serenity
+
+OUTPUT: A fully colored cool ocean reference image.`,
+
+      earth: `Transform this coloring page into a natural earth-toned illustration with the following specifications:
+
+COLOR PALETTE (CRITICAL - Earth Tone Theme):
+- Natural colors: browns, tans, olive greens, terracotta, warm neutrals
+- Organic, nature-inspired harmonies
+- Muted saturation with authentic natural variations
+- Grounded, realistic color relationships
+- Warm, natural atmosphere
+
+ARTISTIC RENDERING:
+- Style: Semi-realistic nature illustration
+- Shading: Natural form-based shading with organic light
+- Lighting: Warm natural daylight from nature
+- Quality: Nature documentary or botanical art style
+
+COMPOSITION:
+- Maintain original structure with earth tone fills
+- Create authentic, grounded visual mood
+- All elements should feel natural and organic
+- Evoke connection with nature and outdoors
+
+OUTPUT: A fully colored earth-toned reference image.`,
+
+      neon: `Transform this coloring page into a bold neon colored illustration with the following specifications:
+
+COLOR PALETTE (CRITICAL - Neon Theme):
+- Electric colors: fluorescent pink, electric blue, lime green, hot orange
+- Maximum saturation with glowing quality
+- High contrast neon combinations
+- Bold, eye-catching color choices
+- Energetic, exciting atmosphere
+
+ARTISTIC RENDERING:
+- Style: Bold pop art with neon glow effect
+- Shading: Strong cel-shading with glowing highlights
+- Lighting: Electric, dramatic with neon glow
+- Quality: Modern graphic design/arcade aesthetic
+
+COMPOSITION:
+- Maintain original structure with neon emphasis
+- Create energetic, attention-grabbing visual
+- All elements should pop with neon intensity
+- Evoke excitement and modern energy
+
+OUTPUT: A fully colored neon reference image.`
     };
 
     const prompt = stylePrompts[style] || stylePrompts.rainbow;
