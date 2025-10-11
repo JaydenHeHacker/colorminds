@@ -35,17 +35,41 @@ export default function Auth() {
     // Get redirect parameter from URL
     const params = new URLSearchParams(window.location.search);
     const redirectPath = params.get('redirect');
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+    
+    // Handle OAuth errors
+    if (error) {
+      console.error('OAuth error:', error, errorDescription);
+      toast.error(errorDescription || 'Authentication failed');
+      setIsGoogleLoading(false);
+    }
     
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Session error:', error);
+        toast.error('Failed to restore session');
+      }
       if (session) {
+        console.log('User already logged in, redirecting...');
+        toast.success('Welcome back!');
         navigate(redirectPath || "/");
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      console.log('Auth state changed:', event, session?.user?.email);
+      
+      if (event === 'SIGNED_IN' && session) {
+        toast.success('Successfully signed in!');
         navigate(redirectPath || "/");
+      } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed');
+      } else if (event === 'USER_UPDATED') {
+        console.log('User updated');
       }
     });
 
