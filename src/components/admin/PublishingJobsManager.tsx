@@ -31,6 +31,7 @@ interface PublishingJob {
   is_active: boolean;
   last_run_at: string | null;
   next_run_at: string | null;
+  end_date?: string | null;
   categories?: { name: string };
 }
 
@@ -351,6 +352,7 @@ export const PublishingJobsManager = () => {
               <TableHead>发布数量</TableHead>
               <TableHead>执行时间</TableHead>
               <TableHead>执行日期</TableHead>
+              <TableHead>结束日期</TableHead>
               <TableHead>类型</TableHead>
               <TableHead>状态</TableHead>
               <TableHead>下次执行</TableHead>
@@ -370,6 +372,15 @@ export const PublishingJobsManager = () => {
                     <div className="text-sm">
                       {getWeekdayLabels(job.schedule_days)}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    {job.end_date ? (
+                      <span className="text-sm">
+                        {new Date(job.end_date).toLocaleDateString("zh-CN")}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">永久</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge variant={job.is_recurring ? "default" : "secondary"}>
