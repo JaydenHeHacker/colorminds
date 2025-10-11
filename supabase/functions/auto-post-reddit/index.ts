@@ -169,10 +169,16 @@ function shouldPost(config: RedditConfig): boolean {
   return hoursSinceLastPost >= config.hours_between_posts;
 }
 
+interface SeriesInfo {
+  id: string;
+  title: string;
+  total_chapters: number;
+}
+
 async function selectBestColoringPage(
   supabase: any,
   userId: string
-): Promise<ColoringPage | null> {
+): Promise<(ColoringPage & { series?: SeriesInfo }) | null> {
   console.log(`Selecting coloring page for user ${userId}`);
   
   // 获取最近7天内已发布的涂色页ID（缩短窗口期以允许内容复用）
@@ -190,10 +196,19 @@ async function selectBestColoringPage(
   const recentPageIds = recentPosts?.map((p: any) => p.coloring_page_id).filter(Boolean) || [];
   console.log(`Found ${recentPageIds.length} recently posted pages`);
 
-  // 查询高质量、未重复的涂色页
+  // 查询高质量、未重复的涂色页（包含系列信息，如果有的话）
   let query = supabase
     .from('coloring_pages')
-    .select('id, title, image_url, category_id, description, download_count')
+    .select(`
+      id, 
+      title, 
+      image_url, 
+      category_id, 
+      description, 
+      download_count,
+      series_id,
+      series(id, title, total_chapters)
+    `)
     .eq('status', 'published');
 
   // 使用正确的Supabase语法排除最近发布的页面
@@ -237,24 +252,42 @@ async function selectBestColoringPage(
   // 随机选择一个（从前10个中选）
   const topPages = pages.slice(0, Math.min(10, pages.length));
   const selected = topPages[Math.floor(Math.random() * topPages.length)];
-  console.log(`Selected page: ${selected.title} (ID: ${selected.id})`);
   
-  return selected;
+  // 提取系列信息
+  const pageWithSeries = {
+    ...selected,
+    series: selected.series ? {
+      id: selected.series.id,
+      title: selected.series.title,
+      total_chapters: selected.series.total_chapters
+    } : undefined
+  };
+  
+  console.log(`Selected page: ${selected.title} (ID: ${selected.id})${pageWithSeries.series ? ` - Part of series: ${pageWithSeries.series.title}` : ''}`);
+  
+  return pageWithSeries;
 }
 
 async function generateAIContent(
   apiKey: string,
-  page: ColoringPage,
+  page: ColoringPage & { series?: SeriesInfo },
   allowedSubreddits: string[]
 ): Promise<{ title: string; description: string; subreddit: string }> {
   // 清理 subreddit 名称，移除 r/ 前缀
   const cleanSubreddits = allowedSubreddits.map(s => s.replace(/^r\//, ''));
   
+  const seriesInfo = page.series ? `
+IMPORTANT SERIES INFO: This coloring page is part of a story series!
+Series: "${page.series.title}"
+Total chapters: ${page.series.total_chapters}
+This makes it MORE INTERESTING - people love story series!
+` : '';
+
   const prompt = `You are a casual Reddit user sharing cool stuff you found. Write like a REAL person, not a marketer.
 
 Coloring Page: "${page.title}"
 ${page.description ? `Context: ${page.description}` : ''}
-
+${seriesInfo}
 Target subreddits: ${cleanSubreddits.join(', ')}
 
 Generate a Reddit post that sounds like a real person sharing something they're excited about:
@@ -264,6 +297,7 @@ TITLE (max 150 chars):
 - Use Reddit slang occasionally (ngl, tbh, lol, etc.)
 - Can include emojis but don't overdo it
 - NO marketing language ("perfect for", "ideal", "great gift")
+${page.series ? `- IF IT'S A SERIES: Mention it naturally! "Found this ${page.series.total_chapters}-part story series" or "This is part X of a ${page.series.total_chapters}-chapter adventure"` : ''}
 - Examples of good vibes: "This came out way cooler than expected", "Found this gem today", "Pretty happy with how this turned out"
 
 DESCRIPTION (2-3 sentences + optional bonus tip):
@@ -273,9 +307,20 @@ DESCRIPTION (2-3 sentences + optional bonus tip):
 - NO phrases like: "perfect for all ages", "completely free to download", "hope you enjoy"
 - Share it like you found something cool and want others to see it
 - Add personality: "turned out better than I thought", "spent way too long on this lol", "this was actually fun"
+${page.series ? `- SERIES BONUS: If mentioning the site, add "they have all ${page.series.total_chapters} chapters" or "full series is there"` : ''}
 
 WEBSITE MENTION (choose ONE strategy randomly):
-Strategy A (70% chance): Naturally mention the source at the end
+${page.series ? `Strategy A (50% chance): Highlight the complete series availability
+- "ColoringPages.fun has all ${page.series.total_chapters} chapters of this - pretty cool to see the whole adventure"
+- "found the complete ${page.series.total_chapters}-part series on ColoringPages.fun"
+- "grabbed it from ColoringPages.fun, they have the full story series there"
+
+Strategy B (30% chance): Mention source + AI feature
+- "ColoringPages.fun has this plus an AI color palette helper - actually useful"
+- "got it from ColoringPages.fun, their AI inspiration thing is kinda neat for picking colors"
+
+Strategy C (20% chance): Just share naturally without site mention
+- Focus purely on the content and series excitement, let people ask where it's from in comments` : `Strategy A (70% chance): Naturally mention the source at the end
 - "grabbed it from ColoringPages.fun"
 - "found it on ColoringPages.fun"
 - "got it from ColoringPages.fun btw"
@@ -286,7 +331,7 @@ Strategy B (20% chance): Share a pro tip about the AI inspiration feature
 - "found it on ColoringPages.fun - they have an AI color helper that's surprisingly good"
 
 Strategy C (10% chance): Just share the coloring page naturally without site mention
-- Focus purely on the content, let people ask where it's from in comments
+- Focus purely on the content, let people ask where it's from in comments`}
 
 SUBREDDIT:
 - Pick the most relevant one from: ${cleanSubreddits.join(', ')}
