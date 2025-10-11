@@ -39,7 +39,8 @@ serve(async (req) => {
       line_complexity,
       image_style,
       line_weight,
-      background_mode
+      background_mode,
+      difficulty = 'medium' // New parameter for text-to-image difficulty
     } = await req.json();
     
     const isImageToImage = !!image_data;
@@ -188,8 +189,70 @@ IMPORTANT: This should look like a traced version of the original photo, not a n
         modalities: ['image', 'text']
       };
     } else {
-      // Text to image
-      optimizedPrompt = `Create a simple, child-friendly coloring page with clear black outlines on white background. Theme: ${prompt}. Style: Simple line art suitable for coloring, no shading, no colors, just clean black lines.`;
+      // Text to image - using structured prompt template
+      
+      // Line art settings based on difficulty
+      const lineSettings: Record<string, any> = {
+        easy: {
+          weight: 'very thick (5-8px), bold outlines',
+          complexity: '3-5 main shapes with large areas',
+          age_group: '3-5 years old',
+          detail_level: 'minimal details, simple clear shapes'
+        },
+        medium: {
+          weight: 'medium (3-4px), balanced detail',
+          complexity: '5-8 main shapes with moderate detail',
+          age_group: '6-8 years old',
+          detail_level: 'moderate complexity with clear sections'
+        },
+        hard: {
+          weight: 'fine (1-2px), intricate patterns',
+          complexity: '8+ shapes with fine details',
+          age_group: '9+ years old',
+          detail_level: 'detailed and intricate with complex patterns'
+        }
+      };
+
+      const settings = lineSettings[difficulty] || lineSettings.medium;
+
+      // Build structured prompt
+      optimizedPrompt = `Generate a black-and-white line art coloring page with the following specifications:
+
+SUBJECT & THEME:
+- Main theme: ${prompt}
+- Target age: ${settings.age_group}
+- Composition: Centered, single focal point with ${settings.complexity}
+
+LINE ART SPECIFICATIONS:
+- Line weight: ${settings.weight}
+- Line quality: Clean, continuous, no breaks or gaps
+- Detail level: ${settings.detail_level}
+- All shapes must be closed (no open paths) for easy coloring
+
+STYLE REQUIREMENTS (CRITICAL):
+- Pure black lines (#000000) on white background (#FFFFFF)
+- Absolutely NO gradients, shading, or gray tones
+- NO colors - only black outlines
+- High contrast for clear printing
+- Large clear spaces suitable for coloring
+- Age-appropriate and child-friendly content
+
+TECHNICAL SPECS:
+- Square aspect ratio (1:1)
+- High resolution for printing (300 DPI equivalent)
+- Safe margins: 10% border space around the main subject
+- Printable and suitable for coloring books
+
+NEGATIVE PROMPTS (DO NOT INCLUDE):
+- No colors, shading, gradients, or gray tones
+- No blurry, broken, or disconnected lines
+- No photorealistic textures or details
+- No small complex details that are hard to color
+- No violent, scary, or inappropriate content
+- No text, logos, or brand names
+- Avoid complexity beyond the ${settings.age_group} skill level
+
+OUTPUT: A clean, professional coloring page ready for printing.`;
       
       aiRequestBody = {
         model: 'google/gemini-2.5-flash-image-preview',

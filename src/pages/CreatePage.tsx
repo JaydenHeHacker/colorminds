@@ -41,6 +41,7 @@ export default function CreatePage() {
   const [imageStyle, setImageStyle] = useState('original');
   const [lineWeight, setLineWeight] = useState('medium');
   const [backgroundMode, setBackgroundMode] = useState('keep');
+  const [difficulty, setDifficulty] = useState('medium'); // For text-to-image
 
   // Load categories - get children of "All" root category
   const { data: categories } = useQuery({
@@ -351,6 +352,7 @@ export default function CreatePage() {
           };
         } else {
           requestBody.prompt = prompt;
+          requestBody.difficulty = difficulty; // Add difficulty for text-to-image
         }
 
         const { data, error } = await supabase.functions.invoke('generate-ai-coloring', {
@@ -687,58 +689,92 @@ export default function CreatePage() {
                     )}
 
                     {generationType === 'single' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Number of Images</label>
-                          <Select value={imageQuantity} onValueChange={handleQuantityChange} disabled={isGenerating}>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Number of Images</label>
+                            <Select value={imageQuantity} onValueChange={handleQuantityChange} disabled={isGenerating}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">1 Image</SelectItem>
+                                <SelectItem value="2">
+                                  <span className="flex items-center gap-2">
+                                    2 Images
+                                    <Crown className="h-3 w-3 text-amber-500" />
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="3">
+                                  <span className="flex items-center gap-2">
+                                    3 Images
+                                    <Crown className="h-3 w-3 text-amber-500" />
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="4">
+                                  <span className="flex items-center gap-2">
+                                    4 Images
+                                    <Crown className="h-3 w-3 text-amber-500" />
+                                  </span>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">
+                              Generate multiple variations to choose the best one
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Visibility</label>
+                            <div className="flex items-center justify-between h-10 px-3 border rounded-md bg-background">
+                              <div className="flex items-center gap-2">
+                                {isPrivate ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                <Label htmlFor="privacy-mode" className="cursor-pointer">
+                                  {isPrivate ? "Private" : "Public"}
+                                </Label>
+                              </div>
+                              <Switch
+                                id="privacy-mode"
+                                checked={isPrivate}
+                                onCheckedChange={handlePrivacyToggle}
+                                disabled={isGenerating}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {isPremium ? "Control who can see your creations" : "Private mode available with Premium"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Difficulty Level</label>
+                          <Select value={difficulty} onValueChange={setDifficulty} disabled={isGenerating}>
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="1">1 Image</SelectItem>
-                              <SelectItem value="2">
-                                <span className="flex items-center gap-2">
-                                  2 Images
-                                  <Crown className="h-3 w-3 text-amber-500" />
-                                </span>
+                              <SelectItem value="easy">
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">Easy (Ages 3-5)</span>
+                                  <span className="text-xs text-muted-foreground">Simple shapes, thick lines</span>
+                                </div>
                               </SelectItem>
-                              <SelectItem value="3">
-                                <span className="flex items-center gap-2">
-                                  3 Images
-                                  <Crown className="h-3 w-3 text-amber-500" />
-                                </span>
+                              <SelectItem value="medium">
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">Medium (Ages 6-8)</span>
+                                  <span className="text-xs text-muted-foreground">Balanced detail, medium lines</span>
+                                </div>
                               </SelectItem>
-                              <SelectItem value="4">
-                                <span className="flex items-center gap-2">
-                                  4 Images
-                                  <Crown className="h-3 w-3 text-amber-500" />
-                                </span>
+                              <SelectItem value="hard">
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">Hard (Ages 9+)</span>
+                                  <span className="text-xs text-muted-foreground">Intricate patterns, fine lines</span>
+                                </div>
                               </SelectItem>
                             </SelectContent>
                           </Select>
-                          <p className="text-xs text-muted-foreground">
-                            Generate multiple variations to choose the best one
-                          </p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Visibility</label>
-                          <div className="flex items-center justify-between h-10 px-3 border rounded-md bg-background">
-                            <div className="flex items-center gap-2">
-                              {isPrivate ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              <Label htmlFor="privacy-mode" className="cursor-pointer">
-                                {isPrivate ? "Private" : "Public"}
-                              </Label>
-                            </div>
-                            <Switch
-                              id="privacy-mode"
-                              checked={isPrivate}
-                              onCheckedChange={handlePrivacyToggle}
-                              disabled={isGenerating}
-                            />
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {isPremium ? "Control who can see your creations" : "Private mode available with Premium"}
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Controls line thickness and complexity
                           </p>
                         </div>
                       </div>
