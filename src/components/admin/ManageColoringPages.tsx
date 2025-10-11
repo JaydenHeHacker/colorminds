@@ -26,8 +26,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Edit, Trash2, Star, StarOff, Loader2, FolderTree, Gauge } from "lucide-react";
+import { Search, Edit, Trash2, Star, StarOff, Loader2, FolderTree, Gauge, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
+
+type SortField = 'created_at' | 'published_at' | 'updated_at' | 'title' | 'download_count';
+type SortOrder = 'asc' | 'desc';
 
 export default function ManageColoringPages() {
   const queryClient = useQueryClient();
@@ -38,6 +41,8 @@ export default function ManageColoringPages() {
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [editingPage, setEditingPage] = useState<any>(null);
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -67,7 +72,7 @@ export default function ManageColoringPages() {
 
   // 查询总数
   const { data: totalCount } = useQuery({
-    queryKey: ['admin-coloring-pages-count', searchQuery, selectedCategory, selectedDifficulty, selectedStatus],
+    queryKey: ['admin-coloring-pages-count', searchQuery, selectedCategory, selectedDifficulty, selectedStatus, sortField, sortOrder],
     queryFn: async () => {
       let query = supabase
         .from('coloring_pages')
@@ -94,7 +99,7 @@ export default function ManageColoringPages() {
 
   // 分页查询数据
   const { data: coloringPages, isLoading } = useQuery({
-    queryKey: ['admin-coloring-pages', currentPage, searchQuery, selectedCategory, selectedDifficulty, selectedStatus],
+    queryKey: ['admin-coloring-pages', currentPage, searchQuery, selectedCategory, selectedDifficulty, selectedStatus, sortField, sortOrder],
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
@@ -109,7 +114,7 @@ export default function ManageColoringPages() {
             slug
           )
         `)
-        .order('created_at', { ascending: false })
+        .order(sortField, { ascending: sortOrder === 'asc', nullsFirst: false })
         .range(from, to);
 
       if (searchQuery) {
@@ -359,85 +364,140 @@ export default function ManageColoringPages() {
     <div className="space-y-6">
       {/* Filters and Search */}
       <Card className="p-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <div className="md:col-span-2">
-            <Label>搜索</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="搜索标题、描述或系列..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div className="md:col-span-2">
+              <Label>搜索</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="搜索标题、描述或系列..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    resetPagination();
+                  }}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label>分类</Label>
+              <Select 
+                value={selectedCategory || "all"} 
+                onValueChange={(v) => {
+                  setSelectedCategory(v === "all" ? null : v);
                   resetPagination();
                 }}
-                className="pl-9"
-              />
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="全部分类" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50 max-h-[300px]">
+                  <SelectItem value="all">全部分类</SelectItem>
+                  {categories?.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {getCategoryLabel(cat)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>难度</Label>
+              <Select 
+                value={selectedDifficulty || "all"} 
+                onValueChange={(v) => {
+                  setSelectedDifficulty(v === "all" ? null : v);
+                  resetPagination();
+                }}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="全部难度" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="all">全部难度</SelectItem>
+                  <SelectItem value="easy">🟢 简单</SelectItem>
+                  <SelectItem value="medium">🟡 中等</SelectItem>
+                  <SelectItem value="hard">🔴 困难</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>状态</Label>
+              <Select 
+                value={selectedStatus || "all"} 
+                onValueChange={(v) => {
+                  setSelectedStatus(v === "all" ? null : v);
+                  resetPagination();
+                }}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="全部状态" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="all">全部状态</SelectItem>
+                  <SelectItem value="draft">📝 草稿</SelectItem>
+                  <SelectItem value="published">✅ 已发布</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          
-          <div>
-            <Label>分类</Label>
-            <Select 
-              value={selectedCategory || "all"} 
-              onValueChange={(v) => {
-                setSelectedCategory(v === "all" ? null : v);
-                resetPagination();
-              }}
-            >
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder="全部分类" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50 max-h-[300px]">
-                <SelectItem value="all">全部分类</SelectItem>
-                {categories?.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {getCategoryLabel(cat)}
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <Label>排序字段</Label>
+              <Select 
+                value={sortField} 
+                onValueChange={(v) => {
+                  setSortField(v as SortField);
+                  resetPagination();
+                }}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="created_at">创建时间</SelectItem>
+                  <SelectItem value="published_at">发布时间</SelectItem>
+                  <SelectItem value="updated_at">更新时间</SelectItem>
+                  <SelectItem value="title">标题</SelectItem>
+                  <SelectItem value="download_count">下载次数</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>排序方向</Label>
+              <Select 
+                value={sortOrder} 
+                onValueChange={(v) => {
+                  setSortOrder(v as SortOrder);
+                  resetPagination();
+                }}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="desc">
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown className="h-4 w-4" />
+                      降序
+                    </div>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label>难度</Label>
-            <Select 
-              value={selectedDifficulty || "all"} 
-              onValueChange={(v) => {
-                setSelectedDifficulty(v === "all" ? null : v);
-                resetPagination();
-              }}
-            >
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder="全部难度" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                <SelectItem value="all">全部难度</SelectItem>
-                <SelectItem value="easy">🟢 简单</SelectItem>
-                <SelectItem value="medium">🟡 中等</SelectItem>
-                <SelectItem value="hard">🔴 困难</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label>状态</Label>
-            <Select 
-              value={selectedStatus || "all"} 
-              onValueChange={(v) => {
-                setSelectedStatus(v === "all" ? null : v);
-                resetPagination();
-              }}
-            >
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder="全部状态" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                <SelectItem value="all">全部状态</SelectItem>
-                <SelectItem value="draft">📝 草稿</SelectItem>
-                <SelectItem value="published">✅ 已发布</SelectItem>
-              </SelectContent>
-            </Select>
+                  <SelectItem value="asc">
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown className="h-4 w-4" />
+                      升序
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </Card>
