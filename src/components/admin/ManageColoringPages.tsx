@@ -78,7 +78,8 @@ export default function ManageColoringPages() {
             slug
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10000);  // 增加查询限制以获取所有数据
       
       if (error) throw error;
       return data;
