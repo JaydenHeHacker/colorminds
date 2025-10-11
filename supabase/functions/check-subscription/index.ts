@@ -47,7 +47,12 @@ serve(async (req) => {
           user_id: user.id,
           tier: "free",
           monthly_quota: 5,
+          stripe_customer_id: null,
+          stripe_subscription_id: null,
+          subscription_end_date: null,
           updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id'
         });
 
       return new Response(JSON.stringify({ 
