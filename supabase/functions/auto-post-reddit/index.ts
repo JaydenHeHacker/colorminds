@@ -346,32 +346,48 @@ async function generateAIContent(
   if (forcedStrategy) {
     const strategyMap = {
       'series_a': `FORCED STRATEGY: Series Highlight (50% normally)
-- Highlight the complete series availability
-- "ColoringPages.fun has all ${page.series?.total_chapters || 'X'} chapters of this - pretty cool to see the whole adventure"
-- "found the complete ${page.series?.total_chapters || 'X'}-part series on ColoringPages.fun"`,
+DESCRIPTION MUST include:
+- Mention that ColoringPages.fun has all ${page.series?.total_chapters || 'X'} chapters
+- Example: "grabbed this from ColoringPages.fun - they have all ${page.series?.total_chapters || 'X'} chapters of this story, pretty cool to see the whole adventure"
+- Example: "found the complete ${page.series?.total_chapters || 'X'}-part series on ColoringPages.fun btw"
+DO NOT write a description without mentioning the website and the complete series.`,
       
       'series_b': `FORCED STRATEGY: Series + AI Feature (30% normally)
-- Mention source + AI feature
-- "ColoringPages.fun has this plus an AI color palette helper - actually useful"
-- "got it from ColoringPages.fun, their AI inspiration thing is kinda neat for picking colors"`,
+DESCRIPTION MUST include:
+- Mention ColoringPages.fun AND the AI color inspiration feature
+- Example: "got it from ColoringPages.fun - they have this AI thing that suggests color palettes, actually pretty helpful for planning this series"
+- Example: "ColoringPages.fun has the full series plus an AI color helper that's surprisingly good"
+DO NOT write a description without mentioning both the website and AI feature.`,
       
       'series_c': `FORCED STRATEGY: Natural Share (20% normally)
-- Focus purely on the content and series excitement
-- Let people ask where it's from in comments`,
+DESCRIPTION MUST:
+- Focus purely on the series excitement and story
+- NO website mention at all
+- Example: "This series tells such a cool story, can't wait to color the rest"
+- Example: "The whole adventure is really well designed, each chapter builds on the last"
+DO NOT mention any website or source.`,
       
       'single_a': `FORCED STRATEGY: Natural Source Mention (70% normally)
-- Naturally mention the source at the end
-- "grabbed it from ColoringPages.fun"
-- "found it on ColoringPages.fun"`,
+DESCRIPTION MUST include:
+- Naturally mention ColoringPages.fun at the end
+- Example: "this one turned out pretty cool, grabbed it from ColoringPages.fun"
+- Example: "found it on ColoringPages.fun btw - they have tons of these"
+DO NOT write a description without mentioning ColoringPages.fun.`,
       
       'single_b': `FORCED STRATEGY: AI Feature Highlight (20% normally)
-- Share a pro tip about the AI inspiration feature
-- "ColoringPages.fun has this AI inspiration feature that's kinda neat"
-- "their AI color helper is surprisingly good"`,
+DESCRIPTION MUST include:
+- Mention the AI color inspiration feature specifically
+- Example: "btw ColoringPages.fun has this AI inspiration thing that suggests color palettes - actually pretty helpful"
+- Example: "got it from ColoringPages.fun, their AI color helper is surprisingly good for picking color schemes"
+DO NOT write a description without mentioning the AI feature.`,
       
       'single_c': `FORCED STRATEGY: Pure Content (10% normally)
-- Focus purely on the content
-- Let people ask where it's from in comments`
+DESCRIPTION MUST:
+- Focus purely on the coloring page itself
+- NO website mention at all
+- Example: "this design is actually really detailed, gonna take forever to color lol"
+- Example: "love the composition on this one, can't wait to try it"
+DO NOT mention any website or source.`
     };
     
     strategyInstruction = strategyMap[forcedStrategy] || '';
@@ -421,6 +437,13 @@ ${page.description ? `Context: ${page.description}` : ''}
 ${seriesInfo}
 Target subreddits: ${cleanSubreddits.join(', ')}
 
+${forcedStrategy ? `
+⚠️ CRITICAL INSTRUCTION - YOU MUST FOLLOW THIS EXACT STRATEGY:
+${strategyInstruction}
+
+This is NOT optional. The description MUST follow the strategy above exactly.
+` : ''}
+
 Generate a Reddit post that sounds like a real person sharing something they're excited about:
 
 TITLE (max 150 chars):
@@ -432,6 +455,7 @@ ${page.series && hasGallery ? `- GALLERY POST: Mention the complete series! "All
 - Examples of good vibes: "This came out way cooler than expected", "Found this gem today", "Pretty happy with how this turned out"
 
 DESCRIPTION (2-3 sentences + optional bonus tip):
+${forcedStrategy ? `⚠️ FOLLOW THE FORCED STRATEGY ABOVE - This is mandatory!` : ''}
 - Write like you're genuinely sharing, not selling
 - Use casual language: "kinda", "pretty", "honestly", "actually"
 - Can mention it's free but make it sound natural ("it's free btw" or "didn't cost anything")
@@ -440,7 +464,7 @@ DESCRIPTION (2-3 sentences + optional bonus tip):
 - Add personality: "turned out better than I thought", "spent way too long on this lol", "this was actually fun"
 ${page.series && hasGallery ? `- GALLERY EXCITEMENT: Mention the swipeable gallery! "Swipe through to see the whole adventure" or "All ${seriesPages.length} pages in order - it tells a complete story"` : page.series ? `- SERIES BONUS: If mentioning the site, add "they have all ${page.series.total_chapters} chapters" or "full series is there"` : ''}
 
-${strategyInstruction}
+${!forcedStrategy ? strategyInstruction : ''}
 
 SUBREDDIT:
 - Pick the most relevant one from: ${cleanSubreddits.join(', ')}
