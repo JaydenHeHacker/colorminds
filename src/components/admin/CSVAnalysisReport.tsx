@@ -163,7 +163,16 @@ export const CSVAnalysisReport = () => {
           .select('slug');
         
         if (existingCategories) {
-          existingSlugs = new Set(existingCategories.map(cat => cat.slug));
+          // Store both singular and plural forms for matching
+          existingCategories.forEach(cat => {
+            existingSlugs.add(cat.slug);
+            // Add plural form (simple s)
+            existingSlugs.add(cat.slug + 's');
+            // Add singular form (remove trailing s)
+            if (cat.slug.endsWith('s')) {
+              existingSlugs.add(cat.slug.slice(0, -1));
+            }
+          });
           console.log('Found existing categories:', existingSlugs.size);
         }
       }
