@@ -18,7 +18,6 @@ interface CategoryPlan {
   slug: string;
   volume: number;
   avgKD: number;
-  priority: number;
   parentCategory?: string;
   keywords: KeywordData[];
 }
@@ -31,10 +30,6 @@ export const CSVAnalysisReport = () => {
     avgKD: number;
     categories: CategoryPlan[];
     opportunities: KeywordData[];
-    thresholds: {
-      phase1: number;
-      phase2: number;
-    };
   } | null>(null);
 
   const extractCategoryName = (keyword: string): string => {
@@ -131,7 +126,6 @@ export const CSVAnalysisReport = () => {
             slug: catSlug,
             volume: 0,
             avgKD: 0,
-            priority: 0,
             keywords: []
           });
         }
@@ -141,34 +135,19 @@ export const CSVAnalysisReport = () => {
         cat.volume += kw.volume;
       }
 
-      // Calculate average KD and priority
+      // Calculate average KD
       const categories = Array.from(categoryMap.values()).map(cat => {
         cat.avgKD = Math.round(
           cat.keywords.reduce((sum, kw) => sum + kw.kd, 0) / cat.keywords.length
         );
-        
-        // Priority score: volume - (avg KD * 100)
-        // This ensures high-volume categories get high priority, with KD penalty
-        cat.priority = Math.round(cat.volume - (cat.avgKD * 100));
-        
         return cat;
       });
 
-      // Sort by priority (highest first)
-      categories.sort((a, b) => b.priority - a.priority);
+      // Sort by volume (highest first)
+      categories.sort((a, b) => b.volume - a.volume);
 
-      // Dynamic threshold calculation based on actual distribution
+      // Take top 200 categories
       const topCategories = categories.slice(0, 200);
-      
-      // Phase 1: Top 30 (15%)
-      const phase1Count = 30;
-      // Phase 2: Next 70 (35%)  
-      const phase2Count = 70;
-      // Phase 3: Remaining 100 (50%)
-      
-      // Calculate thresholds from actual data
-      const phase1Threshold = topCategories[phase1Count - 1]?.priority || 0;
-      const phase2Threshold = topCategories[phase1Count + phase2Count - 1]?.priority || 0;
 
       // Find opportunities (low KD, high volume)
       const opportunities = allKeywords
@@ -185,11 +164,7 @@ export const CSVAnalysisReport = () => {
         totalVolume,
         avgKD,
         categories: topCategories,
-        opportunities,
-        thresholds: {
-          phase1: phase1Threshold,
-          phase2: phase2Threshold
-        }
+        opportunities
       });
 
       toast.success(`分析完成！找到 ${allKeywords.length} 个关键词`);
@@ -211,9 +186,7 @@ export const CSVAnalysisReport = () => {
         avgKD: report.avgKD,
         categories: report.categories.length
       },
-      phase1: report.categories.slice(0, 30),
-      phase2: report.categories.slice(30, 100),
-      phase3: report.categories.slice(100, 200),
+      categories: report.categories,
       opportunities: report.opportunities
     };
 
@@ -302,113 +275,52 @@ export const CSVAnalysisReport = () => {
             </Card>
           </div>
 
-          <Tabs defaultValue="phase1" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="phase1">第一阶段</TabsTrigger>
-              <TabsTrigger value="phase2">第二阶段</TabsTrigger>
-              <TabsTrigger value="phase3">第三阶段</TabsTrigger>
+          <Tabs defaultValue="categories" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="categories">所有类目</TabsTrigger>
               <TabsTrigger value="opportunities">黄金机会</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="phase1" className="space-y-4">
+            <TabsContent value="categories" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>第一阶段：核心类目（优先级最高）</CardTitle>
+                  <CardTitle>所有类目（按搜索量排序）</CardTitle>
                   <CardDescription>
-                    TOP 30类目 (优先级 &gt; {formatNumber(report.thresholds.phase1)})，预计1-2周完成
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {report.categories
-                      .slice(0, 30)
-                      .map((cat, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                          <div className="flex-1">
-                            <div className="font-medium text-lg">{cat.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {cat.keywords.length} 个关键词 | 总量: {formatNumber(cat.volume)}/月
-                            </div>
-                            <div className="flex gap-2 mt-2">
-                              {cat.keywords.slice(0, 3).map((kw, i) => (
-                                <Badge key={i} variant="secondary" className="text-xs">
-                                  {kw.keyword}
-                                </Badge>
-                              ))}
-                              {cat.keywords.length > 3 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{cat.keywords.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right space-y-1">
-                            <Badge className="bg-green-600">{formatNumber(cat.priority)} 优先级</Badge>
-                            <div className="text-xs text-muted-foreground">KD {cat.avgKD}</div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="phase2" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>第二阶段：扩展类目（高优先级）</CardTitle>
-                  <CardDescription>
-                    第31-100类目 (优先级 {formatNumber(report.thresholds.phase2)} - {formatNumber(report.thresholds.phase1)})，预计2-4周完成
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {report.categories
-                      .slice(30, 100)
-                      .map((cat, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                          <div className="flex-1">
-                            <div className="font-medium">{cat.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {cat.keywords.length} 关键词 | {formatNumber(cat.volume)}/月
-                            </div>
-                          </div>
-                          <div className="text-right space-y-1">
-                            <Badge className="bg-blue-600">{formatNumber(cat.priority)}</Badge>
-                            <div className="text-xs">KD {cat.avgKD}</div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="phase3" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>第三阶段：长尾类目（持续优化）</CardTitle>
-                  <CardDescription>
-                    第101-200类目 (优先级 &lt; {formatNumber(report.thresholds.phase2)})，持续添加
+                    共 {report.categories.length} 个类目，按月搜索量从高到低排序
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {report.categories
-                      .slice(100, 200)
-                      .map((cat, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2 border rounded hover:bg-muted/50">
-                          <div className="flex-1">
-                            <span className="font-medium text-sm">{cat.name}</span>
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({cat.keywords.length} | {formatNumber(cat.volume)})
-                            </span>
+                    {report.categories.map((cat, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">#{idx + 1}</Badge>
+                            <span className="font-medium">{cat.name}</span>
                           </div>
-                          <Badge variant="outline" className="text-xs">
-                            {formatNumber(cat.priority)} | KD {cat.avgKD}
-                          </Badge>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {cat.keywords.length} 个关键词
+                          </div>
+                          <div className="flex gap-2 mt-2 flex-wrap">
+                            {cat.keywords.slice(0, 3).map((kw, i) => (
+                              <Badge key={i} variant="secondary" className="text-xs">
+                                {kw.keyword}
+                              </Badge>
+                            ))}
+                            {cat.keywords.length > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{cat.keywords.length - 3}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                      ))}
+                        <div className="text-right space-y-1 ml-4">
+                          <div className="text-lg font-bold">{formatNumber(cat.volume)}</div>
+                          <div className="text-xs text-muted-foreground">月搜索量</div>
+                          <Badge variant="outline" className="text-xs">KD {cat.avgKD}</Badge>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -419,7 +331,7 @@ export const CSVAnalysisReport = () => {
                 <CardHeader>
                   <CardTitle>黄金机会关键词</CardTitle>
                   <CardDescription>
-                    低竞争度（KD&lt;25）+ 高搜索量（&gt;2000） - 前100个
+                    低竞争度（KD&lt;25）+ 高搜索量（≥2000） - 共 {report.opportunities.length} 个
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
