@@ -555,6 +555,45 @@ export type Database = {
           },
         ]
       }
+      keyword_analysis_results: {
+        Row: {
+          analysis_name: string
+          avg_kd: number
+          categories: Json
+          created_at: string
+          created_by: string | null
+          csv_filename: string
+          id: string
+          opportunities: Json
+          total_keywords: number
+          total_volume: number
+        }
+        Insert: {
+          analysis_name: string
+          avg_kd: number
+          categories: Json
+          created_at?: string
+          created_by?: string | null
+          csv_filename: string
+          id?: string
+          opportunities: Json
+          total_keywords: number
+          total_volume: number
+        }
+        Update: {
+          analysis_name?: string
+          avg_kd?: number
+          categories?: Json
+          created_at?: string
+          created_by?: string | null
+          csv_filename?: string
+          id?: string
+          opportunities?: Json
+          total_keywords?: number
+          total_volume?: number
+        }
+        Relationships: []
+      }
       print_basket: {
         Row: {
           added_at: string | null

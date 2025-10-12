@@ -2,9 +2,30 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, FileText, Download } from "lucide-react";
+import { Loader2, FileText, Download, Upload, Save, History, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface KeywordData {
   keyword: string;
@@ -25,6 +46,14 @@ interface CategoryPlan {
 
 export const CSVAnalysisReport = () => {
   const [analyzing, setAnalyzing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvFileName, setCsvFileName] = useState("coloring-pages_broad-match_us_2025-10-03.csv");
+  const [analysisName, setAnalysisName] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [report, setReport] = useState<{
     totalKeywords: number;
     totalVolume: number;
@@ -85,8 +114,18 @@ export const CSVAnalysisReport = () => {
   const analyzeCSV = async () => {
     setAnalyzing(true);
     try {
-      const response = await fetch('/coloring-pages_broad-match_us_2025-10-03.csv');
-      const text = await response.text();
+      let text: string;
+      
+      if (csvFile) {
+        // Read uploaded file
+        text = await csvFile.text();
+        setCsvFileName(csvFile.name);
+      } else {
+        // Read default file
+        const response = await fetch('/coloring-pages_broad-match_us_2025-10-03.csv');
+        text = await response.text();
+      }
+      
       const lines = text.split('\n').slice(1); // Skip header
 
       const allKeywords: KeywordData[] = [];
@@ -200,6 +239,98 @@ export const CSVAnalysisReport = () => {
     }
   };
 
+  const saveAnalysis = async () => {
+    if (!report) {
+      toast.error('请先完成分析');
+      return;
+    }
+
+    if (!analysisName.trim()) {
+      toast.error('请输入分析名称');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase
+        .from('keyword_analysis_results')
+        .insert({
+          analysis_name: analysisName,
+          csv_filename: csvFileName,
+          total_keywords: report.totalKeywords,
+          total_volume: report.totalVolume,
+          avg_kd: report.avgKD,
+          categories: report.categories,
+          opportunities: report.opportunities,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      toast.success('分析结果已保存！');
+      setAnalysisName('');
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('保存失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const loadHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('keyword_analysis_results')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setHistoryData(data || []);
+      setHistoryOpen(true);
+    } catch (error) {
+      console.error('Load history error:', error);
+      toast.error('加载历史记录失败');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const loadAnalysis = (item: any) => {
+    setReport({
+      totalKeywords: item.total_keywords,
+      totalVolume: item.total_volume,
+      avgKD: item.avg_kd,
+      categories: item.categories,
+      opportunities: item.opportunities
+    });
+    setCsvFileName(item.csv_filename);
+    setHistoryOpen(false);
+    toast.success(`已加载分析：${item.analysis_name}`);
+  };
+
+  const deleteAnalysis = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('keyword_analysis_results')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setHistoryData(prev => prev.filter(item => item.id !== id));
+      toast.success('已删除');
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('删除失败');
+    } finally {
+      setDeleteId(null);
+    }
+  };
+
   const exportPlan = () => {
     if (!report) return;
 
@@ -240,23 +371,141 @@ export const CSVAnalysisReport = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button 
-            onClick={analyzeCSV} 
-            disabled={analyzing}
-            size="lg"
-          >
-            {analyzing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {analyzing ? '分析中...' : '开始完整分析'}
-          </Button>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="csv-upload">上传CSV文件（可选）</Label>
+              <Input
+                id="csv-upload"
+                type="file"
+                accept=".csv"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setCsvFile(file);
+                    toast.success(`已选择文件: ${file.name}`);
+                  }
+                }}
+                className="mt-2"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                如果不上传，将使用默认CSV文件
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={analyzeCSV} 
+                disabled={analyzing}
+                size="lg"
+              >
+                {analyzing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {analyzing ? '分析中...' : '开始完整分析'}
+              </Button>
+
+              <Button 
+                onClick={loadHistory}
+                disabled={loadingHistory}
+                variant="outline"
+                size="lg"
+              >
+                {loadingHistory ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <History className="mr-2 h-4 w-4" />}
+                历史记录
+              </Button>
+            </div>
+          </div>
 
           {report && (
-            <Button onClick={exportPlan} variant="outline" size="lg">
-              <Download className="mr-2 h-4 w-4" />
-              导出详细计划
-            </Button>
+            <div className="flex gap-2 pt-4 border-t">
+              <div className="flex-1">
+                <Label htmlFor="analysis-name">分析名称</Label>
+                <Input
+                  id="analysis-name"
+                  value={analysisName}
+                  onChange={(e) => setAnalysisName(e.target.value)}
+                  placeholder="例如：2025年Q1关键词分析"
+                  className="mt-2"
+                />
+              </div>
+              <div className="flex items-end gap-2">
+                <Button 
+                  onClick={saveAnalysis}
+                  disabled={saving || !analysisName.trim()}
+                  variant="default"
+                >
+                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  保存分析
+                </Button>
+                <Button onClick={exportPlan} variant="outline">
+                  <Download className="mr-2 h-4 w-4" />
+                  导出JSON
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>历史分析记录</DialogTitle>
+            <DialogDescription>
+              点击任意记录加载分析结果
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {historyData.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">暂无历史记录</p>
+            ) : (
+              historyData.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                  onClick={() => loadAnalysis(item)}
+                >
+                  <div className="flex-1">
+                    <div className="font-medium">{item.analysis_name}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      文件: {item.csv_filename}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {item.total_keywords} 关键词 | {item.categories.length} 类目 | 
+                      {new Date(item.created_at).toLocaleString('zh-CN')}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteId(item.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              此操作无法撤销，确定要删除这条分析记录吗？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteId && deleteAnalysis(deleteId)}>
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {report && (
         <>
