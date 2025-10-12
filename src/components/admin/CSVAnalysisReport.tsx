@@ -54,6 +54,8 @@ export const CSVAnalysisReport = () => {
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [excludeExisting, setExcludeExisting] = useState(true);
+  const [excludedCount, setExcludedCount] = useState(0);
   const [report, setReport] = useState<{
     totalKeywords: number;
     totalVolume: number;
@@ -153,12 +155,32 @@ export const CSVAnalysisReport = () => {
       // Sort by volume
       allKeywords.sort((a, b) => b.volume - a.volume);
 
+      // Get existing categories from database if needed
+      let existingSlugs = new Set<string>();
+      if (excludeExisting) {
+        const { data: existingCategories } = await supabase
+          .from('categories')
+          .select('slug');
+        
+        if (existingCategories) {
+          existingSlugs = new Set(existingCategories.map(cat => cat.slug));
+          console.log('Found existing categories:', existingSlugs.size);
+        }
+      }
+
       // Group into categories
       const categoryMap = new Map<string, CategoryPlan>();
+      let excluded = 0;
       
       for (const kw of allKeywords) {
         const catName = extractCategoryName(kw.keyword);
         const catSlug = catName.toLowerCase().replace(/\s+/g, '-');
+        
+        // Skip if category already exists in database
+        if (excludeExisting && existingSlugs.has(catSlug)) {
+          excluded++;
+          continue;
+        }
         
         if (!categoryMap.has(catSlug)) {
           categoryMap.set(catSlug, {
@@ -175,6 +197,8 @@ export const CSVAnalysisReport = () => {
         cat.keywords.push(kw);
         cat.volume += kw.volume;
       }
+
+      setExcludedCount(excluded);
 
       // Calculate average KD and Golden Score
       const categories = Array.from(categoryMap.values()).map(cat => {
@@ -230,7 +254,8 @@ export const CSVAnalysisReport = () => {
         opportunities
       });
 
-      toast.success(`分析完成！找到 ${allKeywords.length} 个关键词`);
+      const excludeMsg = excludeExisting && excluded > 0 ? `，已排除 ${excluded} 个已存在类目` : '';
+      toast.success(`分析完成！找到 ${allKeywords.length} 个关键词${excludeMsg}`);
     } catch (error) {
       console.error('Analysis error:', error);
       toast.error('分析失败: ' + (error instanceof Error ? error.message : '未知错误'));
@@ -392,6 +417,19 @@ export const CSVAnalysisReport = () => {
               </p>
             </div>
 
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="exclude-existing"
+                checked={excludeExisting}
+                onChange={(e) => setExcludeExisting(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="exclude-existing" className="cursor-pointer">
+                排除数据库中已存在的类目
+              </Label>
+            </div>
+
             <div className="flex gap-2">
               <Button 
                 onClick={analyzeCSV} 
@@ -540,10 +578,15 @@ export const CSVAnalysisReport = () => {
             
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-muted-foreground">建议类目数</CardTitle>
+                <CardTitle className="text-sm text-muted-foreground">新增类目数</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{report.categories.length}</div>
+                {excludedCount > 0 && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    已排除 {excludedCount} 个
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
