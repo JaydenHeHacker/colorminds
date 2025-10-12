@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PrintBasket } from "@/components/PrintBasket";
+import { RedirectHandler } from "@/components/RedirectHandler";
 import { lazy, Suspense } from "react";
 
 // Eager load critical pages (Index is most important)
@@ -48,6 +49,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <RedirectHandler />
         <PrintBasket />
         <Suspense fallback={<PageLoader />}>
           <Routes>
