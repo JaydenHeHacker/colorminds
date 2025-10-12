@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ArrowLeft, LogOut, Settings, BarChart3, FolderTree, TrendingUp, Users, CalendarClock, Zap, MessageSquare, Share2, Search } from "lucide-react";
+import { Loader2, ArrowLeft, LogOut, Settings, BarChart3, FolderTree, TrendingUp, Users, CalendarClock, Zap, MessageSquare, Share2, Search, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ManageColoringPages from "@/components/admin/ManageColoringPages";
@@ -21,6 +21,7 @@ import ManageContactMessages from "@/components/admin/ManageContactMessages";
 import { SocialMediaManager } from "@/components/admin/SocialMediaManager";
 import { KeywordVolumeAnalyzer } from "@/components/admin/KeywordVolumeAnalyzer";
 import { CSVAnalysisReport } from "@/components/admin/CSVAnalysisReport";
+import { SEOToolsManager } from "@/components/admin/SEOToolsManager";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -171,7 +172,7 @@ export default function Admin() {
       </div>
       <div className="container py-4 sm:py-8 px-2 sm:px-4">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-11 mb-4 sm:mb-8 h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-12 mb-4 sm:mb-8 h-auto">
             <TabsTrigger value="dashboard" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">数据概览</span>
@@ -227,6 +228,11 @@ export default function Admin() {
               <span className="hidden sm:inline">关键词分析</span>
               <span className="sm:hidden">关键词</span>
             </TabsTrigger>
+            <TabsTrigger value="seo" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">SEO工具</span>
+              <span className="sm:hidden">SEO</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -271,6 +277,10 @@ export default function Admin() {
 
           <TabsContent value="keywords">
             <CSVAnalysisReport />
+          </TabsContent>
+
+          <TabsContent value="seo">
+            <SEOToolsManager />
           </TabsContent>
         </Tabs>
       </div>
