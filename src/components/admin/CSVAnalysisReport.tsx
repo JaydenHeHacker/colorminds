@@ -18,6 +18,7 @@ interface CategoryPlan {
   slug: string;
   volume: number;
   avgKD: number;
+  goldenScore: number;
   parentCategory?: string;
   keywords: KeywordData[];
 }
@@ -126,6 +127,7 @@ export const CSVAnalysisReport = () => {
             slug: catSlug,
             volume: 0,
             avgKD: 0,
+            goldenScore: 0,
             keywords: []
           });
         }
@@ -135,16 +137,25 @@ export const CSVAnalysisReport = () => {
         cat.volume += kw.volume;
       }
 
-      // Calculate average KD
+      // Calculate average KD and Golden Score
       const categories = Array.from(categoryMap.values()).map(cat => {
         cat.avgKD = Math.round(
           cat.keywords.reduce((sum, kw) => sum + kw.kd, 0) / cat.keywords.length
         );
+        
+        // Golden Score: High volume + Low KD = High ROI
+        // Formula: (Volume / 100) * (100 - avgKD) * sqrt(keyword_count)
+        // This rewards high traffic, low competition, and multiple keywords
+        const volumeFactor = cat.volume / 100;
+        const difficultyFactor = Math.max(0, 100 - cat.avgKD);
+        const keywordBonus = Math.sqrt(cat.keywords.length);
+        cat.goldenScore = Math.round(volumeFactor * difficultyFactor * keywordBonus);
+        
         return cat;
       });
 
-      // Sort by volume (highest first)
-      categories.sort((a, b) => b.volume - a.volume);
+      // Sort by Golden Score (highest first)
+      categories.sort((a, b) => b.goldenScore - a.goldenScore);
 
       // Take top 200 categories
       const topCategories = categories.slice(0, 200);
@@ -284,43 +295,64 @@ export const CSVAnalysisReport = () => {
             <TabsContent value="categories" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>所有类目（按搜索量排序）</CardTitle>
+                  <CardTitle>所有类目（按黄金分数排序）</CardTitle>
                   <CardDescription>
-                    共 {report.categories.length} 个类目，按月搜索量从高到低排序
+                    共 {report.categories.length} 个类目，黄金分数 = (搜索量/100) × (100-难度) × √关键词数
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {report.categories.map((cat, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">#{idx + 1}</Badge>
-                            <span className="font-medium">{cat.name}</span>
+                    {report.categories.map((cat, idx) => {
+                      // Calculate score level for visual feedback
+                      const maxScore = report.categories[0]?.goldenScore || 1;
+                      const scorePercent = (cat.goldenScore / maxScore) * 100;
+                      const isGolden = scorePercent >= 70;
+                      const isSilver = scorePercent >= 40 && scorePercent < 70;
+                      
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors ${
+                            isGolden ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20' : 
+                            isSilver ? 'border-gray-400 bg-gray-50 dark:bg-gray-900/20' : ''
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">#{idx + 1}</Badge>
+                              {isGolden && <span className="text-yellow-500">🏆</span>}
+                              {isSilver && <span className="text-gray-400">🥈</span>}
+                              <span className="font-medium">{cat.name}</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {cat.keywords.length} 个关键词 | {formatNumber(cat.volume)}/月 | KD {cat.avgKD}
+                            </div>
+                            <div className="flex gap-2 mt-2 flex-wrap">
+                              {cat.keywords.slice(0, 3).map((kw, i) => (
+                                <Badge key={i} variant="secondary" className="text-xs">
+                                  {kw.keyword}
+                                </Badge>
+                              ))}
+                              {cat.keywords.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{cat.keywords.length - 3}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {cat.keywords.length} 个关键词
-                          </div>
-                          <div className="flex gap-2 mt-2 flex-wrap">
-                            {cat.keywords.slice(0, 3).map((kw, i) => (
-                              <Badge key={i} variant="secondary" className="text-xs">
-                                {kw.keyword}
-                              </Badge>
-                            ))}
-                            {cat.keywords.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{cat.keywords.length - 3}
-                              </Badge>
-                            )}
+                          <div className="text-right space-y-1 ml-4">
+                            <div className={`text-2xl font-bold ${
+                              isGolden ? 'text-yellow-600 dark:text-yellow-400' :
+                              isSilver ? 'text-gray-600 dark:text-gray-400' :
+                              'text-muted-foreground'
+                            }`}>
+                              {formatNumber(cat.goldenScore)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">黄金分数</div>
                           </div>
                         </div>
-                        <div className="text-right space-y-1 ml-4">
-                          <div className="text-lg font-bold">{formatNumber(cat.volume)}</div>
-                          <div className="text-xs text-muted-foreground">月搜索量</div>
-                          <Badge variant="outline" className="text-xs">KD {cat.avgKD}</Badge>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
