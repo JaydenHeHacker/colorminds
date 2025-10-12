@@ -31,6 +31,10 @@ export const CSVAnalysisReport = () => {
     avgKD: number;
     categories: CategoryPlan[];
     opportunities: KeywordData[];
+    thresholds: {
+      phase1: number;
+      phase2: number;
+    };
   } | null>(null);
 
   const extractCategoryName = (keyword: string): string => {
@@ -153,6 +157,19 @@ export const CSVAnalysisReport = () => {
       // Sort by priority (highest first)
       categories.sort((a, b) => b.priority - a.priority);
 
+      // Dynamic threshold calculation based on actual distribution
+      const topCategories = categories.slice(0, 200);
+      
+      // Phase 1: Top 30 (15%)
+      const phase1Count = 30;
+      // Phase 2: Next 70 (35%)  
+      const phase2Count = 70;
+      // Phase 3: Remaining 100 (50%)
+      
+      // Calculate thresholds from actual data
+      const phase1Threshold = topCategories[phase1Count - 1]?.priority || 0;
+      const phase2Threshold = topCategories[phase1Count + phase2Count - 1]?.priority || 0;
+
       // Find opportunities (low KD, high volume)
       const opportunities = allKeywords
         .filter(kw => kw.kd < 25 && kw.volume >= 2000)
@@ -167,8 +184,12 @@ export const CSVAnalysisReport = () => {
         totalKeywords: allKeywords.length,
         totalVolume,
         avgKD,
-        categories: categories.slice(0, 200), // Top 200 categories
-        opportunities
+        categories: topCategories,
+        opportunities,
+        thresholds: {
+          phase1: phase1Threshold,
+          phase2: phase2Threshold
+        }
       });
 
       toast.success(`分析完成！找到 ${allKeywords.length} 个关键词`);
@@ -190,9 +211,9 @@ export const CSVAnalysisReport = () => {
         avgKD: report.avgKD,
         categories: report.categories.length
       },
-      phase1: report.categories.filter(c => c.priority > 10000).slice(0, 30),
-      phase2: report.categories.filter(c => c.priority > 3000 && c.priority <= 10000).slice(0, 70),
-      phase3: report.categories.filter(c => c.priority <= 3000).slice(0, 100),
+      phase1: report.categories.slice(0, 30),
+      phase2: report.categories.slice(30, 100),
+      phase3: report.categories.slice(100, 200),
       opportunities: report.opportunities
     };
 
@@ -294,13 +315,12 @@ export const CSVAnalysisReport = () => {
                 <CardHeader>
                   <CardTitle>第一阶段：核心类目（优先级最高）</CardTitle>
                   <CardDescription>
-                    优先级分数 &gt; 10,000，预计1-2周完成，前30个类目
+                    TOP 30类目 (优先级 &gt; {formatNumber(report.thresholds.phase1)})，预计1-2周完成
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {report.categories
-                      .filter(c => c.priority > 10000)
                       .slice(0, 30)
                       .map((cat, idx) => (
                         <div key={idx} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
@@ -338,14 +358,13 @@ export const CSVAnalysisReport = () => {
                 <CardHeader>
                   <CardTitle>第二阶段：扩展类目（高优先级）</CardTitle>
                   <CardDescription>
-                    优先级分数 3,000-10,000，预计2-4周完成，前70个类目
+                    第31-100类目 (优先级 {formatNumber(report.thresholds.phase2)} - {formatNumber(report.thresholds.phase1)})，预计2-4周完成
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {report.categories
-                      .filter(c => c.priority > 3000 && c.priority <= 10000)
-                      .slice(0, 70)
+                      .slice(30, 100)
                       .map((cat, idx) => (
                         <div key={idx} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
                           <div className="flex-1">
@@ -370,14 +389,13 @@ export const CSVAnalysisReport = () => {
                 <CardHeader>
                   <CardTitle>第三阶段：长尾类目（持续优化）</CardTitle>
                   <CardDescription>
-                    优先级分数 &lt; 3,000，持续添加，前100个类目
+                    第101-200类目 (优先级 &lt; {formatNumber(report.thresholds.phase2)})，持续添加
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {report.categories
-                      .filter(c => c.priority <= 3000)
-                      .slice(0, 100)
+                      .slice(100, 200)
                       .map((cat, idx) => (
                         <div key={idx} className="flex items-center justify-between p-2 border rounded hover:bg-muted/50">
                           <div className="flex-1">
