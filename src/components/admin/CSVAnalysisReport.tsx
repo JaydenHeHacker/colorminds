@@ -176,8 +176,8 @@ export const CSVAnalysisReport = () => {
         const catName = extractCategoryName(kw.keyword);
         const catSlug = catName.toLowerCase().replace(/\s+/g, '-');
         
-        // Skip "general" category (noise data)
-        if (catSlug === 'general') {
+        // Skip meaningless categories
+        if (catSlug === 'general' || catSlug === 'color-pages') {
           excluded++;
           continue;
         }
