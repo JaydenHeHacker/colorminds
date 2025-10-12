@@ -176,6 +176,12 @@ export const CSVAnalysisReport = () => {
         const catName = extractCategoryName(kw.keyword);
         const catSlug = catName.toLowerCase().replace(/\s+/g, '-');
         
+        // Skip "general" category (noise data)
+        if (catSlug === 'general') {
+          excluded++;
+          continue;
+        }
+        
         // Skip if category already exists in database
         if (excludeExisting && existingSlugs.has(catSlug)) {
           excluded++;
