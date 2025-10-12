@@ -144,21 +144,34 @@ export const CSVAnalysisReport = () => {
         );
         
         // Golden Score: High volume + Low KD = High ROI
-        // Formula: (Volume / 100) * (100 - avgKD) * sqrt(keyword_count)
-        // This rewards high traffic, low competition, and multiple keywords
+        // Raw formula: (Volume / 100) * (100 - avgKD) * sqrt(keyword_count)
         const volumeFactor = cat.volume / 100;
         const difficultyFactor = Math.max(0, 100 - cat.avgKD);
         const keywordBonus = Math.sqrt(cat.keywords.length);
-        cat.goldenScore = Math.round(volumeFactor * difficultyFactor * keywordBonus);
+        cat.goldenScore = volumeFactor * difficultyFactor * keywordBonus;
         
         return cat;
+      });
+
+      // Normalize Golden Score to 0-100
+      const maxRawScore = Math.max(...categories.map(c => c.goldenScore));
+      const minRawScore = Math.min(...categories.map(c => c.goldenScore));
+      
+      categories.forEach(cat => {
+        if (maxRawScore === minRawScore) {
+          cat.goldenScore = 50; // All same, set to middle
+        } else {
+          cat.goldenScore = Math.round(
+            ((cat.goldenScore - minRawScore) / (maxRawScore - minRawScore)) * 100
+          );
+        }
       });
 
       // Sort by Golden Score (highest first)
       categories.sort((a, b) => b.goldenScore - a.goldenScore);
 
-      // Take top 200 categories
-      const topCategories = categories.slice(0, 200);
+      // Take all categories (no limit)
+      const allCategories = categories;
 
       // Find opportunities (low KD, high volume)
       const opportunities = allKeywords
@@ -174,7 +187,7 @@ export const CSVAnalysisReport = () => {
         totalKeywords: allKeywords.length,
         totalVolume,
         avgKD,
-        categories: topCategories,
+        categories: allCategories,
         opportunities
       });
 
@@ -297,17 +310,15 @@ export const CSVAnalysisReport = () => {
                 <CardHeader>
                   <CardTitle>所有类目（按黄金分数排序）</CardTitle>
                   <CardDescription>
-                    共 {report.categories.length} 个类目，黄金分数 = (搜索量/100) × (100-难度) × √关键词数
+                    共 {report.categories.length} 个类目，黄金分数 0-100（综合搜索量、难度、关键词数量）
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {report.categories.map((cat, idx) => {
                       // Calculate score level for visual feedback
-                      const maxScore = report.categories[0]?.goldenScore || 1;
-                      const scorePercent = (cat.goldenScore / maxScore) * 100;
-                      const isGolden = scorePercent >= 70;
-                      const isSilver = scorePercent >= 40 && scorePercent < 70;
+                      const isGolden = cat.goldenScore >= 70;
+                      const isSilver = cat.goldenScore >= 40 && cat.goldenScore < 70;
                       
                       return (
                         <div 
@@ -346,7 +357,7 @@ export const CSVAnalysisReport = () => {
                               isSilver ? 'text-gray-600 dark:text-gray-400' :
                               'text-muted-foreground'
                             }`}>
-                              {formatNumber(cat.goldenScore)}
+                              {cat.goldenScore}
                             </div>
                             <div className="text-xs text-muted-foreground">黄金分数</div>
                           </div>
