@@ -33,13 +33,26 @@ export const categoryRedirects: Record<string, string> = {
 
 /**
  * Check if a path contains an old category slug that needs redirection
+ * Handles both formats:
+ * - /category/unicorns
+ * - /category/all/unicorns
+ * - /category/parent-slug/unicorns
  */
 export const getRedirectPath = (currentPath: string): string | null => {
   for (const [oldSlug, newSlug] of Object.entries(categoryRedirects)) {
-    // Match category paths like /category/unicorns or /category/unicorns/some-page
-    const oldPattern = `/category/${oldSlug}`;
-    if (currentPath.includes(oldPattern)) {
-      return currentPath.replace(oldPattern, `/category/${newSlug}`);
+    // Check if the old slug appears in the path
+    // Match patterns like:
+    // - /category/adults -> /category/adult
+    // - /category/all/adults -> /category/all/adult
+    // - /category/animals/cats -> /category/animals/cat
+    
+    const pathSegments = currentPath.split('/');
+    const slugIndex = pathSegments.findIndex(segment => segment === oldSlug);
+    
+    if (slugIndex !== -1) {
+      // Replace the old slug with new slug
+      pathSegments[slugIndex] = newSlug;
+      return pathSegments.join('/');
     }
   }
   return null;
