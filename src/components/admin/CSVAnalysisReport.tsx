@@ -256,16 +256,16 @@ export const CSVAnalysisReport = () => {
       
       const { error } = await supabase
         .from('keyword_analysis_results')
-        .insert({
+        .insert([{
           analysis_name: analysisName,
           csv_filename: csvFileName,
           total_keywords: report.totalKeywords,
           total_volume: report.totalVolume,
           avg_kd: report.avgKD,
-          categories: report.categories,
-          opportunities: report.opportunities,
+          categories: report.categories as any,
+          opportunities: report.opportunities as any,
           created_by: user?.id
-        });
+        }]);
 
       if (error) throw error;
 
