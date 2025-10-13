@@ -40,7 +40,11 @@ export const Footer = () => {
               </p>
               <p>
                 Also available as an open-source NPM package:
-                <a href="https://www.npmjs.com/package/create-ai-coloring" rel="dofollow">
+                <a
+                  href="https://www.npmjs.com/package/create-ai-coloring"
+                  rel="dofollow"
+                  className="hover:text-primary underline-offset-4 hover:underline"
+                >
                   create-ai-coloring
                 </a>
               </p>
