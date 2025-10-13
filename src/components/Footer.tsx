@@ -38,6 +38,12 @@ export const Footer = () => {
                   Geminibanana.fun
                 </a>
               </p>
+              <p>
+                Also available as an open-source NPM package:
+                <a href="https://www.npmjs.com/package/create-ai-coloring" rel="dofollow">
+                  create-ai-coloring
+                </a>
+              </p>
             </div>
           </div>
 
