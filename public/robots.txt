@@ -5,6 +5,7 @@ User-agent: *
 Disallow: /admin
 Disallow: /auth
 
-Sitemap: https://colorminds.fun/sitemap.xml
+Sitemap: https://gggmfhgavzworznuagzv.supabase.co/functions/v1/generate-sitemap
+Sitemap: https://gggmfhgavzworznuagzv.supabase.co/functions/v1/generate-image-sitemap
 
 Crawl-delay: 1
