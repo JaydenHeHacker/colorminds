@@ -1,37 +1,10 @@
-# robots.txt for Color Minds
-# https://www.robotstxt.org/
+# robots.txt for ColorMinds.fun
+# Last updated: 2025-10-14
 
 User-agent: *
-Allow: /
-
-# Sitemap location
-Sitemap: https://www.colorminds.fun/sitemap.xml
-
-# Crawl delay for good behavior
-Crawl-delay: 1
-
-# Disallow admin and auth pages
 Disallow: /admin
 Disallow: /auth
 
-# Allow all images
-User-agent: Googlebot-Image
-Allow: /
+Sitemap: https://colorminds.fun/sitemap.xml
 
-# Allow all important content
-Allow: /category/
-Allow: /coloring-page/
-Allow: /series/
-
-# Special bots
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+Crawl-delay: 1
