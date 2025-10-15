@@ -84,13 +84,13 @@ export const SocialMeta = ({
     }
 
     // Canonical URL
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute('href', currentUrl);
+    //let canonical = document.querySelector('link[rel="canonical"]');
+    //if (!canonical) {
+    //  canonical = document.createElement('link');
+    //  canonical.setAttribute('rel', 'canonical');
+    //  document.head.appendChild(canonical);
+    //}
+    //canonical.setAttribute('href', currentUrl);
 
     // Robots meta
     setMetaTag('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1', false);
