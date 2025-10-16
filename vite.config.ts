@@ -4,7 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode, isSsrBuild }) => ({
   server: {
     host: "::",
     port: 8080,
@@ -16,18 +16,25 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Optimize chunk splitting
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Separate vendor chunks for better caching
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
-          'query-vendor': ['@tanstack/react-query'],
-        },
-      },
-    },
+    ...(isSsrBuild
+      ? {}
+      : {
+          // Only split vendor chunks on client build; SSR treats these deps as externals.
+          rollupOptions: {
+            output: {
+              manualChunks: {
+                'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+                'supabase-vendor': ['@supabase/supabase-js'],
+                'ui-vendor': [
+                  '@radix-ui/react-dialog',
+                  '@radix-ui/react-dropdown-menu',
+                  '@radix-ui/react-select',
+                ],
+                'query-vendor': ['@tanstack/react-query'],
+              },
+            },
+          },
+        }),
     // Optimize chunk size warnings
     chunkSizeWarningLimit: 1000,
     // Enable CSS code splitting

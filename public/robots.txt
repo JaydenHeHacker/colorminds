@@ -6,6 +6,4 @@ Disallow: /admin
 Disallow: /auth
 
 Sitemap: https://www.colorminds.fun/static/sitemap.xml
-Sitemap: https://colorminds.fun/static/sitemap.xml
-
-Crawl-delay: 1
+Sitemap: https://www.colorminds.fun/image-sitemap.xml
